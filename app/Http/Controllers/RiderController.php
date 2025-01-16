@@ -37,8 +37,8 @@ class RiderController extends Controller
     public function create()
     {
         $pageTitle = __('message.add_form_title',[ 'form' => __('message.rider')]);
-        $assets = ['phone'];
-        return view('rider.form', compact('pageTitle','assets'));
+        //$assets = ['phone'];
+        return view('rider.form', compact('pageTitle'));
     }
 
     /**
@@ -117,8 +117,8 @@ class RiderController extends Controller
         $data = User::where('user_type', 'rider')->with('userBankAccount')->findOrFail($id);
 
         $profileImage = getSingleMedia($data, 'profile_image');
-        $assets = ['phone'];
-        return view('rider.form', compact('data', 'pageTitle', 'id', 'profileImage', 'assets'));
+        //$assets = ['phone'];
+        return view('rider.form', compact('data', 'pageTitle', 'id', 'profileImage'));
     }
 
     /**
