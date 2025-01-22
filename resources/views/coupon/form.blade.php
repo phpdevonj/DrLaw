@@ -8,7 +8,7 @@
         @endif
         <div class="row">
             <div class="col-12">
-                <a href="{{route('rider.index')}}" class="btn border-radius-10 btn-dark float-right" role="button"><i class="fas fa-arrow-circle-left"></i> {{ __('message.back') }}</a>
+                <a href="{{route('coupon.index')}}" class="btn border-radius-10 btn-dark float-right" role="button"><i class="fas fa-arrow-circle-left"></i> {{ __('message.back') }}</a>
             </div>
             <div class="col-lg-12 mt-3">
                 <div class="card border-radius-20">

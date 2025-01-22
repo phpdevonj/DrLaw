@@ -126,7 +126,8 @@ class RideRequestController extends Controller
             }
 
             if ($riderequest->coupon_code) {
-                $response = verify_coupon_code($riderequest->coupon_code);
+                $rider_coupon_code = Coupon::where('id', $riderequest->coupon_code)->value('code');
+                $response = verify_coupon_code($rider_coupon_code);
 
                 if ($response['status'] != 200) {
                     return json_custom_response($response, $response['status']);
@@ -157,7 +158,7 @@ class RideRequestController extends Controller
 
             $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
             $coupon_code = $riderequest->coupon_code;
-            $coupon = Coupon::where('code', $coupon_code)->first();
+            $coupon = Coupon::where('id', $coupon_code)->first();
 
             $status = $coupon_code ? 400 : 200;
             if ($coupon) {

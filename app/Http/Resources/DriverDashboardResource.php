@@ -41,7 +41,8 @@ class DriverDashboardResource extends JsonResource
                 }
 
                 if ($on_ride_request->coupon_code) {
-                    $response = verify_coupon_code($on_ride_request->coupon_code);
+                    $on_ride_coupon_code = Coupon::where('id', $on_ride_request->coupon_code)->value('code');
+                    $response = verify_coupon_code($on_ride_coupon_code);
 
                     if ($response['status'] != 200) {
                         return json_custom_response($response, $response['status']);
@@ -72,7 +73,7 @@ class DriverDashboardResource extends JsonResource
 
                 $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
                 $coupon_code = $on_ride_request->coupon_code;
-                $coupon = Coupon::where('code', $coupon_code)->first();
+                $coupon = Coupon::where('id', $coupon_code)->first();
 
                 $status = $coupon_code ? 400 : 200;
                 if ($coupon) {

@@ -46,6 +46,17 @@ class PushNotificationDataTable extends DataTable
             })
             ->addIndexColumn()
             ->addColumn('action', 'push_notification.action')
+            ->filterColumn('usertype', function ($query, $keyword) {
+                $query->where(function ($query) use ($keyword) {
+                    if (stripos(__('message.both'), $keyword) !== false) {
+                        $query->where('for_rider', 1)->where('for_driver', 1);
+                    } elseif (stripos(__('message.rider'), $keyword) !== false) {
+                        $query->where('for_rider', 1)->where('for_driver', 0);
+                    } elseif (stripos(__('message.driver'), $keyword) !== false) {
+                        $query->where('for_rider', 0)->where('for_driver', 1);
+                    }
+                });
+            })
             ->order(function ($query) {
                 if (request()->has('order')) {
                     $order = request()->order[0];
