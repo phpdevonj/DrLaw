@@ -84,8 +84,8 @@ class DriverDocumentDataTable extends DataTable
     public function query()
     {
         $model = DriverDocument::myDocument();//->orderBy('id','desc');
-        if (!empty(request()->driver_id)) {
-            $model->where('driver_id', request()->driver_id);
+        if (!empty(request()->driver_id) || $this->driver_id) {
+            $model->where('driver_id', request()->driver_id ?? $this->driver_id);
         }
 
         if (request()->document_id) {

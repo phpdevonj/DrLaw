@@ -29,6 +29,9 @@
                         <li class="nav-item">
                             <a href="{{ route('driver.show', [ $data->id, 'type' => 'ride_request']) }}" class="nav-link {{ $type == 'ride_request' ? 'active': '' }}"> {{ __('message.riderequest') }} </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('driver.show', [ $data->id, 'type' => 'document']) }}" class="nav-link {{ $type == 'document' ? 'active': '' }}"> {{ __('message.document') }} </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -357,10 +360,24 @@
                 </div>
             </div>
         @endif
+        @if( $type == 'document' )
+            <div class="col-md-12">
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">{{ __('message.list_form_title', [ 'form' => __('message.driver_document') ]) }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {{ $dataTable->table(['class' => 'table  w-100'],false) }}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div> 
 </div>
 @section('bottom_script')
-    {{ in_array($type,['wallet_history','ride_request']) ? $dataTable->scripts() : '' }}
+    {{ in_array($type,['wallet_history','ride_request','document']) ? $dataTable->scripts() : '' }}
     <script type="text/javascript">
         (function($) {
             "use strict";

@@ -15,6 +15,7 @@ use App\DataTables\WalletHistoryDataTable;
 use App\DataTables\DriverEarningDataTable;
 use App\DataTables\RideRequestDataTable;
 use Illuminate\Support\Facades\DB;
+use App\DataTables\DriverDocumentDataTable;
 
 class DriverController extends Controller
 {
@@ -100,7 +101,7 @@ class DriverController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(WalletHistoryDataTable $dataTable,RideRequestDataTable $rideRequestDataTable, $id)
+    public function show(WalletHistoryDataTable $dataTable,RideRequestDataTable $rideRequestDataTable, DriverDocumentDataTable $driverDocumentDataTable, $id)
     {
         $pageTitle = __('message.view_form_title',[ 'form' => __('message.driver')]);
         $data = User::where('user_type', 'driver')->with('roles','userDetail', 'userBankAccount')->findOrFail($id);
@@ -156,6 +157,10 @@ class DriverController extends Controller
 
                 case 'ride_request':
                     return $rideRequestDataTable->with('driver_id',$id)->render('driver.show', compact('pageTitle', 'data', 'profileImage', 'type' ));
+                break;
+
+                case 'document':
+                    return $driverDocumentDataTable->with('driver_id',$id)->render('driver.show', compact('pageTitle', 'data', 'profileImage', 'type' ));
                 break;
 
             default:
