@@ -10,6 +10,7 @@ use App\Http\Requests\RiderRequest;
 use App\DataTables\RideRequestDataTable;
 use App\DataTables\WalletHistoryDataTable;
 use App\DataTables\WithdrawRequestDataTable;
+use App\DataTables\PointHistoryDataTable;
 
 class RiderController extends Controller
 {
@@ -69,7 +70,7 @@ class RiderController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(RideRequestDataTable $dataTable, WalletHistoryDataTable $walletHistoryDataTable, WithdrawRequestDataTable $WithdrawRequestDataTable, $id)
+    public function show(RideRequestDataTable $dataTable, WalletHistoryDataTable $walletHistoryDataTable, WithdrawRequestDataTable $WithdrawRequestDataTable, PointHistoryDataTable $pointHistoryDataTable, $id)
     {
         $pageTitle = __('message.view_form_title',[ 'form' => __('message.rider')]);
         $data = User::where('user_type', 'rider')->with('roles','userBankAccount')->findOrFail($id);
@@ -77,28 +78,34 @@ class RiderController extends Controller
 
         $profileImage = getSingleMedia($data, 'profile_image');
 
+        $loyalty_program = SettingData('ride', 'loyalty_program') ?? 0;
+
         $type = request('type') ?? 'detail';
         switch ($type) {
             case 'detail':
-                    return view('rider.show', compact('pageTitle', 'data', 'profileImage','type'));
+                    return view('rider.show', compact('pageTitle', 'data', 'profileImage','type','loyalty_program'));
                 break;
                 
             case 'wallet_history':
-                    return $walletHistoryDataTable->with('user_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type'));
+                    return $walletHistoryDataTable->with('user_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type','loyalty_program'));
+                break;
+
+            case 'points_history':
+                    return $pointHistoryDataTable->with('user_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type','loyalty_program'));
                 break;
             
             case 'ride_request':
-                    return $dataTable->with('rider_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type'));
+                    return $dataTable->with('rider_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type','loyalty_program'));
                 break;
 
             case 'withdraw_request':
-                    return $WithdrawRequestDataTable->with('rider_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type'));
+                    return $WithdrawRequestDataTable->with('rider_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type','loyalty_program'));
                 break;
             
             default:
                 # code...
                 $type = 'detail';
-                return view('rider.show', compact('pageTitle', 'data', 'profileImage','type'));
+                return view('rider.show', compact('pageTitle', 'data', 'profileImage','type','loyalty_program'));
                 break;
         }
 

@@ -23,6 +23,11 @@
                         <li class="nav-item">
                             <a href="{{ route('rider.show', [ $data->id, 'type' => 'wallet_history']) }}" class="nav-link {{ $type == 'wallet_history' ? 'active': '' }}"> {{ __('message.wallethistory') }} </a>
                         </li>
+                        @if($loyalty_program == 1)
+                        <li class="nav-item">
+                            <a href="{{ route('rider.show', [ $data->id, 'type' => 'points_history']) }}" class="nav-link {{ $type == 'points_history' ? 'active': '' }}"> {{ __('message.pointshistory') }} </a>
+                        </li>
+                        @endif
                         <li class="nav-item">
                             <a href="{{ route('rider.show', [ $data->id, 'type' => 'ride_request']) }}" class="nav-link {{ $type == 'ride_request' ? 'active': '' }}"> {{ __('message.riderequest') }} </a>
                         </li>
@@ -244,6 +249,71 @@
                 </div>
             </div>
         @endif
+
+        @if( $type == 'points_history' && $loyalty_program == 1)
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card card-block border-radius-20">
+                            <div class="card-body">
+                                <div class="top-block-one">                                
+                                    <p class="mb-1">{{ __('message.points_balance') }}</p>
+                                    <p></p>
+                                    <h5>{{ getPointFormat(optional($data->userPoint)->total_points) ?? 0 }} </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">{{ __('message.add_form_title', [ 'form' => __('message.points') ]) }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {!! Form::open(['route' => ['savepoints.fund', $data->id], 'method' => 'post' ]) !!}
+                            <div class="row">
+                                <div class="form-group col-md-4">
+                                    {{ Form::label('type', __('message.type').' <span class="text-danger">*</span>',[ 'class' => 'form-control-label' ], false) }}
+                                    {{ Form::select('type', [ 'credit' => __('message.credit'), 'debit' => __('message.debit') ], old('type'), [ 'class' => 'form-control select2js', 'required']) }}
+                                </div>
+
+                                <div class="form-group col-md-8">
+                                    {{ Form::label('transaction_type', __('message.transaction_type').' <span class="text-danger">*</span>',[ 'class' => 'form-control-label' ], false) }}
+                                    {{ Form::select('points_transaction_type', [ 'manual_adjustment' => __('message.manual_adjustment')], old('type'), [ 'class' => 'form-control select2js', 'required']) }}
+                                </div>
+
+                                <div class="form-group col-md-12">
+                                    {{ Form::label('amount', __('message.amount').' <span class="text-danger">*</span>', ['class' => 'form-control-label' ], false ) }}
+                                    {{ Form::number('amount', old('amount'), [ 'class' => 'form-control', 'min' => 0, 'step' => 'any', 'required', 'placeholder' => __('message.amount') ]) }}
+                                </div>
+
+                                <div class="form-group col-md-12">
+                                    {{ Form::label('description', __('message.description'), ['class' => 'form-control-label']) }}
+                                    {{ Form::textarea('description', null, [ 'class' => 'form-control textarea', 'rows' => 2, 'placeholder' => __('message.description') ]) }}
+                                </div>
+                            </div>
+                            <hr>
+                            {{ Form::submit( __('message.save'), ['class'=>'btn btn-md btn-primary float-right' ]) }}
+                        {!! Form::close() !!}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">{{ __('message.list_form_title', [ 'form' => __('message.pointshistory') ]) }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {{ $dataTable->table(['class' => 'table  w-100'],false) }}
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         @if( $type == 'ride_request' )
             <div class="col-md-12">
                 <div class="card card-block border-radius-20">
@@ -275,7 +345,7 @@
     </div> 
 </div>
 @section('bottom_script')
-    {{ in_array($type,['ride_request','wallet_history','withdraw_request']) ? $dataTable->scripts() : '' }}
+    {{ in_array($type,['ride_request','wallet_history','withdraw_request','points_history']) ? $dataTable->scripts() : '' }}
     <script type="text/javascript">
         (function($) {
             "use strict";

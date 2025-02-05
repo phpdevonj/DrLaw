@@ -1305,6 +1305,20 @@ function getPriceFormat($price)
     return $price;
 }
 
+function getPointFormat($points)
+{
+    if (gettype($points) == 'string') {
+        return $points;
+    }
+    if($points === null){
+        $points = 0;
+    }
+    
+    $points = number_format( (float) $points, 2,'.','');
+
+    return $points;
+}
+
 function verify_coupon_code($coupon_code)
 {
     $coupon = Coupon::where('code', $coupon_code)->first();

@@ -110,6 +110,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('frontenddata-save',[ App\Http\Controllers\FrontendDataController::class, 'store' ]);
     Route::get('get-appsetting', [API\UserController::class, 'getAppSetting']);
     Route::post('update-appsetting', [App\Http\Controllers\SettingController::class, 'updateAppSetting']);
+    
+    // Loyalty Points
+    Route::get('point-detail', [ API\PointController::class, 'getPointDetail'] );
+    Route::get('point-list', [ API\PointController::class, 'getList'] );
+    Route::post('point-withdraw', [ API\PointController::class, 'pointWithdraw'] );
 });
 
 Route::get('place-autocomplete-api', [ API\RideRequestController::class, 'placeAutoComplete' ] );

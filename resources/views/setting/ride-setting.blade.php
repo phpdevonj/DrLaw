@@ -50,6 +50,27 @@
                                 {{ Form::label('apply_additional_fee_no', __('message.no'), ['class' => 'custom-control-label' ]) }}
                             </div>
                         </div>
+                    @elseif( $key == 'loyalty_program' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        @php
+                            $value = isset($value) ? $value : 0;
+                        @endphp
+                        <div class="d-block">
+                            <div class="custom-control custom-radio custom-control-inline col-2">
+                                {{ Form::radio('loyalty_program', '1' , $value == 1 ? true : '' , ['class' => 'custom-control-input', 'id' => 'loyalty_program_yes' ]) }}
+                                {{ Form::label('loyalty_program_yes', __('message.yes'), ['class' => 'custom-control-label' ]) }}
+                            </div>
+                            <div class="custom-control custom-radio custom-control-inline col-2">
+                                {{ Form::radio('loyalty_program', '0' , $value == 0 ? true : '', ['class' => 'custom-control-input', 'id' => 'loyalty_program_no' ]) }}
+                                {{ Form::label('loyalty_program_no', __('message.no'), ['class' => 'custom-control-label' ]) }}
+                            </div>
+                        </div>
+                    @elseif( $key == 'point_ratio' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Point ratio', 'class' => 'form-control' ]) }}
+                    @elseif( $key == 'point_value' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Point value', 'class' => 'form-control' ]) }}
                     @else
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         {{ Form::number($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'min' => 0, 'step' => 'any', 'class' => 'form-control' ]) }}

@@ -26,6 +26,8 @@ use App\Models\Screen;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
+use App\Models\Point as RiderPoints;
+use App\Models\PointHistory;
 
 class HomeController extends Controller
 {
@@ -707,5 +709,37 @@ class HomeController extends Controller
         $mqtt->subscribe($topic, function ($topic, $message) {
             echo sprintf("Received message on topic [%s]: %s\n", $topic, $message);
         }, 0);
+    }
+
+    // save points
+    public function savePointsHistory(Request $request, $userId){
+        $data = $request->all();
+
+        $points = RiderPoints::firstOrCreate(['user_id'=> $userId]);
+
+        if($data['type'] == 'credit'){
+            $total_points = $points['total_points'] + $data['amount'];
+        }
+
+        if($data['type'] == 'debit'){
+            $total_points = $points['total_points'] - $data['amount'];
+        }
+        
+        $points->total_points = $total_points;
+
+        try{
+            DB::beginTransaction();
+            $points->save();
+            $data['user_id'] = $points->user_id;
+            $data['transaction_type'] = $data['points_transaction_type'];
+            $data['balance'] = $total_points;
+            $data['datetime'] = date('Y-m-d H:i:s');
+            $result = PointHistory::create($data);  
+            DB::commit();
+        }catch(\Exception $e){
+            DB::rollback();
+            return $e;
+        }
+        return redirect()->back()->withSuccess(__('message.transaction_submitted'));
     }
 }

@@ -198,6 +198,8 @@ Route::group(['middleware' => ['auth', 'verified', 'admin']], function()
 
     Route::get('download-withdrawrequest-list', [ WithdrawRequestController::class, 'downloadWithdrawRequestList'])->name('download.withdrawrequest.list');
 
+    // Loyalty Points
+    Route::post('save-points-fund/{user_id}', [ HomeController::class, 'savePointsHistory'] )->name('savepoints.fund');
 });
 
 Route::get('/ajax-list',[ HomeController::class, 'getAjaxList' ])->name('ajax-list');

@@ -50,6 +50,9 @@ return [
         'apply_additional_fee'  => '',
         'surge_price'  => '',
         'is_bidding'  => '',
+        'loyalty_program'  => '',
+        'point_ratio'  => '',
+        'point_value'  => '',
     ],
     'ride_status' => ['new_ride_requested', 'no_drivers_available', 'accepted', 'arriving', 'arrived', 'in_progress', 'canceled', 'completed' , 'sos'],
     'notification' => [

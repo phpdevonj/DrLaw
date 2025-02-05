@@ -19,6 +19,9 @@ use App\Models\SurgePrice;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Support\Facades\Http;
 use Validator;
+use App\Models\Point as RiderPoints;
+use App\Models\PointHistory;
+use Illuminate\Support\Facades\DB;
 
 class RideRequestController extends Controller
 {
@@ -317,6 +320,12 @@ class RideRequestController extends Controller
         saveRideHistory($history_data);
         // update driver is_available
         $ride_request->driver->update(['is_available' => 1]);
+
+        $loyalty_program = SettingData('ride', 'loyalty_program') ?? 0;
+        if($loyalty_program){
+            // transfer loyalty points to rider account
+            $this->transferLoyaltyPointToRiderAccount($ridefee['subtotal'], $ride_request->rider_id, $ride_request->id);
+        }
         return json_message_response( __('message.ride.completed'));
     }
 
@@ -553,6 +562,40 @@ class RideRequestController extends Controller
             }
         } catch (\Exception $e) {
             \Log::error('Error updating Firestore document for Ride: ' . $e->getMessage());
+        }
+    }
+
+    public function transferLoyaltyPointToRiderAccount($subtotal, $userId, $ride_request_id){
+        if(empty($subtotal)){
+            return json_custom_response('Ride amount is required.');
+        }
+        $point_ratio = SettingData('ride', 'point_ratio') ?? 0;
+        $points = $subtotal * ($point_ratio/100);
+
+        $point_data = RiderPoints::firstOrCreate(['user_id'=>$userId]);
+
+        $total_points = $point_data->total_points + $points;
+
+        $point_data->total_points  = $total_points;
+
+        try{
+            DB::beginTransaction();
+            $point_data->save();
+            $point_history = [
+                'user_id' => $userId,
+                'ride_request_id' => $ride_request_id ?? null,
+                'type' => 'credit',
+                'transaction_type' => 'earned',
+                'amount' => $points,
+                'balance' => $total_points,
+                'datetime' => date('Y-m-d H:i:s')
+            ];
+            $result = PointHistory::create($point_history);
+            DB::commit();
+            return true;
+        }catch(\Exception $e){
+            DB::rollback();
+            return json_custom_response($e);
         }
     }
 }
