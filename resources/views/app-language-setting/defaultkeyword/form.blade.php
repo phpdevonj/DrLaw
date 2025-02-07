@@ -20,7 +20,7 @@
                 </div>
                 <div class="form-group col-md-12">
                     {{ Form::label('keyword_name', __('message.keyword_title') . ' <span class="text-danger">*</span>', ['class' => 'form-control-label'], false) }}
-                    {{ Form::text('keyword_name', old('keyword_name'), ['placeholder' => __('message.keyword_title'), 'class' => 'form-control', 'required', 'readonly' => true]) }}
+                    {{ Form::text('keyword_name', old('keyword_name'), ['placeholder' => __('message.keyword_title'), 'class' => 'form-control', 'required']) }}
                 </div>
                 <div class="form-group col-md-12">
                     {{ Form::label('keyword_value', __('message.keyword_value') . ' <span class="text-danger">*</span>', ['class' => 'form-control-label'], false) }}

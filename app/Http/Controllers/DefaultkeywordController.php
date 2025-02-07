@@ -68,7 +68,7 @@ class DefaultkeywordController extends Controller
         }
         $requestData = $request->all();
         $requestData['keyword_name'] = str_replace(' ', '_', $requestData['keyword_name']);
-        $keywordData = DefaultKeyword::create($request->all());
+        $keywordData = DefaultKeyword::create($requestData);
     
         $language = LanguageList::all();
         if(count($language) > 0){

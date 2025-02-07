@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 class PointController extends Controller
 {
     public function getPointDetail(Request $request){
-        $points_data = Point::where('user_id', 8)->first();
+        $points_data = Point::where('user_id', auth()->user()->id)->first();
 
         if( $points_data == null ) {
             $message = __('message.not_found_entry',['name' => __('message.points')]);
@@ -28,7 +28,7 @@ class PointController extends Controller
     }
     
     public function getList(Request $request){
-        $point_history = PointHistory::scopemyPointHistory();
+        $point_history = PointHistory::myPointHistory();
 
         $point_history->when(request('user_id'), function ($q) {
             return $q->where('user_id', request('user_id'));

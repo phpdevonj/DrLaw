@@ -31,12 +31,16 @@ class DefaultKeywordRequest extends FormRequest
         switch ($method) {
             case 'post':
                 $rules = [
+                    'keyword_name' => 'required',
                     'keyword_value' => 'required',
+                    'screen_id' => 'required',
                 ];
                 break;
             case 'patch':
                 $rules = [
+                    'keyword_name' => 'required',
                     'keyword_value' => 'required',
+                    'screen_id' => 'required',
                 ];
                 break;
         }
@@ -46,7 +50,10 @@ class DefaultKeywordRequest extends FormRequest
 
     public function messages()
     {
-        return [];
+        return [
+            'keyword_name.required'  =>'The keyword title field is required.',
+            'screen_id.required'  =>'The screen name field is required.',
+        ];
     }
     /**
      * @param Validator $validator
