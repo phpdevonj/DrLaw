@@ -86,8 +86,9 @@ class PointController extends Controller
             return json_message_response($message,400); 
         }       
 
-        $point_conversion_value =  SettingData('ride', 'point_value') ?? 0;
-        $converted_amount = $requested_points*$point_conversion_value;
+        $point_to_currency_value =  SettingData('ride', 'point_value') ?? 0;
+        $converted_amount = $requested_points/$point_to_currency_value;
+        $converted_amount = getPointFormat($converted_amount);
 
         // Deduct points and credit wallet
         $total_points = $points->total_points - $requested_points;

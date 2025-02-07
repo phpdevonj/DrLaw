@@ -570,7 +570,8 @@ class RideRequestController extends Controller
             return json_custom_response('Ride amount is required.');
         }
         $point_ratio = SettingData('ride', 'point_ratio') ?? 0;
-        $points = $subtotal * ($point_ratio/100);
+        $point_value = SettingData('ride', 'point_value') ?? 0;
+        $points = ($subtotal * ($point_ratio/100))*$point_value;
 
         $point_data = RiderPoints::firstOrCreate(['user_id'=>$userId]);
 
