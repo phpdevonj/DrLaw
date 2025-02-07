@@ -64,7 +64,8 @@ class PointController extends Controller
         $loyalty_program = SettingData('ride', 'loyalty_program') ?? 0;
 
         if(!$loyalty_program){
-            return json_custom_response(__('message.loyalty_not_enabled'));            
+            $message = __('message.loyalty_not_enabled');
+            return json_message_response($message,400);          
         }
 
         $data = $request->all();
@@ -76,11 +77,13 @@ class PointController extends Controller
         $wallet = Wallet::firstOrCreate([ 'user_id' => $user_id ]);
 
         if($points->total_points < $requested_points){
-            return json_custom_response(__('message.insufficient_points'));            
+            $message = __('message.insufficient_points');
+            return json_message_response($message,400);            
         }
 
         if(($data['type'] ?? '') !== 'debit'){
-            return json_custom_response(__('message.invalid_transaction_type'));
+            $message = __('message.invalid_transaction_type');
+            return json_message_response($message,400); 
         }       
 
         $point_conversion_value =  SettingData('ride', 'point_value') ?? 0;
@@ -118,6 +121,11 @@ class PointController extends Controller
             return json_custom_response($e);
         }
 
-        return json_custom_response(__('message.withdraw_points'));        
+        $message = __('message.withdraw_points');
+        $response = [
+            'message' => $message
+        ];
+
+        return json_custom_response($response);        
     }
 }
