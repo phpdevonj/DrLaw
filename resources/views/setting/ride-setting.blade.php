@@ -71,6 +71,9 @@
                     @elseif( $key == 'point_value' )
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Point value', 'class' => 'form-control' ]) }}
+                    @elseif( $key == 'min_points_withdrawal' )
+                    {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                    {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Minimum Points for Withdrawal', 'class' => 'form-control' ]) }}
                     @else
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         {{ Form::number($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'min' => 0, 'step' => 'any', 'class' => 'form-control' ]) }}

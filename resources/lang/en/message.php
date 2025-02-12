@@ -632,6 +632,7 @@ return array(
     'loyalty_program'  => 'Loyalty Program',
     'point_ratio'  => 'Point Ratio',
     'point_value'  => 'Point Value',
+    'min_points_withdrawal'  => 'Minimum Points for Withdrawal',
     'pointshistory'  => 'Points History',
     'points_balance' => 'Points Balance',
     'points' => 'Points',

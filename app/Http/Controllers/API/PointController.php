@@ -62,6 +62,7 @@ class PointController extends Controller
 
     public function pointWithdraw(Request $request){
         $loyalty_program = SettingData('ride', 'loyalty_program') ?? 0;
+        $min_points_withdrawal = SettingData('ride', 'min_points_withdrawal') ?? 0;
 
         if(!$loyalty_program){
             $message = __('message.loyalty_not_enabled');
@@ -71,6 +72,11 @@ class PointController extends Controller
         $data = $request->all();
         $user_id = request()->user_id ?? auth()->user()->id;
         $requested_points = $data['points'] ?? 0;
+
+        if($requested_points < $min_points_withdrawal){
+            $message = "You need at least {$min_points_withdrawal} points to withdraw.";
+            return json_message_response($message,400); 
+        }
 
         // Fetch user's points and wallet
         $points = Point::firstOrCreate(['user_id'=> $user_id ]);
