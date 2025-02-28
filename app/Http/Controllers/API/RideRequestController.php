@@ -599,4 +599,47 @@ class RideRequestController extends Controller
             return json_custom_response($e);
         }
     }
+
+    /**
+     * Get scheduled rides list
+     */
+    public function getScheduleRidesList(Request $request){
+        $schedule_rides = RideRequest::where('status', 'scheduled')->where('is_schedule', 1);
+
+        $schedule_rides->when(request('service_id'), function ($q) {
+            return $q->where('service_id', request('service_id'));
+        });
+        
+        $schedule_rides->when(request('rider_id'), function ($q) {
+            return $q->where('rider_id',request('rider_id'));
+        });
+        
+        $schedule_rides->when(request('driver_id'), function ($query) {
+            return $query->whereHas('driver',function ($q) {
+                $q->where('driver_id',request('driver_id'));
+            });
+        });
+
+        $order = 'desc';
+        $per_page = config('constant.PER_PAGE_LIMIT');
+        if( $request->has('per_page') && !empty($request->per_page)){
+            if(is_numeric($request->per_page))
+            {
+                $per_page = $request->per_page;
+            }
+            if($request->per_page == -1 ){
+                $per_page = $schedule_rides->count();
+            }
+        }
+
+        $schedule_rides = $schedule_rides->orderBy('datetime',$order)->paginate($per_page);
+        $items = RideRequestResource::collection($schedule_rides);
+
+        $response = [
+            'pagination' => json_pagination_response($items),
+            'data' => $items,
+        ];
+
+        return json_custom_response($response);
+    }
 }

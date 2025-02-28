@@ -20,6 +20,9 @@ use App\Models\RideRequestBid;
 use App\Models\Setting;
 use App\Models\SurgePrice;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use App\Models\User;
+use App\Notifications\CommonNotification;
 
 class RideRequestController extends Controller
 {
@@ -595,5 +598,235 @@ class RideRequestController extends Controller
             'success' => false,
             'message' => 'Invalid drop index'
         ], 400);
+    }
+
+    /**
+     * Scheduled rides for the authenticated rider
+     */
+    public function saveScheduleRide(Request $request){
+        $data = $request->all();
+        $service = Service::with('region')->where('id',$request->service_id)->first();
+
+        // Check if this is a scheduled ride
+        if ($request->has('is_schedule') && $request->is_schedule == 1) {
+            // Validate schedule datetime
+            if(!$request->has('datetime')){
+                return json_message_response(__('message.ride.schedule_datetime_required'), 400);
+            }
+
+            if(!$request->has('timezone')){
+                return json_message_response(__('message.ride.timezone_required'), 400);
+            }
+
+            $riderTimezone = $request->timezone;
+            $riderScheduleDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $request->datetime, $riderTimezone);
+            
+            // Ensure schedule time is in the future
+            if($riderScheduleDateTime->isPast()){
+                return json_message_response(__('message.ride.schedule_time_must_be_future'), 400);
+            }
+
+            // Check if schedule time is at least 60 mins in advance
+            $minScheduleTime = now()->addMinutes(60);
+            if($riderScheduleDateTime->lt($minScheduleTime)){
+                return json_message_response(__('message.ride.schedule_minimum_time_required'), 400);
+            }
+            
+            $data['datetime'] = $request->datetime; // store schedule dateTime in rider timezone
+            $data['scheduled_at'] = Carbon::createFromFormat('Y-m-d H:i:s', $request->datetime, $riderTimezone)->setTimezone('UTC')->toDateTimeString(); // store schedule dateTime in UTC
+
+            $data['is_schedule'] = 1;
+            $data['status'] = 'scheduled';
+        }
+        
+        $coupon_code = $request->coupon_code;
+
+        if( $coupon_code != null ) {
+            $coupon = Coupon::where('code', $coupon_code)->first();
+            $status = isset($coupon_code) ? 400 : 200;
+        
+            if($coupon != null) {
+                $status = Coupon::isValidCoupon($coupon);
+            }
+            if( $status != 200 ) {
+                $response = couponVerifyResponse($status);
+                return json_custom_response($response,$status);
+            } else {
+                $data['coupon_code'] = $coupon->id;
+                $data['coupon_data'] = $coupon;
+            }
+        }
+
+        $data['distance_unit'] = $service->region->distance_unit ?? 'km';
+        if (isset($data['multi_location'])) {
+            $data['multi_drop_location'] = json_encode($data['multi_location']);
+        }
+        $data['ride_has_bid'] = $request->ride_type == 'with_bidding' ? 1 : 0;
+        $result = RideRequest::create($data);
+
+        $message = __('message.save_form', ['form' => __('message.riderequest')]);        
+        
+        $history_data = [
+            'ride_request_id' => $result->id,
+            'history_type'    => $result->status,
+            'ride_request'    => $result,
+            'driver_ids'      => $result,
+        ];
+        saveRideHistory($history_data);
+        
+        if($request->is('api/*')) {
+            $response = [
+                'riderequest_id' => $result->id,
+                'message' => $message
+            ];
+            return json_custom_response($response);
+        }
+
+        return redirect()->route('riderequest.index')->withSuccess($message);
+    }
+
+    /**
+     * Cancel a scheduled ride
+     */
+    public function cancelScheduledRide(Request $request, $id)
+    {
+        $ride = RideRequest::where('id', $id)->where('status', 'scheduled')->where('is_schedule', 1)->first();
+
+        if (!$ride) {
+            return json_message_response(__('message.ride.scheduled_ride_not_found'), 404);
+        }        
+
+        
+        $user = auth()->user();  
+        // Rider has permission to cancel his schedule rides
+        if(!$user->hasRole('admin') && $user->id !== $ride->rider_id) {
+            return json_message_response(__('message.ride.unauthorized_action'), 403);
+        }
+
+        // Don't allow cancellation if less than 30 mins before scheduled time
+        $scheduleTime = \Carbon\Carbon::parse($ride->datetime);
+        if ($scheduleTime->diffInMinutes(now()) < 30) {
+            return json_message_response(__('message.ride.too_late_to_cancel_scheduled_ride'), 400);
+        }
+
+        $ride->status = 'canceled';
+        $ride->cancel_by = $user->user_type;
+        $ride->reason = $request->cancel_reason;
+        $ride->save();
+
+        $history_data = [
+            'history_type' => 'canceled',
+            'ride_request_id' => $ride->id,
+            'ride_request' => $ride,
+        ];
+        saveRideHistory($history_data);
+
+        if ($request->is('api/*')) {
+            return json_message_response(__('message.ride.scheduled_ride_cancelled_successfully'));
+        }
+
+        return redirect()->back()->withSuccess(__('message.ride.scheduled_ride_cancelled_successfully'));
+    }
+
+    /**
+     * Accept a scheduled ride
+     */
+    public function acceptScheduleRide(Request $request, $id){
+        $riderequest = RideRequest::find($id);
+
+        if($riderequest == null) {
+            $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+            return json_message_response($message);
+        }
+
+        if($riderequest->status != 'scheduled' ) {
+            $message = __('message.ride.riderequest_status_is_not_scheduled');
+            return json_message_response($message,400);
+        }
+
+        if($riderequest->driver_id != null ) {
+            $message = __('message.ride.driver_assigned');
+            return json_message_response($message,400);
+        }
+
+        $user = auth()->user();
+        // Driver has permission to accept the schedule rides
+        if(!$user->hasRole('driver')){
+            return json_message_response(__('message.ride.unauthorized_action'), 403);
+        }
+
+        if(!request()->has('is_accept') && request('is_accept') == 0 ) {
+            $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+            return json_message_response($message,400);
+        }
+
+        $riderequest->driver_id = request('driver_id');
+        $riderequest->status = 'driver_accepted';
+        $riderequest->max_time_for_find_driver_for_ride_request = 0;
+        $riderequest->otp = rand(1000, 9999);
+        $riderequest->riderequest_in_driver_id = null;
+        $riderequest->riderequest_in_datetime = null;
+        $riderequest->save();
+        $result = $riderequest;
+    
+        $history_data = [
+            'history_type'      => 'driver_accepted',
+            'ride_request_id'   => $result->id,
+            'ride_request'      => $result,
+        ];
+    
+        saveRideHistory($history_data);
+        //$riderequest->driver->update(['is_available' => 0]);
+        
+        $message = __('message.updated');
+        if( $result->driver_id == null ) {
+            $message = __('message.save_form',[ 'form' => __('message.riderequest') ] );
+        }
+        if($request->is('api/*')) {
+            $response = [
+                'ride_request_id' => $result->id,
+                'message' => $message
+            ];
+            return json_custom_response($response);
+        }
+    }
+    /**
+     * Assiged driver to schedule rides
+     */
+    public function assignDriverToScheduleRide(Request $request, $id){
+        $riderequest = RideRequest::find($id);
+
+        if($riderequest == null) {
+            $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+            return json_message_response($message);
+        }
+
+        if($riderequest->status != 'scheduled' ) {
+            $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+            return json_message_response($message,400);
+        }
+
+        $riderequest->update([
+            'riderequest_in_driver_id' => $request->driver_id,
+            'riderequest_in_datetime' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
+
+        // Send notification to the assigned driver
+        $notification_data = [
+            'id' => $riderequest->id,
+            'type' => 'scheduled',
+            'data' => [
+                'rider_id' => $riderequest->rider_id,
+                'rider_name' => optional($riderequest->rider)->display_name ?? '',
+            ],
+            'message' => __('message.scheduled'),
+            'subject' => __('message.ride.scheduled'),
+        ];
+
+        $driver = User::find($request->driver_id);
+        $driver->notify(new CommonNotification($notification_data['type'], $notification_data));
+
+        $message = __('message.ride.driver_assigned_to_schedule_riderequest'); 
+        return redirect()->route('riderequest.index')->withSuccess($message);
     }
 }

@@ -116,6 +116,10 @@ class RideRequestDataTable extends DataTable
                 return dateAgoFormate($query->created_at, true);
             })
 
+            ->addColumn('is_schedule', function ($query) {
+                return $query->is_schedule == 1 ? 'Yes' : 'No';
+            })
+
             ->addColumn('invoice', function ($query) {
                 return $query->status == 'completed' ? '<a href="' . route('ride-invoice', $query->id) . '"><i class="ri-download-2-line" style="font-size:25px"></i></a>' : 'N/A';
             })
@@ -159,7 +163,7 @@ class RideRequestDataTable extends DataTable
         }
     
         $riderequest_type = request('riderequest_type');
-        if (in_array($riderequest_type, ['pending', 'canceled', 'completed', 'new_ride_requested'])) {
+        if (in_array($riderequest_type, ['pending', 'canceled', 'completed', 'new_ride_requested','scheduled'])) {
             $model->where('status', $riderequest_type);
         }
     
@@ -213,6 +217,7 @@ class RideRequestDataTable extends DataTable
             Column::computed('invoice')->addClass('text-center'),
             Column::make('created_at')->title( __('message.created_at') ),
             Column::make('status')->title( __('message.status') ),
+            Column::make('is_schedule')->title( __('message.ride.is_schedule') ),
             Column::computed('action')
                   ->exportable(false)
                   ->printable(false)

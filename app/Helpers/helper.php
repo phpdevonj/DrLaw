@@ -161,6 +161,22 @@ function saveRideHistory($data)
     $ride_request_id = $data['ride_request']->id;
     $ride_request = RideRequest::find($ride_request_id);
     switch ($data['history_type']) {
+        case 'scheduled':
+            $data['history_message'] = __('message.ride.scheduled');
+            $history_data = [
+                'rider_id' => $ride_request->rider_id,
+                'rider_name' => optional($ride_request->rider)->display_name ?? '',
+            ];
+            $sendTo = ['admin', 'rider'];
+            break;
+        case 'driver_accepted':
+            $data['history_message'] = __('message.ride.driver_accepted');
+            $history_data = [
+                'driver_id' => $ride_request->driver_id,
+                'driver_name' => optional($ride_request->driver)->display_name ?? '',
+            ];
+            $sendTo = ['admin', 'rider'];
+            break;
         case 'new_ride_requested':
             $data['history_message'] = __('message.ride.new_ride_requested');
             $history_data = [
@@ -445,7 +461,7 @@ function saveRideHistory($data)
 
             if ($user != null) {
                 if ($send != 'driver') {
-                    if ($data['history_type'] != 'new_ride_requested') {
+                    if ($data['history_type'] != 'new_ride_requested' && $data['history_type'] != 'scheduled' && $data['history_type'] != 'driver_accepted') {
                         try {
                             $document_name = 'ride_' . $ride_request->id;
                             $firebaseData = app('firebase.firestore')->database()->collection('rides')->document($document_name);

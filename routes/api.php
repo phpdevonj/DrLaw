@@ -115,6 +115,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('point-detail', [ API\PointController::class, 'getPointDetail'] );
     Route::get('point-list', [ API\PointController::class, 'getList'] );
     Route::post('point-withdraw', [ API\PointController::class, 'pointWithdraw'] );
+
+    // Ride schedule
+    Route::post('schedule-riderequest', [ App\Http\Controllers\RideRequestController::class, 'saveScheduleRide'] );
+    Route::get('getScheduleRidesList', [ API\RideRequestController::class, 'getScheduleRidesList'] );
+    Route::post('cancel-scheduled-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'cancelScheduledRide']);
+    Route::post('accept-schedule-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'acceptScheduleRide']);
 });
 
 Route::get('place-autocomplete-api', [ API\RideRequestController::class, 'placeAutoComplete' ] );
