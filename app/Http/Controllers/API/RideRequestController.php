@@ -50,7 +50,9 @@ class RideRequestController extends Controller
         $riderequest->when(request('status'), function ($query) {
             if( request('status') == 'upcoming' ) {
                 return $query->where('datetime', '>=', Carbon::now()->format('Y-m-d H:i:s'));
-            } else if( request('status') == 'canceled' ) {
+            }else if( request('status') == 'history' ) {
+                return $query->where('datetime', '<', Carbon::now()->format('Y-m-d H:i:s'));
+            }  else if( request('status') == 'canceled' ) {
                 return $query->whereIn('status',['canceled']);
             } else {
                 return $query->where('status', request('status'));
