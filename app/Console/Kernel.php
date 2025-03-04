@@ -28,6 +28,9 @@ class Kernel extends ConsoleKernel
         // $schedule->command('find_driver:for_regular_ride')->everyMinute();
         // $schedule->command('ride:find-nearby-driver')->everyMinute();
         $schedule->command('ride:assign-drivers-for-regular-rides')->everyMinute();
+        $schedule->command('scheduleride:assign-drivers-for-schedule-rides')->everyMinute();
+        $schedule->command('scheduleride:process-schedule-rides')->everyMinute();
+        $schedule->command('scheduleride:send-notifications')->everyFifteenMinutes();
     }
 
     /**

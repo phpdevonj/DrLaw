@@ -380,6 +380,38 @@
                         </div>
                     </div>
                 </div>
+
+                @if(empty($data->driver_id) && $data->is_schedule == 1 && $data->status == 'scheduled')
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">Assigned Driver</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {!! Form::model($data, ['route' => ['assign-driver', $data->id], 'method' => 'patch', 'enctype' => 'multipart/form-data' ]) !!}
+                        <div class="row">
+                            <div class="form-group col-md-12">
+                                {{ Form::label('driver_id', __('message.select_name',[ 'select' => __('message.driver') ]).' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                {{ Form::select('driver_id', isset($id) ? [ optional($data->driver)->id => optional($data->driver)->display_name] : [], old('driver_id'), [
+                                    'class' => 'select2js form-group driver',
+                                    'required',
+                                    'data-placeholder' => __('message.select_name',[ 'select' => __('message.driver') ]),
+                                    'data-ajax--url' => route('ajax-list', ['type' => 'assigned_driver', 'ride_id' => $data->id ]),
+                                ]) }}
+                            </div>
+                            <div class="form-group col-md-12">
+                                {{ Form::button('<span id="button-loader" style="display:none;"><div class="spinner-border spinner-border-sm text-light" role="status"></div></span> ' . __('message.save'), [
+                                    'type' => 'submit',
+                                    'class' => 'btn border-radius-10 btn-success float-right',
+                                    'id' => ''
+                                ]) }}
+                            </div>
+                        </div>
+                        {!! Form::close() !!}
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

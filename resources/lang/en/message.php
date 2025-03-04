@@ -282,6 +282,8 @@ return array(
     'driver_found' => 'Driver found',
     'rider_canceled' => 'Rider cancelled',
     'completed' => 'Completed',
+    'scheduled' => 'Scheduled',
+    'driver_accepted' => 'Driver Accepted',
     'ride' =>
     array(
         'new_ride_requested' => 'New Ride requested',
@@ -303,6 +305,20 @@ return array(
         'bid_placed' => 'Bid placed by Driver :name.',
         'bid_accept' => 'The rider accepted the bid request of driver :name.',
         'bid_reject' => 'The rider rejected the bid request of driver :name.',
+        'scheduled' => 'Scheduled',
+        'schedule_datetime_required' => 'Scheduled datetime is required.',
+        'schedule_time_must_be_future' => 'Scheduled datatime must be future.',
+        'schedule_minimum_time_required' => 'Scheduled minimum time required.',
+        'scheduled_ride_not_found' => 'Scheduled ride not found.',
+        'too_late_to_cancel_scheduled_ride' => 'Too late for cancel schedule ride.',
+        'scheduled_ride_cancelled_successfully' => 'Scheduled ride cancelled successfully.',
+        'unauthorized_action' => 'Unauthorized user for performing action.',
+        'driver_accepted' => 'Driver Accepted',
+        'driver_assigned' => 'Driver already assigned to ride request.',
+        'driver_assigned_to_schedule_riderequest' => 'Driver assigned to schedule ride request.',
+        'is_schedule' => 'Is schedule',
+        'timezone_required' => 'Timezone required',
+        'riderequest_status_is_not_scheduled' => 'Ride request status must be Scheduled to proceed'
     ),
     'notification_settings' => 'Notification Setting',
     'notification_list' => 

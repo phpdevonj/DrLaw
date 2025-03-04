@@ -524,6 +524,37 @@ class HomeController extends Controller
                 updateLanguageVersion();
                 break;
 
+            case 'assigned_driver':
+                $min_amount = SettingData('wallet', 'min_amount_to_get_ride') ?? null;
+                $ride_data = RideRequest::find($request->ride_id);
+                $cancelled_driver_ids = $ride_data->cancelled_driver_ids ?? [];
+
+                $rejected_bid_driver_ids = is_string($ride_data->rejected_bid_driver_ids) ? json_decode($ride_data->rejected_bid_driver_ids, true) : ($ride_data->rejected_bid_driver_ids ?? []);
+
+                
+                $rejected_bid_driver_ids = is_array($rejected_bid_driver_ids) ? $rejected_bid_driver_ids : [];
+
+                $items = \App\Models\User::select('id','display_name as text')
+                ->where('user_type','driver')
+                ->where('status', 'active')
+                ->where('is_online', 1)
+                ->where('is_available', 1)
+                ->where('service_id', $ride_data->service_id)
+                ->whereNotIn('id', $cancelled_driver_ids)
+                ->whereNotIn('id', $rejected_bid_driver_ids)
+                ->when($min_amount, function ($query) use ($min_amount) {
+                    $query->whereHas('userWallet', function ($q) use ($min_amount) {
+                        $q->where('total_amount', '>=', $min_amount);
+                    });
+                });                
+                
+                if($value != ''){
+                    $items->where('display_name', 'LIKE', $value.'%');
+                }
+
+                $items = $items->get();
+                break;
+
             default :
                 break;
         }

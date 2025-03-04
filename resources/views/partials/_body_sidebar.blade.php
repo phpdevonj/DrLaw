@@ -157,6 +157,10 @@
                 ->data('permission', 'riderequest list')
                 ->prepend('<i class="fas fa-list"></i>')
                 ->link->attr(['class' => '']);
+            $menu->riderequest->add('<span>'.__('message.list_form_title',['form' => __('message.scheduled')]).'</span>', ['class' => 'sidebar-layout' ,'route' => ['riderequest.index', 'riderequest_type' => 'scheduled']])
+            ->data('permission', 'riderequest list')
+            ->prepend('<i class="fas fa-list"></i>')
+            ->link->attr(['class' => '']);
 
         $pending_complaint = App\Models\Complaint::where('status','pending')->count();
         $menu->add('<span>'.__('message.complaint').'</span>'. ($pending_complaint > 0 ? '<span class="badge badge-dark ride-badge">'.$pending_complaint.'</span>' : '') ,[ 'class' => ''])
