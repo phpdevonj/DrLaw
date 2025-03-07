@@ -275,14 +275,17 @@ class UserController extends Controller
         }
 
         // Update or create addresses
-        if ($request->has('user_address')) {
-            foreach ($request->user_address as $addressData) {
-                if (isset($addressData['id'])) {
-                    // Update existing address
-                    $user->userAddresses()->where('id', $addressData['id'])->update($addressData);
-                } else {
-                    // Create new address
-                    $user->userAddresses()->create($addressData);
+        if ($request->has('user_address')){
+            $user_addresses = json_decode($request->user_address, true);
+            if (is_array($user_addresses)) {
+                foreach ($user_addresses as $addressData) {
+                    if (isset($addressData['id'])) {
+                        // Update existing address
+                        $user->userAddresses()->where('id', $addressData['id'])->update($addressData);
+                    } else {
+                        // Create new address
+                        $user->userAddresses()->create($addressData);
+                    }
                 }
             }
         }
