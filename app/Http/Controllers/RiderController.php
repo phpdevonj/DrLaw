@@ -11,6 +11,7 @@ use App\DataTables\RideRequestDataTable;
 use App\DataTables\WalletHistoryDataTable;
 use App\DataTables\WithdrawRequestDataTable;
 use App\DataTables\PointHistoryDataTable;
+use App\DataTables\UserAddressDataTable;
 
 class RiderController extends Controller
 {
@@ -70,7 +71,7 @@ class RiderController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(RideRequestDataTable $dataTable, WalletHistoryDataTable $walletHistoryDataTable, WithdrawRequestDataTable $WithdrawRequestDataTable, PointHistoryDataTable $pointHistoryDataTable, $id)
+    public function show(RideRequestDataTable $dataTable, WalletHistoryDataTable $walletHistoryDataTable, WithdrawRequestDataTable $WithdrawRequestDataTable, PointHistoryDataTable $pointHistoryDataTable, UserAddressDataTable $userAddressDataTable, $id)
     {
         $pageTitle = __('message.view_form_title',[ 'form' => __('message.rider')]);
         $data = User::where('user_type', 'rider')->with('roles','userBankAccount')->findOrFail($id);
@@ -101,7 +102,9 @@ class RiderController extends Controller
             case 'withdraw_request':
                     return $WithdrawRequestDataTable->with('rider_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type','loyalty_program'));
                 break;
-            
+            case 'address':
+                return $userAddressDataTable->with('user_id',$id)->render('rider.show', compact('pageTitle', 'data', 'type','loyalty_program'));
+            break;
             default:
                 # code...
                 $type = 'detail';

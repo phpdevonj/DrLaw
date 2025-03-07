@@ -70,6 +70,11 @@ class User extends Authenticatable implements HasMedia
         return $this->hasOne(Point::class, 'user_id', 'id');
     }
 
+    public function userAddresses()
+    {
+        return $this->hasMany(UserAddress::class, 'user_id', 'id');
+    }
+
     public function scopeAdmin($query) {
         return $query->where('user_type', 'admin')->first();
     }

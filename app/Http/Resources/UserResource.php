@@ -44,6 +44,7 @@ class UserResource extends JsonResource
             'rating'            => count($this->riderRating) > 0 ? (float) number_format(max($this->riderRating->avg('rating'),0), 2) : 0,
             'user_bank_account' => $this->userBankAccount,
             'otp_verify_at'     => $this->otp_verify_at,
+            'user_address'         => UserAddressResource::collection($this->userAddresses),
         ];
     }
 }

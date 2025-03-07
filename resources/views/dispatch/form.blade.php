@@ -308,6 +308,9 @@
             });
 
             function serviceList(latitude, longitude) {
+                // Remove any existing error message
+                $('.service-error').remove();
+                
                 var route = "{{ route('ajax-list',[ 'type' => 'service_for_ride']) }}&latitude="+latitude+"&longitude="+longitude;
                 route = route.replaceAll('amp;','');
                 
@@ -320,7 +323,16 @@
                             data: result.results
                         });
 
-                        $(".service").val(latitude).trigger('change');
+                        if (result.results.length === 0) {
+                            $('.service').empty();
+                            $('.service').next('.select2-container').append('<div class="service-error text-danger mt-1">{{ __("message.no_service_available") }}</div>');
+                        } else {
+                            $(".service").val(latitude).trigger('change');
+                        }
+                    },
+                    error: function() {
+                        $('.service').empty();
+                        $('.service').next('.select2-container').append('<div class="service-error text-danger mt-1">{{ __("message.error_fetching_services") }}</div>');
                     }
                 })
             }

@@ -34,6 +34,10 @@
                         <li class="nav-item">
                             <a href="{{ route('rider.show', [ $data->id, 'type' => 'withdraw_request']) }}" class="nav-link {{ $type == 'withdraw_request' ? 'active': '' }}"> {{ __('message.withdrawrequest') }} </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('rider.show', [ $data->id, 'type' => 'address']) }}" class="nav-link {{ $type == 'address' ? 'active': '' }}"> {{ __('message.address') }} </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -342,10 +346,59 @@
                 </div>
             </div>
         @endif
+
+        @if($type == 'address')
+            <div class="col-md-12">
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">{{ __('message.add_form_title', [ 'form' => __('message.address') ]) }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {!! Form::open(['route' => ['useraddress.store'], 'method' => 'post' ]) !!}
+                            <div class="row">
+                                {{ Form::hidden('start_latitude', null, [ 'id' => 'start_latitude'] ) }}
+                                {{ Form::hidden('start_longitude', null, [ 'id' => 'start_longitude']) }}
+                                {{ Form::hidden('user_id', $data->id) }}                                
+                                <div class="form-group col-md-4">
+                                    {{ Form::label('address_type', __('message.address_type').' <span class="text-danger">*</span>',[ 'class' => 'form-control-label' ], false) }}
+                                    {{ Form::select('address_type', [ 'home' => __('message.home'), 'work' => __('message.work') , 'other' => __('message.other'), 'custom' => __('message.custom') ], old('address_type'), [ 'class' => 'form-control select2js', 'id' => 'address_type', 'required']) }}
+                                </div>
+
+                                <div class="form-group col-md-4" id="custom_label_container" style="display: none;">
+                                    {{ Form::label('custom_label', __('message.custom_label').' <span class="text-danger">*</span>' ,['class' => 'form-control-label'], false) }}
+                                    {{ Form::text('custom_label', old('custom_label'),[ 'id' => 'custom_label', 'placeholder' => __('message.custom_label'),'class' =>'form-control']) }}
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    {{ Form::label('street_address', __('message.street_address').' <span class="text-danger">*</span>',['class' => 'form-control-label'], false) }}
+                                    {{ Form::text('street_address', old('street_address'),[ 'id' => 'street_address', 'placeholder' => __('message.street_address'),'class' =>'form-control', 'required']) }}
+                                </div>
+                            </div>
+                            <hr>
+                            {{ Form::submit( __('message.save'), ['class'=>'btn btn-md btn-primary float-right' ]) }}
+                        {!! Form::close() !!}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">{{ __('message.list_form_title', [ 'form' => __('message.address') ]) }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {{ $dataTable->table(['class' => 'table  w-100'],false) }}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div> 
 </div>
 @section('bottom_script')
-    {{ in_array($type,['ride_request','wallet_history','withdraw_request','points_history']) ? $dataTable->scripts() : '' }}
+    {{ in_array($type,['ride_request','wallet_history','withdraw_request','points_history','address']) ? $dataTable->scripts() : '' }}
     <script type="text/javascript">
         (function($) {
             "use strict";
@@ -379,6 +432,65 @@
                 })
             }
         })(jQuery);
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&libraries=places" defer></script>
+    <script>
+        $(function() {
+
+            $(document).ready(function() {
+                $('#street_address').val('');
+            });
+
+            if(window.google || window.google.maps) {
+                initialize();
+            }
+            function initialize() {
+                var street_address_input = document.getElementById('street_address');
+                var street_address = new google.maps.places.Autocomplete(street_address_input);
+
+                street_address.addListener('place_changed', function () {
+                    var place = street_address.getPlace();
+                    if (!place.geometry) {
+                        alert("{{ __('message.address_autocomplete_error', ['address' => __('message.street_address')]) }}");
+                        $('#street_address').focus();
+                        return;
+                    }
+                    start_latitude  = place.geometry['location'].lat();
+                    start_longitude = place.geometry['location'].lng();
+                    $('#start_latitude').val(start_latitude);
+                    $('#start_longitude').val(start_longitude);
+                    $('#street_address').val(place.formatted_address);
+                    serviceList(start_latitude, start_longitude);                        
+                });
+            }
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Function to toggle custom label field
+            function toggleCustomLabel() {
+                var addressType = $('#address_type').val();
+                var customLabelContainer = $('#custom_label_container');
+                var customLabelInput = $('#custom_label');
+                
+                if (addressType === 'custom') {
+                    customLabelContainer.show();
+                    customLabelInput.prop('required', true);
+                } else {
+                    customLabelContainer.hide();
+                    customLabelInput.prop('required', false);
+                    customLabelInput.val(''); // Clear the value when hidden
+                }
+            }
+
+            // Initial check on page load
+            toggleCustomLabel();
+
+            // Listen for changes on address type select
+            $('#address_type').on('change', function() {
+                toggleCustomLabel();
+            });
+        });
     </script>
 @endsection
 </x-master-layout>

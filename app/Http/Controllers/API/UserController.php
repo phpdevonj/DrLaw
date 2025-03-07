@@ -273,6 +273,19 @@ class UserController extends Controller
         } else if( $request->has('user_bank_account') && $request->user_bank_account != null ) {
             $user_data->userBankAccount()->create($request->user_bank_account);
         }
+
+        // Update or create addresses
+        if ($request->has('user_address')) {
+            foreach ($request->user_address as $addressData) {
+                if (isset($addressData['id'])) {
+                    // Update existing address
+                    $user->userAddresses()->where('id', $addressData['id'])->update($addressData);
+                } else {
+                    // Create new address
+                    $user->userAddresses()->create($addressData);
+                }
+            }
+        }
         
         $message = __('message.updated');
         // $user_data['profile_image'] = getSingleMedia($user_data,'profile_image',null);

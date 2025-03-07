@@ -37,6 +37,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScreenController;
 use App\Http\Controllers\SurgePriceController;
 use App\Http\Controllers\WhyChooseController;
+use App\Http\Controllers\UserAddressController;
 
 /*
 |--------------------------------------------------------------------------
@@ -201,6 +202,9 @@ Route::group(['middleware' => ['auth', 'verified', 'admin']], function()
     // Loyalty Points
     Route::post('save-points-fund/{user_id}', [ HomeController::class, 'savePointsHistory'] )->name('savepoints.fund');
     Route::patch('assign-driver-schedule-ride/{id}',[RideRequestController::class,'assignDriverToScheduleRide'])->name('assign-driver');
+
+    // rider addresses
+    Route::resource('useraddress', UserAddressController::class);
 });
 
 Route::get('/ajax-list',[ HomeController::class, 'getAjaxList' ])->name('ajax-list');
