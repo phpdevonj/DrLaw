@@ -606,7 +606,7 @@ class RideRequestController extends Controller
      * Get scheduled rides list
      */
     public function getScheduleRidesList(Request $request){
-        $schedule_rides = RideRequest::where('status', 'scheduled')->where('is_schedule', 1);
+        $schedule_rides = RideRequest::where('status', 'scheduled')->where('is_schedule', 1)->where('datetime', '>=', Carbon::now()->format('Y-m-d H:i:s'));
 
         $schedule_rides->when(request('service_id'), function ($q) {
             return $q->where('service_id', request('service_id'));
