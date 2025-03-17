@@ -690,7 +690,7 @@ class RideRequestController extends Controller
      */
     public function cancelScheduledRide(Request $request, $id)
     {
-        $ride = RideRequest::where('id', $id)->where('status', 'scheduled')->where('is_schedule', 1)->first();
+        $ride = RideRequest::where('id', $id)->whereIn('status', ['scheduled','driver_accepted'])->where('is_schedule', 1)->first();
 
         if (!$ride) {
             return json_message_response(__('message.ride.scheduled_ride_not_found'), 404);
