@@ -10,6 +10,7 @@ use App\Notifications\CommonNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Traits\RideRequestTrait;
+use App\Models\RideRequestHistory;
 
 class ProcessScheduledRides extends Command
 {
@@ -47,7 +48,7 @@ class ProcessScheduledRides extends Command
     {
         try {
             // Get scheduled rides that are due within the next 15 minutes
-            $scheduledRides = RideRequest::where('is_schedule', 1)->where('scheduled_at', '<=', Carbon::now()->addMinutes(15))->where('scheduled_at', '>=', Carbon::now())->get();
+            $scheduledRides = RideRequest::where('is_schedule', 1)->whereIn('status', ['scheduled','driver_accepted'])->where('scheduled_at', '<=', Carbon::now()->addMinutes(15))->where('scheduled_at', '>=', Carbon::now())->get();
 
             foreach ($scheduledRides as $ride) {
                 // Check if driver is assigned
@@ -62,10 +63,10 @@ class ProcessScheduledRides extends Command
                             $rideData = [
                                 'driver_ids' => [$ride->driver_id],
                                 'on_rider_stream_api_call' => 1,
-                                'on_stream_api_call' => 1,
+                                'on_stream_api_call' => 0,
                                 'ride_id' => $ride->id,
                                 'rider_id' => $ride->rider_id,
-                                'status' => $ride->status,
+                                'status' => 'accepted',
                                 'payment_status' => '',
                                 'payment_type' => '',
                                 'tips' => 0,
@@ -89,6 +90,21 @@ class ProcessScheduledRides extends Command
                         
                         $driver->notify(new CommonNotification($notification_data['type'], $notification_data));
                         $ride->driver->update(['is_available' => 0]);
+                        $ride->update(['status'=>'accepted']);
+
+                        // store ride history
+                        $data['datetime'] = date('Y-m-d H:i:s');
+                        $data['history_type'] = 'accepted';
+                        $data['history_message'] = __('message.ride.accepted');
+                        $data['ride_request_id'] = $ride->id;
+                        $history_data = [
+                            'driver_id' => $ride->driver_id,
+                            'driver_name' => optional($ride->driver)->display_name ?? '',
+                        ];
+                        $data['history_data'] = json_encode($history_data);
+                        if( $data['history_type'] != null ) {
+                            RideRequestHistory::create($data);
+                        }
                         
                         Log::info('Scheduled ride notification sent to driver #'.$driver->id.' for ride #'.$ride->id);
                     }
