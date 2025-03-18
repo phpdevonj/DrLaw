@@ -76,7 +76,7 @@ class ProcessScheduledRides extends Command
                         }
                         $firebaseData->set($rideData);
 
-                        // Send notification
+                        // Send notification to driver
                         $notification_data = [
                             'id' => $ride->id,
                             'type' => 'scheduled_ride_reminder',
@@ -104,6 +104,18 @@ class ProcessScheduledRides extends Command
                         $data['history_data'] = json_encode($history_data);
                         if( $data['history_type'] != null ) {
                             RideRequestHistory::create($data);
+                        }
+
+                        // Send notification to rider
+                        if ($rider = User::find($ride->rider_id)) {            
+                            $rider_notification_data = [
+                                'id' => $ride->id,
+                                'type' => 'scheduled_ride_reminder',
+                                'data' => $ride->driver_id ? ['driver_name' => optional($ride->driver)->display_name] : [],
+                                'message' => 'You have a scheduled ride coming up in ' .Carbon::now()->diffInMinutes($ride->scheduled_at).' minutes.',
+                                'subject' => 'Upcoming Scheduled Ride',
+                            ];
+                            $rider->notify(new CommonNotification($rider_notification_data['type'], $rider_notification_data));
                         }
                         
                         Log::info('Scheduled ride notification sent to driver #'.$driver->id.' for ride #'.$ride->id);
