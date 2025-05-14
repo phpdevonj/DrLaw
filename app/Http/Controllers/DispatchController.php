@@ -108,7 +108,7 @@ class DispatchController extends Controller
         $data['status'] = 'new_ride_requested';
         $data['payment_type'] = 'cash';
 
-        $place_details = mighty_get_distance_matrix(request('start_latitude'), request('start_longitude'), request('end_latitude'), request('end_longitude'));
+        $place_details = og_get_distance_matrix(request('start_latitude'), request('start_longitude'), request('end_latitude'), request('end_longitude'));
         // distance in meter
         $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
         $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);

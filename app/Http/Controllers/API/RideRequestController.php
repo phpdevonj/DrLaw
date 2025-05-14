@@ -140,7 +140,7 @@ class RideRequestController extends Controller
             }
 
             if (!empty($riderequest->multi_drop_location)) {
-                $place_details = mighty_get_distance_matrix_multiple_destination(
+                $place_details = og_get_distance_matrix_multiple_destination(
                     $riderequest->start_latitude, 
                     $riderequest->start_longitude, 
                     $riderequest->end_latitude, 
@@ -150,7 +150,7 @@ class RideRequestController extends Controller
                 $dropoff_distance_in_meters = $place_details['distance'];
                 $dropoff_time_in_seconds = $place_details['duration'];
             } else {
-                $place_details = mighty_get_distance_matrix(
+                $place_details = og_get_distance_matrix(
                     $riderequest->start_latitude, 
                     $riderequest->start_longitude, 
                     $riderequest->end_latitude, 

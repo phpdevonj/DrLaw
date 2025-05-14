@@ -36,7 +36,7 @@ return [
     |
     */
 
-    'mqtt_unique_topic_name' => env('MQTT_UNIQUE_TOPIC_NAME', 'mightytaxi'),
+    'mqtt_unique_topic_name' => env('MQTT_UNIQUE_TOPIC_NAME', 'ogtaxi'),
 
     /*
     |--------------------------------------------------------------------------

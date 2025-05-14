@@ -50,7 +50,7 @@ class DriverDashboardResource extends JsonResource
                 }
 
                 if (!empty($on_ride_request->multi_drop_location)) {
-                    $place_details = mighty_get_distance_matrix_multiple_destination(
+                    $place_details = og_get_distance_matrix_multiple_destination(
                         $on_ride_request->start_latitude, 
                         $on_ride_request->start_longitude, 
                         $on_ride_request->end_latitude, 
@@ -60,7 +60,7 @@ class DriverDashboardResource extends JsonResource
                     $dropoff_distance_in_meters = $place_details['distance'];
                     $dropoff_time_in_seconds = $place_details['duration'];
                 } else {
-                    $place_details = mighty_get_distance_matrix(
+                    $place_details = og_get_distance_matrix(
                         $on_ride_request->start_latitude, 
                         $on_ride_request->start_longitude, 
                         $on_ride_request->end_latitude, 

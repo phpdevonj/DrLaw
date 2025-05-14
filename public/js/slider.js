@@ -1,7 +1,7 @@
 /*
 Template: SimpleDash - Responsive Bootstrap 4 Admin Dashboard Template
-Author: MeetMighty
-Design and Developed by: http://meetmighty.com/
+Author: Arihant
+Design and Developed by: ongraph.com
 NOTE: This file contains the styling for Slider in Template.
 */
 

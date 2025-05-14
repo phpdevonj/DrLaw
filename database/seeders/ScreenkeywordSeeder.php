@@ -1851,8 +1851,8 @@ class ScreenkeywordSeeder extends Seeder
           [
             "screenId" => "30",
             "keyword_id" => 307,
-            "keyword_name" => "mostReliableMightyDriverApp",
-            "keyword_value" => "Most Reliable Mighty Driver App"
+            "keyword_name" => "mostReliableOGDriverApp",
+            "keyword_value" => "Most Reliable OG Driver App"
           ],
           [
             "screenId" => "30",
@@ -1869,8 +1869,8 @@ class ScreenkeywordSeeder extends Seeder
           [
             "screenId" => "30",
             "keyword_id" => 139,
-            "keyword_name" => "mostReliableMightyRiderApp",
-            "keyword_value" => "Most Reliable Mighty Rider App"
+            "keyword_name" => "mostReliableOGRiderApp",
+            "keyword_value" => "Most Reliable OG Rider App"
           ],
           [
             "screenId" => "30",

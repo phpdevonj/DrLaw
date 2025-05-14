@@ -101,12 +101,12 @@ class ServiceController extends Controller
         $service = $service->orderBy('name','asc')->paginate($per_page);
 
         if( !empty(request('drop_location')) ) {
-            $place_details = mighty_get_distance_matrix_multiple_destination(request('pick_lat'), request('pick_lng'), request('drop_lat'), request('drop_lng'), request('drop_location'));
+            $place_details = og_get_distance_matrix_multiple_destination(request('pick_lat'), request('pick_lng'), request('drop_lat'), request('drop_lng'), request('drop_location'));
 
             $dropoff_distance_in_meters = $place_details['distance'];
             $dropoff_time_in_seconds = $place_details['duration'];
         } else {
-            $place_details = mighty_get_distance_matrix(request('pick_lat'), request('pick_lng'), request('drop_lat'), request('drop_lng'));
+            $place_details = og_get_distance_matrix(request('pick_lat'), request('pick_lng'), request('drop_lat'), request('drop_lng'));
             // distance in meter
             $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
             $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);

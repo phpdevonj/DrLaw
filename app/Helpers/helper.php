@@ -1070,7 +1070,7 @@ function km_to_mile($km) {
     return $km * 0.621371;
 }
 
-function mighty_get_distance_matrix_result($pick_lat, $pick_lng, $drop_lat, $drop_lng, $drop_location) {
+function og_get_distance_matrix_result($pick_lat, $pick_lng, $drop_lat, $drop_lng, $drop_location) {
     
     $result = collect($drop_location)->map(function ($item, $index) use ($pick_lng, $drop_lat, $drop_lng, $drop_location) {
         if ($index == 0) {
@@ -1084,7 +1084,7 @@ function mighty_get_distance_matrix_result($pick_lat, $pick_lng, $drop_lat, $dro
 
 }
 
-function mighty_get_distance_matrix($pick_lat, $pick_lng, $drop_lat, $drop_lng, $traffic = false) {
+function og_get_distance_matrix($pick_lat, $pick_lng, $drop_lat, $drop_lng, $traffic = false) {
     $google_map_api_key = env('GOOGLE_MAP_KEY');
         
     $response = Http::withHeaders([
@@ -1556,22 +1556,22 @@ function stringLong($str = '', $type = 'title', $length = 0) //Add … if string
     }
 }
 
-function mighty_get_distance_matrix_multiple_destination($pick_lat, $pick_lng, $drop_lat, $drop_lng, $drop_latlng, $traffic = false)
+function og_get_distance_matrix_multiple_destination($pick_lat, $pick_lng, $drop_lat, $drop_lng, $drop_latlng, $traffic = false)
 {
     $distance = 0;
     $duration = 0;
     for ($i = 0; $i <= count($drop_latlng); $i++)
     {
         if( $i == 0 ) {
-            $response = mighty_get_distance_matrix($pick_lat, $pick_lng, $drop_latlng[$i]['latitude'], $drop_latlng[$i]['longitude']);
+            $response = og_get_distance_matrix($pick_lat, $pick_lng, $drop_latlng[$i]['latitude'], $drop_latlng[$i]['longitude']);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);
         } elseif( count($drop_latlng) == $i ) {
-            $response = mighty_get_distance_matrix($drop_latlng[$i-1]['latitude'], $drop_latlng[$i-1]['longitude'], $drop_lat, $drop_lng);
+            $response = og_get_distance_matrix($drop_latlng[$i-1]['latitude'], $drop_latlng[$i-1]['longitude'], $drop_lat, $drop_lng);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);
         }else {
-            $response = mighty_get_distance_matrix($drop_latlng[$i-1]['latitude'], $drop_latlng[$i-1]['longitude'], $drop_latlng[$i]['latitude'], $drop_latlng[$i]['longitude']);
+            $response = og_get_distance_matrix($drop_latlng[$i-1]['latitude'], $drop_latlng[$i-1]['longitude'], $drop_latlng[$i]['latitude'], $drop_latlng[$i]['longitude']);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);
         }
@@ -1661,7 +1661,7 @@ function updateLanguageVersion()
     return $language_version_data->increment('version_no',1);
 }
 
-function mighty_language_direction($language = null)
+function og_language_direction($language = null)
 {
     if (empty($language)) {
         $language = app()->getLocale();
