@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\DriverRequest;
+use App\Http\Requests\DriverStepOneRequest;
 
 class UserController extends Controller
 {
@@ -527,5 +528,10 @@ class UserController extends Controller
         }
         
         return json_custom_response(['message'=> $message, 'status' => true]);
+    }
+
+    public function validateDriverStepOne(DriverStepOneRequest $request)
+    {
+        return json_custom_response(['status' => true]);
     }
 }

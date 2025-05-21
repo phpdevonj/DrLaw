@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('register',[API\UserController::class, 'register']);
+Route::post('/driver/register/step-one', [API\UserController::class, 'validateDriverStepOne']);
 Route::post('driver-register',[API\UserController::class, 'driverRegister']);
 Route::post('login',[API\UserController::class,'login']);
 Route::post('forget-password',[ API\UserController::class,'forgetPassword']);
