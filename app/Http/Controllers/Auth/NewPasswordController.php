@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Exception\Auth\UserNotFound;
 
 class NewPasswordController extends Controller
 {
@@ -49,6 +51,19 @@ class NewPasswordController extends Controller
                 ])->save();
 
                 event(new PasswordReset($user));
+
+                // Sync password to Firebase
+                try {
+                    $auth = app('firebase.auth');
+                    $firebaseUser = $auth->getUserByEmail($user->email);
+
+                     // Update password in Firebase
+                    $auth->changeUserPassword($firebaseUser->uid, $request->password);
+                } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
+                    \Log::error("Firebase user not found for email: " . $user->email);
+                } catch (\Exception $e) {
+                    \Log::error("Error syncing password to Firebase: " . $e->getMessage());
+                }
             }
         );
 

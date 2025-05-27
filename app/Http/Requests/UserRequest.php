@@ -33,6 +33,7 @@ class UserRequest extends FormRequest
             'username'  => 'required|unique:users,username,'.$user_id,
             'email'     => 'required|email|unique:users,email,'.$user_id,
             'contact_number' => 'max:20|unique:users,contact_number,'.$user_id,
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:1024',
         ];
 
         return $rules;
@@ -42,6 +43,9 @@ class UserRequest extends FormRequest
     {
         return [
             'userProfile.dob.*'  =>'DOB is required.',
+            'profile_image.image' => 'The profile image must be a valid image file.',
+            'profile_image.mimes' => 'Allowed image types: jpeg, png, jpg, gif, webp.',
+            'profile_image.max' => 'The profile image must not be larger than 1MB.',
         ];
     }
 

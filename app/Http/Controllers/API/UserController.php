@@ -256,7 +256,7 @@ class UserController extends Controller
 
         $user->fill($request->all())->update();
 
-        if(isset($request->profile_image) && $request->profile_image != null ) {
+        if($request->hasFile('profile_image')) {
             $user->clearMediaCollection('profile_image');
             $user->addMediaFromRequest('profile_image')->toMediaCollection('profile_image');
         }
