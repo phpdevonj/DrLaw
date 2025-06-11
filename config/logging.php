@@ -102,6 +102,13 @@ return [
             'days' => 14,
         ],
 
+        'custom_api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api/custom_api.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),

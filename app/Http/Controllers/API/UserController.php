@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\DriverRequest;
 use App\Http\Requests\DriverStepOneRequest;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -89,40 +90,50 @@ class UserController extends Controller
 
     public function login(Request $request)
     {      
-        if(Auth::attempt(['email' => request('email'), 'password' => request('password'), 'user_type' => request('user_type')])){
-            
-            $user = Auth::user();
-
-            if( $user->status == 'banned' ) {
-                $message = __('message.account_banned');
+        Log::channel('custom_api')->info('[LOGIN] API called', ['request' => $request->all(),'line' => __LINE__]); 
+        try {
+            if(Auth::attempt(['email' => request('email'), 'password' => request('password'), 'user_type' => request('user_type')])){
+                Log::channel('custom_api')->info('[LOGIN] Authentication successful', ['email' => $request->email,'line' => __LINE__]);
+                
+                $user = Auth::user();
+    
+                if( $user->status == 'banned' ) {
+                    $message = __('message.account_banned');
+                    Log::channel('custom_api')->warning('[LOGIN] Account is banned', ['email' => $request->email,'line' => __LINE__]);
+                    return json_message_response($message,400);
+                }
+    
+                if(request('player_id') != null){
+                    $user->player_id = request('player_id');
+                }
+    
+                if(request('fcm_token') != null){
+                    $user->fcm_token = request('fcm_token');
+                }
+                $user->last_actived_at = now();
+                $user->save();
+                
+                $success = $user;
+                $success['api_token'] = $user->createToken('auth_token')->plainTextToken;
+                $success['profile_image'] = getSingleMedia($user,'profile_image',null);
+                $is_verified_driver = false;
+                if($user->user_type == 'driver') {
+                    $is_verified_driver = $user->is_verified_driver; // DriverDocument::verifyDriverDocument($user->id);
+                }
+                $success['is_verified_driver'] = (int) $is_verified_driver;
+                unset($success['media']);
+                Log::channel('custom_api')->info('[LOGIN] Login successful, response returned', ['email' => $request->email,'line' => __LINE__]);
+                return json_custom_response([ 'data' => $success ], 200 );
+            }
+            else{
+                Log::channel('custom_api')->warning('[LOGIN] Authentication failed', ['email' => $request->email,'line' => __LINE__]);
+                $message = __('auth.failed');
+                
                 return json_message_response($message,400);
             }
-
-            if(request('player_id') != null){
-                $user->player_id = request('player_id');
-            }
-
-            if(request('fcm_token') != null){
-                $user->fcm_token = request('fcm_token');
-            }
-            $user->last_actived_at = now();
-            $user->save();
-            
-            $success = $user;
-            $success['api_token'] = $user->createToken('auth_token')->plainTextToken;
-            $success['profile_image'] = getSingleMedia($user,'profile_image',null);
-            $is_verified_driver = false;
-            if($user->user_type == 'driver') {
-                $is_verified_driver = $user->is_verified_driver; // DriverDocument::verifyDriverDocument($user->id);
-            }
-            $success['is_verified_driver'] = (int) $is_verified_driver;
-            unset($success['media']);
-
-            return json_custom_response([ 'data' => $success ], 200 );
-        }
-        else{
+        } catch (\Exception $e) {
+            Log::channel('custom_api')->error('[LOGIN] Exception occurred', ['email'   => $request->email ?? null,'error'   => $e->getMessage(),'line' => __LINE__]);
             $message = __('auth.failed');
-            
             return json_message_response($message,400);
         }
     }
@@ -340,99 +351,123 @@ class UserController extends Controller
     public function socialLogin(Request $request)
     {
         $input = $request->all();
+        Log::channel('custom_api')->info('[SOCIAL_LOGIN] API called', ['request' => $input,'line' => __LINE__]);
 
-        if($input['login_type'] === 'mobile'){
-            $user_data = User::where('username', $input['username'])->where('login_type','mobile')->first();
-        } else {
-            $user_data = User::where('email',$input['email'])->first();
-        }
-        
-        if( $user_data != null ) {
-            if( !in_array($user_data->user_type, ['admin',request('user_type')] )) {
-                $message = __('auth.failed');
-                return json_message_response($message,400);
-            }
-
-            if( $user_data->status == 'banned' ) {
-                $message = __('message.account_banned');
-                return json_message_response($message,400);
-            }
-        
-            if( !isset($user_data->login_type) || $user_data->login_type  == '' )
-            {
-                if($request->login_type === 'google')
-                {
-                    $message = __('validation.unique',['attribute' => 'email' ]);
-                } else {
-                    $message = __('validation.unique',['attribute' => 'username' ]);
-                }
-                return json_message_response($message,400);
-            }
-            $message = __('message.login_success');
-        } else {
-
-            if($request->login_type === 'google')
-            {
-                $key = 'email';
-                $value = $request->email;
+        try {
+            if($input['login_type'] === 'mobile'){
+                $user_data = User::where('username', $input['username'])->where('login_type','mobile')->first();
             } else {
-                $key = 'username';
-                $value = $request->username;
-            }
-
-            if($request->login_type === 'mobile' && $user_data == null ){
-                $otp_response = [
-                    'status' => true,
-                    'is_user_exist' => false
-                ];
-                return json_custom_response($otp_response);
+                $user_data = User::where('email',$input['email'])->first();
             }
             
-            $validator = Validator::make($input,[
-                'email' => 'required|email|unique:users,email',
-                'username'  => 'required|unique:users,username',
-                'contact_number' => 'max:20|unique:users,contact_number',
-            ]);
-
-            if ( $validator->fails() ) {
-                $data = [
-                    'status' => false,
-                    'message' => $validator->errors()->first(),
-                    'all_message' =>  $validator->errors()
-                ];
+            if( $user_data != null ) {
+                if( !in_array($user_data->user_type, ['admin',request('user_type')] )) {
+                    $message = __('auth.failed');
+                    Log::channel('custom_api')->info('[SOCIAL_LOGIN] Auth failed due to user type mismatch', ['email' => $user_data->email,'line' => __LINE__]);
+                    return json_message_response($message,400);
+                }
     
-                return json_custom_response($data, 422);
+                if( $user_data->status == 'banned' ) {
+                    $message = __('message.account_banned');
+                    Log::channel('custom_api')->info('[SOCIAL_LOGIN] Account is banned', ['email' => $user_data->email,'line' => __LINE__]);
+                    return json_message_response($message,400);
+                }
+            
+                if( !isset($user_data->login_type) || $user_data->login_type  == '' )
+                {
+                    if($request->login_type === 'google')
+                    {
+                        $message = __('validation.unique',['attribute' => 'email' ]);
+                    } else {
+                        $message = __('validation.unique',['attribute' => 'username' ]);
+                    }
+                    Log::channel('custom_api')->info('[SOCIAL_LOGIN] Email/Username validation error', [
+                        'email' => $user_data->email,
+                        'message' => $message,
+                        'line' => __LINE__
+                    ]);
+                    return json_message_response($message,400);
+                }
+                $message = __('message.login_success');
+            } else {
+    
+                if($request->login_type === 'google')
+                {
+                    $key = 'email';
+                    $value = $request->email;
+                } else {
+                    $key = 'username';
+                    $value = $request->username;
+                }
+    
+                if($request->login_type === 'mobile' && $user_data == null ){
+                    $otp_response = [
+                        'status' => true,
+                        'is_user_exist' => false
+                    ];
+                    Log::channel('custom_api')->info('[SOCIAL_LOGIN] Mobile login, user not found', ['username' => $input['username'], 'otp_response' => $otp_response,'line' => __LINE__]);
+                    return json_custom_response($otp_response);
+                }
+                
+                $validator = Validator::make($input,[
+                    'email' => 'required|email|unique:users,email',
+                    'username'  => 'required|unique:users,username',
+                    'contact_number' => 'max:20|unique:users,contact_number',
+                ]);
+    
+                if ( $validator->fails() ) {
+                    $data = [
+                        'status' => false,
+                        'message' => $validator->errors()->first(),
+                        'all_message' =>  $validator->errors()
+                    ];
+                    Log::channel('custom_api')->info('[SOCIAL_LOGIN] Validation error during registration', ['input' => $input, 'errors' => $data,'line' => __LINE__]);
+                    return json_custom_response($data, 422);
+                }
+    
+                $password = !empty($input['accessToken']) ? $input['accessToken'] : $input['email'];
+    
+                $input['display_name'] = $input['first_name']." ".$input['last_name'];
+                $input['password'] = Hash::make($password);
+                $input['user_type'] = isset($input['user_type']) ? $input['user_type'] : 'rider';
+                $user = User::create($input);
+                if($user->userWallet == null) {
+                    $user->userWallet()->create(['total_amount' => 0 ]);
+                }
+                $user->assignRole($input['user_type']);
+    
+                $user_data = User::where('id',$user->id)->first();
+                $message = __('message.save_form',['form' => $input['user_type'] ]);
             }
-
-            $password = !empty($input['accessToken']) ? $input['accessToken'] : $input['email'];
-
-            $input['display_name'] = $input['first_name']." ".$input['last_name'];
-            $input['password'] = Hash::make($password);
-            $input['user_type'] = isset($input['user_type']) ? $input['user_type'] : 'rider';
-            $user = User::create($input);
-            if($user->userWallet == null) {
-                $user->userWallet()->create(['total_amount' => 0 ]);
+    
+            $user_data['api_token'] = $user_data->createToken('auth_token')->plainTextToken;
+            $user_data['profile_image'] = getSingleMedia($user_data, 'profile_image', null);
+    
+            $is_verified_driver = false;
+            if($user_data->user_type == 'driver') {
+                $is_verified_driver = $user_data->is_verified_driver; // DriverDocument::verifyDriverDocument($user_data->id);
             }
-            $user->assignRole($input['user_type']);
+            $user_data['is_verified_driver'] = (int) $is_verified_driver;
+            $response = [
+                'status' => true,
+                'message' => $message,
+                'data' => $user_data
+            ];
 
-            $user_data = User::where('id',$user->id)->first();
-            $message = __('message.save_form',['form' => $input['user_type'] ]);
+            Log::channel('custom_api')->info('[SOCIAL_LOGIN] Login successful, response returned', [
+                'email' => $user_data->email ?? null,
+                'response' => $response,
+                'line' => __LINE__
+            ]);
+            return json_custom_response($response);
+        } catch (\Exception $e) {
+            Log::channel('custom_api')->error('[SOCIAL_LOGIN] Exception occurred', [
+                'error' => $e->getMessage(),
+                'line' => __LINE__
+            ]);
+            $message = __('auth.failed');
+            return json_message_response($message,400);
         }
-
-        $user_data['api_token'] = $user_data->createToken('auth_token')->plainTextToken;
-        $user_data['profile_image'] = getSingleMedia($user_data, 'profile_image', null);
-
-        $is_verified_driver = false;
-        if($user_data->user_type == 'driver') {
-            $is_verified_driver = $user_data->is_verified_driver; // DriverDocument::verifyDriverDocument($user_data->id);
-        }
-        $user_data['is_verified_driver'] = (int) $is_verified_driver;
-        $response = [
-            'status' => true,
-            'message' => $message,
-            'data' => $user_data
-        ];
-        return json_custom_response($response);
     }
 
     public function updateUserStatus(Request $request)

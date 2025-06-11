@@ -1705,3 +1705,21 @@ function rideStatus() {
         'canceled' => __('message.canceled'),
     ];
 }
+
+function convertSecondsToReadableTime($totalSeconds)
+{
+    $hours = floor($totalSeconds / 3600);
+    $minutes = floor(($totalSeconds % 3600) / 60);
+
+    $parts = [];
+
+    if ($hours > 0) {
+        $parts[] = $hours . ' hour' . ($hours > 1 ? 's' : '');
+    }
+
+    if ($minutes > 0) {
+        $parts[] = $minutes . ' minute' . ($minutes > 1 ? 's' : '');
+    }
+
+    return implode(' ', $parts);
+}

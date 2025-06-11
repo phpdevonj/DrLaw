@@ -454,7 +454,7 @@ class RideRequestController extends Controller
             // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->rider_id, json_encode($notify_data)));
         }
 
-        if( auth()->user()->hasRole('rider') ) {
+        if( auth()->user()->hasRole('rider') && $ride_request->status !== 'completed' && $ride_request->payment->payment_status != 'paid') {
             $this->updateFirestoreRideDocument($ride_request, 'rider');
             // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->driver_id, json_encode($notify_data)));
         }
