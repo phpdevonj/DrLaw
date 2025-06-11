@@ -1714,11 +1714,11 @@ function convertSecondsToReadableTime($totalSeconds)
     $parts = [];
 
     if ($hours > 0) {
-        $parts[] = $hours . ' hour' . ($hours > 1 ? 's' : '');
+        $parts[] = $hours . ' hr' . ($hours > 1 ? 's' : '');
     }
 
     if ($minutes > 0) {
-        $parts[] = $minutes . ' minute' . ($minutes > 1 ? 's' : '');
+        $parts[] = $minutes . ' min' . ($minutes > 1 ? 's' : '');
     }
 
     return implode(' ', $parts);

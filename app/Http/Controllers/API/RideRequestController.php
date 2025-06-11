@@ -449,7 +449,7 @@ class RideRequestController extends Controller
         $notify_data->success_message = $msg;
         $notify_data->result = new RideRequestResource($ride_request);
 
-        if( auth()->user()->hasRole('driver') ) {
+        if( auth()->user()->hasRole('driver') && $ride_request->status !== 'completed' && $ride_request->payment->payment_status != 'paid') {
             $this->updateFirestoreRideDocument($ride_request, 'driver');
             // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->rider_id, json_encode($notify_data)));
         }
