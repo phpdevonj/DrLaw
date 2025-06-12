@@ -1166,6 +1166,10 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     
     if ($distance_in_unit > $minimum_distance) {
         $distance_in_unit -= $minimum_distance;
+    }else{
+        // If the distance_in_unit is less than the minimum distance, we keep the distance as 0
+        // because the base fare already covers up to the minimum distance.
+        $distance_in_unit = 0;
     }
 
     $distance_price = ($distance_in_unit * $service['per_distance']);

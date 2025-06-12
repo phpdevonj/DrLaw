@@ -339,6 +339,10 @@ class RideRequestController extends Controller
         $per_minute_drive_charge = $duration * $service->per_minute_drive;
         if( $distance > $service->minimum_distance ) {
             $distance = $distance - $service->minimum_distance;
+        }else{
+            // If the distance is less than the minimum distance, we keep the distance as 0
+            // because the base fare already covers up to the minimum distance.
+            $distance = 0;
         }
         $per_distance_charge = $distance * $service->per_distance;
 
