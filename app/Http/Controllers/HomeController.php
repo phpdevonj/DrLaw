@@ -28,6 +28,7 @@ use App\Models\WalletHistory;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use App\Models\Point as RiderPoints;
 use App\Models\PointHistory;
+use App\Models\Region;
 
 class HomeController extends Controller
 {
@@ -772,5 +773,68 @@ class HomeController extends Controller
             return $e;
         }
         return redirect()->back()->withSuccess(__('message.transaction_submitted'));
+    }
+
+    public function heatmap(Request $request)
+    {
+        $pageTitle = __('message.heatmap');
+        $assets = [''];
+
+        $regionId = $request->input('region_id');
+        $polygonCoords = [];
+        $lat = null;
+        $lng = null;
+
+        $query = DB::table('ride_requests');
+
+        if (!empty($regionId)) {
+            // Get service IDs for selected region
+            $serviceIds = Service::where('region_id', $regionId)->pluck('id')->toArray();
+
+            if (!empty($serviceIds)) {
+                $query->whereIn('service_id', $serviceIds);
+            }
+
+            // Get region and parse polygon + centroid
+            $region = Region::selectRaw('*, ST_AsText(ST_Centroid(`coordinates`)) as center')->find($regionId);
+
+            if ($region && $region->coordinates) {
+                // Parse polygon points
+                $polygon = json_decode($region->coordinates->toJson(), true)['coordinates'][0];
+
+                $polygonCoords = array_map(function ($point) {
+                    return ['lat' => (float)$point[1], 'lng' => (float)$point[0]];
+                }, $polygon);
+
+                // Parse center
+                if (preg_match('/POINT\(([-\d\.]+) ([-\d\.]+)\)/', $region->center, $matches)) {
+                    $lng = (float)$matches[1];
+                    $lat = (float)$matches[2];
+                }
+            }
+        }
+
+        // Get start and end coordinates
+        $heatmapPoints = $query->select('start_latitude as lat', 'start_longitude as lng')
+            ->whereNotNull('start_latitude')
+            ->whereNotNull('start_longitude')
+            ->union(
+                DB::table('ride_requests')
+                    ->select('end_latitude as lat', 'end_longitude as lng')
+                    ->whereNotNull('end_latitude')
+                    ->whereNotNull('end_longitude')
+                    ->when(!empty($serviceIds), fn($q) => $q->whereIn('service_id', $serviceIds))
+            )
+            ->get();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'points' => $heatmapPoints,
+                //'polygon' => $polygonCoords,
+                'center' => ['lat' => $lat, 'lng' => $lng],
+            ]);
+        }
+
+        return view('heatmap.index', compact('pageTitle','assets','heatmapPoints'));
     }
 }

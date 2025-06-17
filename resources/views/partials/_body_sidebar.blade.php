@@ -372,6 +372,11 @@
                 ->nickname('map')
                 ->data('permission', 'driver location');
         
+        $menu->add('<span>'.__('message.heatmap').'</span>', ['route' => 'heatmap'])
+            ->prepend('<i class="fas fa-map"></i>')
+            ->nickname('heatmap')
+            ->data('permission', 'driver location');
+        
         $menu->add('<span>'.__('message.setting').'</span>', ['route' => 'setting.index'])
                 ->prepend('<i class="fas fa-cogs"></i>')
                 ->nickname('setting')

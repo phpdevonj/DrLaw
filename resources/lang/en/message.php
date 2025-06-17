@@ -681,4 +681,5 @@ return array(
     'custom' => 'Custom',
     'no_service_available' => 'No service available',
     'error_fetching_services' => 'Error while fetching services',
+    'heatmap' => 'Heatmap',
 );

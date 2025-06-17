@@ -34,7 +34,7 @@
         .mydetails .invoice-details {
             vertical-align: text-top;
             text-align: left;
-            padding-left: 64%;
+            padding-left: 35%;
         }
 
         .addresspickupdetails  {
@@ -110,7 +110,20 @@
         <table class="mydetails">
             <tr>
                 <td>
-                    {{--  <img src="{{ getSingleMediaSettingImage($app_setting,'site_logo') }}" width="80px" loading="lazy">  --}}
+                @php
+                    // Get the logo URL from your existing function
+                    $logoUrl = getSingleMedia(appSettingData('get'),'site_logo',null);
+
+                    // Convert it to a public path
+                    $relativePath = str_replace(url('/'), '', $logoUrl); 
+                    $logoPath = public_path($relativePath);              
+
+                    // Convert to base64
+                    $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
+                    $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
+                    $logoSrc = $logoData ? 'data:image/' . $logoType . ';base64,' . $logoData : '';
+                @endphp
+                    <img src="{{ $logoSrc }}" height="125" width="125">
                 </td>
                 <td class="invoice-details">
                     <strong>{{ __('message.invoice_no') }} :</strong> {{ optional($ride_detail)->id }}<br>

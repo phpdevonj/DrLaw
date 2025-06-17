@@ -205,6 +205,9 @@ Route::group(['middleware' => ['auth', 'verified', 'admin']], function()
 
     // rider addresses
     Route::resource('useraddress', UserAddressController::class);
+
+    // Heatmap
+    Route::get('heatmap',[ HomeController::class, 'heatmap' ])->name('heatmap');
 });
 
 Route::get('/ajax-list',[ HomeController::class, 'getAjaxList' ])->name('ajax-list');
