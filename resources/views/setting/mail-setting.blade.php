@@ -11,7 +11,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-control-label text-capitalize">{{ strtolower(str_replace('_',' ',$key)) }}</label>
-                        @if( !env('APP_DEMO') && auth()->user()->hasRole('admin'))
+                        @if( !env('APP_DEMO') && auth()->user()->hasAnyRole(getActiveAdminsRoles()))
                             <input type="{{$key=='MAIL_PASSWORD'?'password':'text'}}" value="{{ $value }}" name="ENV[{{$key}}]" class="form-control" placeholder="{{ config('constant.MAIL_PLACEHOLDER.'.$key) }}">
                         @else
                             <input type="{{$key=='MAIL_PASSWORD'?'password':'text'}}" value="" name="ENV[{{$key}}]" class="form-control" placeholder="{{ config('constant.MAIL_PLACEHOLDER.'.$key) }}">

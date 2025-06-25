@@ -256,7 +256,7 @@ class SettingController extends Controller
         if(env('APP_DEMO')){
             return redirect()->route('setting.index', ['page' => $page])->withErrors(__('message.demo_permission_denied'));
         }
-        if(!auth()->user()->hasRole('admin')) {
+        if(!auth()->user()->hasAnyRole(getActiveAdminsRoles())) {
             abort(403, __('message.action_is_unauthorized'));
         }
         $env = $request->ENV;
@@ -343,7 +343,7 @@ class SettingController extends Controller
         if(env('APP_DEMO')){
             return redirect()->route('term-condition')->withErrors(__('message.demo_permission_denied'));
         }
-        if(!auth()->user()->hasRole('admin')) {
+        if(!auth()->user()->hasAnyRole(getActiveAdminsRoles())) {
             abort(403, __('message.action_is_unauthorized'));
         }
         $setting_data = [
@@ -376,7 +376,7 @@ class SettingController extends Controller
         if(env('APP_DEMO')){
             return redirect()->route('privacy-policy')->withErrors(__('message.demo_permission_denied'));
         }
-        if(!auth()->user()->hasRole('admin')) {
+        if(!auth()->user()->hasAnyRole(getActiveAdminsRoles())) {
             abort(403, __('message.action_is_unauthorized'));
         }
         $setting_data = [
@@ -400,7 +400,7 @@ class SettingController extends Controller
         if(env('APP_DEMO')){
             return redirect()->route('setting.index', ['page' => 'payment-setting'])->withErrors(__('message.demo_permission_denied'));
         }
-        if(!auth()->user()->hasRole('admin')) {
+        if(!auth()->user()->hasAnyRole(getActiveAdminsRoles())) {
             abort(403, __('message.action_is_unauthorized'));
         }
         $data = $request->all();
