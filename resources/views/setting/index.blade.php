@@ -24,7 +24,10 @@
                                     <a href="javascript:void(0)" data-href="{{ route('layout_page') }}?page=password_form" data-target=".paste_here" class="nav-link {{$page=='password_form'?'active':''}}"  data-toggle="tabajax" rel="tooltip"> {{ __('message.change_password') }} </a>
                                 </li>
                             @else
-                                @hasanyrole('admin|demo_admin')
+                                @php
+                                    $roles = getActiveAdminsRoles();
+                                @endphp
+                                @if(auth()->user()->hasAnyRole($roles))
                                     <li class="nav-item">
                                         <a href="javascript:void(0)" data-href="{{ route('layout_page') }}?page=general-setting" data-target=".paste_here" class="nav-link {{$page=='general-setting'?'active':''}}"  data-toggle="tabajax" rel="tooltip"> {{ __('message.general_settings') }}</a>
                                     </li>
@@ -49,7 +52,7 @@
                                     <li class="nav-item">
                                         <a href="javascript:void(0)" data-href="{{ route('layout_page') }}?page=payment-setting" data-target=".paste_here" class="nav-link {{$page=='payment-setting'?'active':''}}"  data-toggle="tabajax" rel="tooltip"> {{ __('message.payment_settings') }}</a>
                                     </li>
-                                @endhasanyrole
+                                @endif
                             @endif
                         </ul>
                         <div class="tab-content">

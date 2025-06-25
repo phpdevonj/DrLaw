@@ -34,7 +34,7 @@ class Payment extends Model
     {
         $user = auth()->user();
 
-        if($user->hasAnyRole(['admin','demo_admin']) ) {
+        if($user->hasAnyRole(getActiveAdminsRoles()) ) {
             return $query;
         }
 

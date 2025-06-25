@@ -83,7 +83,7 @@ class User extends Authenticatable implements HasMedia
     {
         $auth_user = auth()->user();
 
-        if( $auth_user->hasAnyRole(['admin']) ) {
+        if( $auth_user->hasAnyRole(getActiveAdminsRoles()) ) {
             $query->where('user_type', $user_type)->where('status','active');
             return $query;
         }

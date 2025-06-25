@@ -2,7 +2,7 @@
     $auth_user= authSession();
 ?>
     
-@if($query->status == 0 && $auth_user->hasAnyRole(['admin']) )
+@if($query->status == 0 && $auth_user->hasAnyRole(getActiveAdminsRoles()) )
     <div class="d-flex justify-content-end align-items-center">
         <a href="{{ route('withdraw.request.status', [ 'id' => $query->id, 'status' => 1 ]) }}"
             data--confirmation='true' data-title="{{ __('message.withdrawrequest') }}"

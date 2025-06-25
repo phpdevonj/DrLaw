@@ -109,7 +109,7 @@
                     const toDate = $('#to_date_main').val() || '';
                     const riderId = $('#rider_id').val() || '';
                     const driverId = $('#driver_id').val() || '';
-                    const exportUrl = `{{ route('download-admin-earning') }}?from_date=${fromDate}&to_date=${toDate}&rider_id=${riderId}&driver_id=${driverId}`;
+                    const exportUrl = `{{ route('download-driver-earning') }}?from_date=${fromDate}&to_date=${toDate}&rider_id=${riderId}&driver_id=${driverId}`;
                     window.location.href = exportUrl;
                 });
         
@@ -119,7 +119,7 @@
                     const toDate = $('#to_date_main').val() || '';
                     const riderId = $('#rider_id').val() || '';
                     const driverId = $('#driver_id').val() || '';
-                    const exportUrl = `{{ route('download-adminearningpdf') }}?from_date=${fromDate}&to_date=${toDate}&rider_id=${riderId}&driver_id=${driverId}`;
+                    const exportUrl = `{{ route('download-driverearningpdf') }}?from_date=${fromDate}&to_date=${toDate}&rider_id=${riderId}&driver_id=${driverId}`;
                     window.location.href = exportUrl;
                 });
             });

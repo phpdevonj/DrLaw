@@ -17,6 +17,7 @@ use App\Models\Document;
 use App\Models\LanguageVersionDetail;
 use App\Models\RideRequestBid;
 use App\Models\SurgePrice;
+use App\Models\Role;
 
 function DummyData($key){
     $dummy_title = 'XXXXXXXXXXXX';
@@ -1742,4 +1743,8 @@ function convertSecondsToReadableTime($totalSeconds)
     }
 
     return implode(' ', $parts);
+}
+
+function getActiveAdminsRoles() {
+    return Role::where('status', 1)->whereNotIn('name', ['driver', 'rider'])->pluck('name')->toArray();
 }

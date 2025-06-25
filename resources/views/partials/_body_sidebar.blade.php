@@ -5,7 +5,7 @@
         
         $menu->add('<span>'.__('message.book_now').'</span>', [ 'class' => '', 'route' => 'dispatch.create'])
                 ->prepend('<i class="fa fa-plus"></i>')
-                ->data('permission', 'order-add')
+                ->data('permission', 'dispatch add')
                 ->link->attr(['class' => '']);
 
         //Admin Dashboard
@@ -83,7 +83,7 @@
                 ->link->attr(['class' => '']);
 
             $menu->driver->add('<span>'.__('message.pending_list_form_title',['form' => __('message.driver')]).'</span>', ['class' => 'sidebar-layout' ,'route' => ['driver.pending', 'pending'] ])
-                ->data('permission', 'driver list')
+                ->data('permission', 'pending driver')
                 ->prepend('<i class="fas fa-list"></i>')
                 ->link->attr(['class' => '']);
 

@@ -21,7 +21,7 @@
                     <div class="card-body">
                         <div class="new-user-info">
                             <div class="row">
-                                @if(auth()->user()->hasAnyRole(['admin','demo_admin']))
+                                
                                     <div class="form-group col-md-4">
                                         {{ Form::label('driver_id', __('message.select_name',[ 'select' => __('message.driver') ]).' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
                                         {{ Form::select('driver_id', isset($id) ? [ optional($data->driver)->id => optional($data->driver)->display_name] : [], old('driver_id'), [
@@ -31,7 +31,6 @@
                                             'data-ajax--url' => route('ajax-list', ['type' => 'driver', 'status' => 'pending' ]),
                                         ]) }}
                                     </div>
-                                @endif
 
                                 @if(auth()->user()->hasRole('fleet'))
                                     <div class="form-group col-md-4">
@@ -67,12 +66,11 @@
                                     {{ Form::text('expire_date', old('expire_date'),[ 'class' =>'form-control min-datepicker', 'placeholder' => __('message.expire_date'), 'required' => $has_expiry_date == 1 ? 'required' : null ]) }}
                                 </div>
                                 
-                                @if(auth()->user()->hasAnyRole(['admin','demo_admin']))
+                                
                                     <div class="form-group col-md-4">
                                         {{ Form::label('is_verified', __('message.is_verify').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
                                         {{ Form::select('is_verified',[ '0' => __('message.pending'), '1' => __('message.approved'), '2' => __('message.rejected') ], old('is_verified'), [ 'id' => 'is_verified', 'class' => 'form-control select2js', 'required']) }}
                                     </div>
-                                @endif
 
                                 <div class="form-group col-md-4">
                                     <label class="form-control-label" for="driver_document">{{ __('message.upload_document') }} <span class="text-danger" id="document_required"></span> </label>

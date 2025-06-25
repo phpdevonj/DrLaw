@@ -34,7 +34,7 @@ class SettingController extends Controller
         $page = $request->page;
 
         if($page == ''){
-            if($auth_user->hasAnyRole(['admin', 'demo_admin'])){
+            if($auth_user->hasAnyRole(getActiveAdminsRoles())){
                 $page = 'general-setting';
             }else{
                 $page = 'profile_form';
