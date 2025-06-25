@@ -682,4 +682,7 @@ return array(
     'no_service_available' => 'No service available',
     'error_fetching_services' => 'Error while fetching services',
     'heatmap' => 'Heatmap',
+    'admin_user' => 'Admin User',
+    'select_role' => 'Select Role',
+    'please_select_role' => 'Please select role',
 );

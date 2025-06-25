@@ -38,6 +38,7 @@ use App\Http\Controllers\ScreenController;
 use App\Http\Controllers\SurgePriceController;
 use App\Http\Controllers\WhyChooseController;
 use App\Http\Controllers\UserAddressController;
+use App\Http\Controllers\AdminUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,7 +68,7 @@ Route::group(['prefix' => 'auth'], function() {
 
 Route::get('ride-invoice/{id}', [RideRequestController::class, 'rideInvoicePdf'])->name('ride-invoice');
 Route::get('language/{locale}', [ HomeController::class, 'changeLanguage'])->name('change.language');
-Route::group(['middleware' => ['auth', 'verified', 'admin']], function()
+Route::group(['middleware' => ['auth', 'verified', 'admin', 'check.route.permission']], function()
 {
     // Route::get('/', [HomeController::class, 'index']);
     Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -183,7 +184,7 @@ Route::group(['middleware' => ['auth', 'verified', 'admin']], function()
     Route::get('admin-earning-report', [ReportController::class, 'adminEarning'])->name('adminEarningReport');
     Route::get('driver-earning-report', [ ReportController::class, 'driverEarning' ])->name('driver.earning.report');
     Route::get('driver-report-report', [ ReportController::class, 'driverReport' ])->name('driver.report.list');
-    Route::get('service-wise-report', [ ReportController::class, 'serviceWiseReport' ])->name('serviceWiseReport');
+    Route::get('service-wise-report', [ ReportController::class, 'serviceWiseReport' ])->name('service.wise.report');
 
     // Report Excel Route
     Route::get('download-admin-earning', [ReportController::class, 'downloadAdminEarning'])->name('download-admin-earning');
@@ -208,6 +209,9 @@ Route::group(['middleware' => ['auth', 'verified', 'admin']], function()
 
     // Heatmap
     Route::get('heatmap',[ HomeController::class, 'heatmap' ])->name('heatmap');
+
+    // admin user
+    Route::resource('admin-user', AdminUserController::class);
 });
 
 Route::get('/ajax-list',[ HomeController::class, 'getAjaxList' ])->name('ajax-list');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Support\Facades\Cache;
 
 class PermissionController extends Controller
 {
@@ -23,7 +24,7 @@ class PermissionController extends Controller
         $permission = Permission::orderBy('id','ASC')->whereNull('parent_id')->with('subpermission')->get();
         $pageTitle = __('message.list_form_title',['form' => __('message.permission')  ]);
 
-        $roles = Role::where('status',1)->orderBy('name','ASC');
+        $roles = Role::where('status',1)->whereNotIn('name',['admin','demo_admin','rider','driver'])->orderBy('name','ASC');
         if(!\Auth::user()->hasRole('admin')){
             $roles->where('name','!=','admin');
         }
@@ -70,6 +71,7 @@ class PermissionController extends Controller
                 }
             }
         }
+        Cache::flush();
         return redirect()->route('permission.index')->withSuccess(__('message.save_form',['form' => __('message.permission')]));
     }
 

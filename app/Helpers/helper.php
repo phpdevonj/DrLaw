@@ -550,27 +550,43 @@ function saveRideHistory($data)
 
 function checkMenuRoleAndPermission($menu)
 {
-    if (auth()->check()) {
-        if ($menu->data('role') == null && auth()->user()->hasRole('admin')) {
+
+    if (!auth()->check()) {
+        return false;
+    }
+
+    $user = auth()->user();
+    $roles = $menu->data('role');
+    $permissions = $menu->data('permission');
+
+    // Case: No role or permission set, but user is admin → allow
+    if (!$roles && $user->hasRole('admin')) {
+        return true;
+    }
+
+    // Case: No role or permission set at all → allow
+    if (!$roles && !$permissions) {
+        return true;
+    }
+
+    // Handle roles (supports comma-separated or array)
+    if ($roles) {
+        $rolesArray = is_array($roles) ? $roles : explode(',', $roles);
+        if ($user->hasAnyRole($rolesArray)) {
             return true;
         }
+    }
 
-        if($menu->data('permission') == null && $menu->data('role') == null) {
-            return true;
-        }
-
-        if($menu->data('role') != null) {
-            if(auth()->user()->hasAnyRole(explode(',', $menu->data('role')))) {
-                return true;
-            }
-        }
-
-        if($menu->data('permission') != null) {
-            if(auth()->user()->can($menu->data('permission')) ) {
+    // Handle permissions (supports comma-separated or array)
+    if ($permissions) {
+        $permArray = is_array($permissions) ? $permissions : explode(',', $permissions);
+        foreach ($permArray as $perm) {
+            if ($user->can(trim($perm))) {
                 return true;
             }
         }
     }
+
     return false;
 }
 

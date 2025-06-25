@@ -17,7 +17,12 @@ class Admin
      */
     public function handle($request, Closure $next)
     {   
-        if (Auth::check() && auth()->user()->hasRole('admin') ) {
+        
+        // get all roles using model and use foreach loop to check in array condition
+        $excludedRoles = ['rider', 'driver'];
+        $allowedRoles = Role::where('status', 1)->whereNotIn('name', $excludedRoles)->pluck('name')->toArray();
+
+        if (Auth::check() && auth()->user()->hasAnyRole($allowedRoles) && auth()->user()->status == 'active') {
             return $next($request);
         }else {
             Auth::logout();

@@ -555,6 +555,17 @@ class HomeController extends Controller
 
                 $items = $items->get();
                 break;
+            case 'role':
+                $items = \App\Models\Role::select('id','name as text')
+                    ->whereNotIn('name',['rider','driver','admin'])
+                    ->where('status',1);
+    
+                    if($value != ''){
+                        $items->where('name', 'LIKE', $value.'%');
+                    }
+    
+                    $items = $items->get();
+                    break;
 
             default :
                 break;

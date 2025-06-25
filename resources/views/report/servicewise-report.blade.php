@@ -57,7 +57,7 @@
                     serverSide: true,
                     searching: false,
                     ajax: {
-                        url: '{{ route("serviceWiseReport") }}',
+                        url: '{{ route("service.wise.report") }}',
                         data: function(d) {
                             d.rider_id = $('#rider_id').val();
                             d.driver_id = $('#driver_id').val();
