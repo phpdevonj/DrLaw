@@ -619,12 +619,20 @@ class RideRequestController extends Controller
         $schedule_rides->when(request('rider_id'), function ($q) {
             return $q->where('rider_id',request('rider_id'));
         });
-        
-        $schedule_rides->when(request('driver_id'), function ($query) {
-            return $query->whereHas('driver',function ($q) {
-                $q->where('driver_id',request('driver_id'));
+
+        $schedule_rides->when(request('driver_id'), function ($q) {
+            $driverId = (int) request('driver_id');
+            return $q->where(function ($query) use ($driverId) {
+                $query->whereNull('cancelled_driver_ids')
+                      ->orWhereRaw("JSON_CONTAINS(cancelled_driver_ids, '[$driverId]') = 0");
             });
         });
+        
+        // $schedule_rides->when(request('driver_id'), function ($query) {
+        //     return $query->whereHas('driver',function ($q) {
+        //         $q->where('driver_id',request('driver_id'));
+        //     });
+        // });
 
         $order = 'desc';
         $per_page = config('constant.PER_PAGE_LIMIT');

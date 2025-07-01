@@ -342,6 +342,8 @@ class RideRequestController extends Controller
     
             saveRideHistory($history_data);
             $riderequest->driver->update(['is_available' => 0]);
+
+            $message = __('message.updated');
         } else {
             // $riderequest->status = 'driver_declined';
             // $riderequest->save();
@@ -355,15 +357,17 @@ class RideRequestController extends Controller
     
             // saveRideHistory($history_data);
             $result = $this->acceptDeclinedRideRequest($riderequest, $request->all());
+
+            // return response if ride request is decline by driver
+            $message = __('message.ride.driver_declined',[ 'name' => __('message.driver') ] );
         }
 
-        $message = __('message.updated');
-        if( $result->driver_id == null ) {
+        if(isset($result->driver_id) && $result->driver_id == null ) {
             $message = __('message.save_form',[ 'form' => __('message.riderequest') ] );
         }
         if($request->is('api/*')) {
             $response = [
-                'ride_request_id' => $result->id,
+                'ride_request_id' => $result->id??$request->id,
                 'message' => $message
             ];
             return json_custom_response($response);
@@ -755,36 +759,49 @@ class RideRequestController extends Controller
             return json_message_response(__('message.ride.unauthorized_action'), 403);
         }
 
-        if(!request()->has('is_accept') && request('is_accept') == 0 ) {
-            $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
-            return json_message_response($message,400);
+        // if(!request()->has('is_accept') && request('is_accept') == 0 ) {
+        //     $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+        //     return json_message_response($message,400);
+        // }
+
+        if(request()->has('is_accept') && request('is_accept') == 1 ){
+            $riderequest->driver_id = request('driver_id');
+            $riderequest->status = 'driver_accepted';
+            $riderequest->max_time_for_find_driver_for_ride_request = 0;
+            $riderequest->otp = rand(1000, 9999);
+            $riderequest->riderequest_in_driver_id = null;
+            $riderequest->riderequest_in_datetime = null;
+            $riderequest->save();
+            $result = $riderequest;
+        
+            $history_data = [
+                'history_type'      => 'driver_accepted',
+                'ride_request_id'   => $result->id,
+                'ride_request'      => $result,
+            ];
+        
+            saveRideHistory($history_data);
+            //$riderequest->driver->update(['is_available' => 0]);
+
+            $message = __('message.updated');
+        }else{
+            $cancelled_driver_ids = $riderequest->cancelled_driver_ids ?: [];
+        
+            if (request()->has('is_accept') && request('is_accept') == 0) {
+                array_push($cancelled_driver_ids, request('driver_id'));
+            }
+            $riderequest->cancelled_driver_ids = $cancelled_driver_ids;
+            $result = $riderequest->save();
+
+            $message = __('message.ride.driver_declined',[ 'name' => __('message.driver') ] );
         }
 
-        $riderequest->driver_id = request('driver_id');
-        $riderequest->status = 'driver_accepted';
-        $riderequest->max_time_for_find_driver_for_ride_request = 0;
-        $riderequest->otp = rand(1000, 9999);
-        $riderequest->riderequest_in_driver_id = null;
-        $riderequest->riderequest_in_datetime = null;
-        $riderequest->save();
-        $result = $riderequest;
-    
-        $history_data = [
-            'history_type'      => 'driver_accepted',
-            'ride_request_id'   => $result->id,
-            'ride_request'      => $result,
-        ];
-    
-        saveRideHistory($history_data);
-        //$riderequest->driver->update(['is_available' => 0]);
-        
-        $message = __('message.updated');
-        if( $result->driver_id == null ) {
+        if(isset($result->driver_id) && $result->driver_id == null ) {
             $message = __('message.save_form',[ 'form' => __('message.riderequest') ] );
         }
         if($request->is('api/*')) {
             $response = [
-                'ride_request_id' => $result->id,
+                'ride_request_id' => $result->id ?? $id,
                 'message' => $message
             ];
             return json_custom_response($response);
