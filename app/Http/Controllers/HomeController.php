@@ -691,7 +691,7 @@ class HomeController extends Controller
             $unit_value = convertUnitvalue('km');
 
             $radius = SettingData('DISTANCE', 'DISTANCE_RADIUS') ?? 50;
-            $driver_list->selectRaw("id, first_name, last_name, display_name, status, is_online, is_available, last_location_update_at, user_type, latitude, longitude, ( $unit_value * acos( cos( radians($latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians($longitude) ) + sin( radians($latitude) ) * sin( radians( latitude ) ) ) ) AS distance")
+            $driver_list->selectRaw("id, first_name, last_name, display_name, status, is_online, is_available, last_location_update_at, user_type, latitude, longitude, service_id, ( $unit_value * acos( cos( radians($latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians($longitude) ) + sin( radians($latitude) ) * sin( radians( latitude ) ) ) ) AS distance")
                 ->having('distance', '<=', $radius)
                 ->where('is_online',1)
                 ->where('is_available',1)

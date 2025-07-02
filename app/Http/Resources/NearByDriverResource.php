@@ -26,6 +26,8 @@ class NearByDriverResource extends JsonResource
             'is_available'      => $this->is_available,
             'rating'            => count($this->driverRating) > 0 ? (float) number_format(max($this->driverRating->avg('rating'),0), 2) : 0,
             'last_location_update_at' => $this->last_location_update_at,
+            'service_id'        => $this->service_id,
+            'service_name'      => optional($this->service)->name,
         ];
     }
 }
