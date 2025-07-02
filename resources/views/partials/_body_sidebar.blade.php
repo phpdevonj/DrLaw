@@ -3,10 +3,10 @@
 
     $MyNavBar = \Menu::make('MenuList', function ($menu) use($url){
         
-        $menu->add('<span>'.__('message.book_now').'</span>', [ 'class' => '', 'route' => 'dispatch.create'])
-                ->prepend('<i class="fa fa-plus"></i>')
-                ->data('permission', 'dispatch add')
-                ->link->attr(['class' => '']);
+        //$menu->add('<span>'.__('message.book_now').'</span>', [ 'class' => '', 'route' => 'dispatch.create'])
+        //        ->prepend('<i class="fa fa-plus"></i>')
+        //        ->data('permission', 'dispatch add')
+        //        ->link->attr(['class' => '']);
 
         //Admin Dashboard
         $menu->add('<span>'.__('message.dashboard').'</span>', ['route' => 'home'])
