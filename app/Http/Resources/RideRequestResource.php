@@ -22,6 +22,9 @@ class RideRequestResource extends JsonResource
 
         $getBidAmount = $this->approvedBids()->first();
 
+        $driver_ratings = optional($this->driver)->driverRating ?? collect();
+        $rider_ratings = optional($this->rider)->riderRating ?? collect();
+
         return [
             'id'                => $this->id,
             'rider_id'          => $this->rider_id,
@@ -90,6 +93,8 @@ class RideRequestResource extends JsonResource
             'multi_drop_location'     => json_decode($this->multi_drop_location),
             'invoice_url' => $pdfUrl,
             'invoice_name' => 'Ride_' . $this->id,
+            'driver_rating' => $driver_ratings->count() > 0 ? (float) number_format(max($driver_ratings->avg('rating'), 0), 2) : 0,
+            'rider_rating'  => $rider_ratings->count() > 0 ? (float) number_format(max($rider_ratings->avg('rating'), 0), 2) : 0,
         ];
     }
 }
