@@ -36,6 +36,7 @@ class UserController extends Controller
 
         $input['display_name'] = $input['first_name']." ".$input['last_name'];
         $input['last_actived_at'] = now();
+        $input['contact_number'] = trim($input['country_code']) . trim($input['contact_number']);
         $user = User::create($input);
         $user->assignRole($input['user_type']);
 
@@ -65,6 +66,7 @@ class UserController extends Controller
         $input['display_name'] = $input['first_name']." ".$input['last_name'];
         $input['is_available'] = 1;
         $input['last_actived_at'] = now();
+        $input['contact_number'] = trim($input['country_code']) . trim($input['contact_number']);
         $user = User::create($input);
         $user->assignRole($input['user_type']);
 

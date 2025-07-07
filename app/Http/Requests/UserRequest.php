@@ -20,6 +20,13 @@ class UserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'full_contact_number' => $this->country_code . $this->contact_number,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -32,7 +39,8 @@ class UserRequest extends FormRequest
         $rules = [
             'username'  => 'required|unique:users,username,'.$user_id,
             'email'     => 'required|email|unique:users,email,'.$user_id,
-            'contact_number' => 'max:20|unique:users,contact_number,'.$user_id,
+            'contact_number' => 'required|max:20',
+            'full_contact_number' => 'required|unique:users,contact_number,' . $user_id,
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:1024',
         ];
 
@@ -46,6 +54,8 @@ class UserRequest extends FormRequest
             'profile_image.image' => 'The profile image must be a valid image file.',
             'profile_image.mimes' => 'Allowed image types: jpeg, png, jpg, gif, webp.',
             'profile_image.max' => 'The profile image must not be larger than 1MB.',
+            'contact_number.required' => 'Mobile number is required.',
+            'full_contact_number.unique' => 'This mobile number has already been taken.',
         ];
     }
 

@@ -18,6 +18,13 @@ class DriverStepOneRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'full_contact_number' => $this->country_code . $this->contact_number,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -33,10 +40,19 @@ class DriverStepOneRequest extends FormRequest
             'username'   => 'required|unique:users,username',
             'password' => 'required|min:8',
             'email'      => 'required|email|unique:users,email',
-            'contact_number' => 'required|max:20|unique:users,contact_number',
+            'contact_number' => 'required|max:20',
+            'full_contact_number' => 'required|unique:users,contact_number',
         ];
 
         return $rules;
+    }
+
+    public function messages()
+    {
+        return [
+            'contact_number.required' => 'Mobile number is required.',
+            'full_contact_number.unique' => 'This mobile number has already been taken.',
+        ];
     }
 
     /**
