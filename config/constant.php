@@ -24,7 +24,7 @@ return [
         // 'cash' => [],
         'stripe' => [ 'url', 'secret_key', 'publishable_key' ],
         // 'razorpay' => [ 'key_id', 'secret_id' ],
-        // 'paystack' => [ 'public_key' ],
+        'paystack' => [ 'public_key','secret_key' ],
         // 'flutterwave' => [ 'public_key', 'secret_key', 'encryption_key' ],
         // 'paypal' => [ 'tokenization_key' ],
         // 'paytabs' => [ 'client_key', 'profile_id', 'server_key'],
