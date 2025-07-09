@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             ModelHasPermissionsTableSeeder::class,
             AppSettingTableSeeder::class,
             LanguageDefaultListSeeder::class,
-            ScreenkeywordSeeder::class
+            //ScreenkeywordSeeder::class
         ]);
     }
 }

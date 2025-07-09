@@ -920,6 +920,69 @@ class PermissionTableSeeder extends Seeder
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'updated_at' => NULL,
             ),
+            100 => 
+            array (
+                'id' => 101,
+                'name' => 'withdrawrequest',
+                'guard_name' => 'web',
+                'parent_id' => NUll,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
+            101 => 
+            array (
+                'id' => 102,
+                'name' => 'withdrawrequest list',
+                'guard_name' => 'web',
+                'parent_id' => 101,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
+            102 => 
+            array (
+                'id' => 103,
+                'name' => 'heatmap',
+                'guard_name' => 'web',
+                'parent_id' => NUll,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
+            103 => 
+            array (
+                'id' => 104,
+                'name' => 'heatmap list',
+                'guard_name' => 'web',
+                'parent_id' => 103,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
+            104 => 
+            array (
+                'id' => 105,
+                'name' => 'setting',
+                'guard_name' => 'web',
+                'parent_id' => NUll,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
+            105 => 
+            array (
+                'id' => 106,
+                'name' => 'setting list',
+                'guard_name' => 'web',
+                'parent_id' => 105,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
+            106 => 
+            array (
+                'id' => 107,
+                'name' => 'setting edit',
+                'guard_name' => 'web',
+                'parent_id' => 105,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => NULL,
+            ),
         ));
     }
 }
