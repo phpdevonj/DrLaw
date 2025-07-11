@@ -122,7 +122,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('getScheduleRidesList', [ API\RideRequestController::class, 'getScheduleRidesList'] );
     Route::post('cancel-scheduled-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'cancelScheduledRide']);
     Route::post('accept-schedule-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'acceptScheduleRide']);
+
+    // create paystack payment transaction
+    Route::post('/paystack/transaction', [API\PaystackController::class, 'storeTransaction']);
+    Route::post('/paystack/transaction/update-status', [API\PaystackController::class, 'updateTransactionStatus']);
 });
 
 Route::get('place-autocomplete-api', [ API\RideRequestController::class, 'placeAutoComplete' ] );
 Route::get('place-detail-api', [ API\RideRequestController::class, 'placeDetail' ] );
+
+// paystack webhook
+Route::post('/paystack/webhook', [API\PaystackController::class, 'handleWebhook']);

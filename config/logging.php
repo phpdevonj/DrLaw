@@ -109,6 +109,13 @@ return [
             'days' => 14,
         ],
 
+        'paystack_webhook' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/paystack_webhook.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),
