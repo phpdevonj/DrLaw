@@ -53,6 +53,7 @@ class DriverResource extends JsonResource
             'is_document_required'  => $is_document_required,
             'last_location_update_at' => $this->last_location_update_at,
             'otp_verify_at'     => $this->otp_verify_at,
+            'driver_complete_trips'    => $this->completedTripsAsDriverCount(),
         ];
     }
 }

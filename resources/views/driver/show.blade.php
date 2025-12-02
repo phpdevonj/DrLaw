@@ -78,6 +78,10 @@
                                     </div>
                                 </div>
                             @endif
+                            
+                            <p class="text-white text-center mb-4">                                
+                                Driver Score : {{$data->driver_score}}%
+                            </p>
                         </div>
                         <div class="pro-content border-radius-20">
                             <div class="d-flex align-items-center mb-3">

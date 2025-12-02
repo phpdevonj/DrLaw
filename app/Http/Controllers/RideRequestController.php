@@ -23,6 +23,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Notifications\CommonNotification;
+use App\Models\Wallet;
+use App\Models\WalletHistory;
+use App\Models\RideRequestHistory;
 
 class RideRequestController extends Controller
 {
@@ -66,6 +69,41 @@ class RideRequestController extends Controller
      */
     public function store(Request $request)
     {
+        // Rider should not be able to book a normal ride within X minutes of a scheduled ride.
+        // $normal_ride_restriction_buffer = SettingData('ride', 'normal_ride_restriction_buffer') ?? 0;
+        // if ($normal_ride_restriction_buffer > 0) {
+        //     $utcNow = Carbon::now('UTC');
+        
+        //     $hasUpcomingScheduledRide = RideRequest::where([
+        //             'rider_id' => request('rider_id'),
+        //             'is_schedule' => 1,
+        //         ])
+        //         ->whereNotIn('status', ['canceled', 'completed']) 
+        //         ->whereBetween('scheduled_at', [
+        //             $utcNow,
+        //             $utcNow->copy()->addMinutes($normal_ride_restriction_buffer)
+        //         ])
+        //         ->exists();
+        
+        //     if ($hasUpcomingScheduledRide) {
+        //         $message = __('message.rider_normal_ride_restriction', [
+        //             'name' => __('message.riderequest'),
+        //             'minutes' => $normal_ride_restriction_buffer
+        //         ]);
+        //         return json_message_response($message,400);
+        //     }
+        // }
+
+        $blockedScheduleStatuses = ['accepted','arriving','arrived','in progress'];
+        $rider_has_blocking_scheduled_ride = RideRequest::where('rider_id', auth()->user()->id)
+            ->where('is_schedule', 1) // check only scheduled ride
+            ->whereIn('status', $blockedScheduleStatuses)
+            ->exists();
+
+        if ($rider_has_blocking_scheduled_ride) {
+            return json_message_response(__('message.scheduled_ride_active_not_allowed'),400);
+        }
+
         $data = $request->all();
 
         // Check if the rider has registred a riderequest already
@@ -99,6 +137,10 @@ class RideRequestController extends Controller
             $data['multi_drop_location'] = json_encode($data['multi_location']);
         }
         $data['ride_has_bid'] = $request->ride_type == 'with_bidding' ? 1 : 0;
+
+        $data['destination_latitude'] = $request->end_latitude;
+        $data['destination_longitude'] = $request->end_longitude;
+        $data['destination_address'] = $request->end_address;
         $result = RideRequest::create($data);
 
         $message = __('message.save_form', ['form' => __('message.riderequest')]);        
@@ -313,6 +355,33 @@ class RideRequestController extends Controller
 
     public function acceptRideRequest(Request $request)
     {
+        if(request()->has('is_accept') && request('is_accept') == 1){
+            $normal_ride_restriction_buffer = SettingData('ride', 'normal_ride_restriction_buffer') ?? 0;
+
+            if($normal_ride_restriction_buffer > 0){
+                $utcNow = Carbon::now('UTC');
+
+                $hasUpcomingScheduledRide = RideRequest::where([
+                        'driver_id' => request('driver_id'),
+                        'is_schedule' => 1,
+                        'status' => 'driver_accepted'
+                    ])
+                    ->whereBetween('scheduled_at', [
+                        $utcNow,
+                        $utcNow->copy()->addMinutes($normal_ride_restriction_buffer)
+                    ])
+                    ->exists();
+
+                if ($hasUpcomingScheduledRide) {
+                    $message = __('message.driver_normal_ride_restriction', [
+                        'name' => __('message.riderequest'),
+                        'minutes' => $normal_ride_restriction_buffer
+                    ]);
+                    return json_message_response($message);
+                }
+            }
+        } 
+        
         $riderequest = RideRequest::find($request->id);
 
         if($riderequest == null) {
@@ -394,6 +463,24 @@ class RideRequestController extends Controller
                 $auth_user->unreadNotifications->where('data.type','!=', 'complaintcomment')->where('data.id', $id)->markAsRead();
             }
         }
+
+        if ($data->duration <= $data->distance) {
+            // Short duration ride
+            $time_fare_value = $data->time_fare_short_ride;
+            $time_fare_type = 'Short duration ride';
+        } elseif ($data->duration > $data->distance && $data->duration <= 2 * $data->distance) {
+            // Moderate duration ride
+            $time_fare_value = $data->time_fare_moderate_ride;
+            $time_fare_type = 'Moderate duration ride';
+        } elseif ($data->duration > 2 * $data->distance) {
+            // Long duration / heavy traffic
+            $time_fare_value = $data->time_fare_long_ride;
+            $time_fare_type = 'Long duration / heavy traffic';
+        } else {
+            $time_fare_value = 0;
+            $time_fare_type = 'Other';
+        }
+
         $fixed_amount = 0;
         $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
         if ($surge_price_setting_value == 1) {
@@ -405,9 +492,9 @@ class RideRequestController extends Controller
                     $fixed_amount =($data->subtotal * $surge_price->value) / 100;
                 }
             }
-            return view('riderequest.show', compact('data','surge_price','fixed_amount'));
+            return view('riderequest.show', compact('data','surge_price','fixed_amount','time_fare_value','time_fare_type'));
         }
-        return view('riderequest.show', compact('data','fixed_amount'));
+        return view('riderequest.show', compact('data','fixed_amount','time_fare_value','time_fare_type'));
     }
 
     /**
@@ -434,6 +521,7 @@ class RideRequestController extends Controller
     public function update(RideRequestRequest $request, $id)
     {
         $riderequest = RideRequest::findOrFail($id);
+        $ride_status = $riderequest->status;
 
         if( $request->has('otp') ) {
             if($riderequest->otp != $request->otp) {
@@ -502,6 +590,30 @@ class RideRequestController extends Controller
         ];
 
         saveRideHistory($history_data);
+
+        if($request->status == 'canceled'){
+            // Check who cancelled the ride
+                $cancelled_by = $request->cancel_by;
+
+                if ($cancelled_by === 'rider') {
+                    // Rider canceled → check ride status
+                    if ($ride_status === 'arrived' && $riderequest->cancelation_charges > 0) {
+                        // Rider canceled AFTER driver arrived → apply cancellation charges
+                        $this->saveCancellationPayment($riderequest, $ride_status);
+                    }
+                }
+            
+            try {
+                $firebaseData = app('firebase.firestore')
+                    ->database()
+                    ->collection('rides')
+                    ->document('ride_'.$riderequest->id);
+        
+                $firebaseData->delete();
+            } catch (\Exception $e) {
+                Log::error("Firestore delete failed for ride {$riderequest->id}: ".$e->getMessage());
+            }
+        }
 
         if($request->is('api/*')) {
             return json_message_response($message);
@@ -635,9 +747,28 @@ class RideRequestController extends Controller
             if($riderScheduleDateTime->lt($minScheduleTime)){
                 return json_message_response(__('message.ride.schedule_minimum_time_required'), 400);
             }
+
+            // Convert to UTC to compare & store
+            $scheduledAtUTC = $riderScheduleDateTime->clone()->setTimezone('UTC');
+
+            // Add buffer (x minutes before & after)
+            $scheduled_ride_restriction_buffer = SettingData('ride', 'scheduled_ride_restriction_buffer') ?? 0;
+            $startTime = $scheduledAtUTC->clone()->subMinutes($scheduled_ride_restriction_buffer);
+            $endTime   = $scheduledAtUTC->clone()->addMinutes($scheduled_ride_restriction_buffer);
+
+            // Check if rider already has a ride in this time window
+            $existingRide = RideRequest::where('rider_id', $request->rider_id)
+                ->where('is_schedule', 1)
+                ->whereIn('status', ['scheduled', 'driver_accepted'])
+                ->whereBetween('scheduled_at', [$startTime->toDateTimeString(), $endTime->toDateTimeString()])
+                ->first();
+
+            if($existingRide){
+                return json_message_response(__('message.ride.already_scheduled_same_time'), 400);
+            }
             
             $data['datetime'] = $request->datetime; // store schedule dateTime in rider timezone
-            $data['scheduled_at'] = Carbon::createFromFormat('Y-m-d H:i:s', $request->datetime, $riderTimezone)->setTimezone('UTC')->toDateTimeString(); // store schedule dateTime in UTC
+            $data['scheduled_at'] = $scheduledAtUTC; // store schedule dateTime in UTC
 
             $data['is_schedule'] = 1;
             $data['status'] = 'scheduled';
@@ -764,6 +895,23 @@ class RideRequestController extends Controller
         //     return json_message_response($message,400);
         // }
 
+        // Check if ride is at least 5 hours away
+        if (Carbon::parse($riderequest->scheduled_at)->lt(Carbon::now()->addHours(5))) {
+            return json_message_response(__('message.ride.must_be_5_hours_later'), 400);
+        }
+
+        $hasActiveSchedule = RideRequest::where([
+            'driver_id'   => $user->id,
+            'is_schedule' => 1,
+        ])
+        ->whereNotIn('status', ['completed', 'canceled'])
+        ->exists();
+
+        if ($hasActiveSchedule) {
+            $message = __('message.ride.schedule_already_active');
+            return json_message_response($message,400);
+        }
+
         if(request()->has('is_accept') && request('is_accept') == 1 ){
             $riderequest->driver_id = request('driver_id');
             $riderequest->status = 'driver_accepted';
@@ -845,5 +993,161 @@ class RideRequestController extends Controller
 
         $message = __('message.ride.driver_assigned_to_schedule_riderequest'); 
         return redirect()->route('riderequest.index')->withSuccess($message);
+    }
+
+    private function saveCancellationPayment($ride, $ride_status){
+        try {
+            $currency_code = $currency ?? SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+            $currency_data = currencyArray($currency_code);
+            $currency      = strtolower($currency_data['code']);
+
+
+            // Non-card flow → directly debit wallet
+            $this->saveCancellationTransaction($ride, $currency, true);
+        } catch (\Throwable $th) {
+            Log::error('Cancellation payment processing failed', [
+                'ride_id' => $ride->id,
+                'error'   => $th->getMessage(),
+            ]);
+    
+            // As last fallback → debit wallet
+            $this->saveCancellationTransaction($ride, $currency, true);
+        }
+    }
+
+    private function saveCancellationTransaction($ride, $default_currency, $forceWallet = false){
+        DB::transaction(function () use ($ride, $default_currency, $forceWallet) {
+
+            // Update ride amounts
+            $ride->total_amount += $ride->cancelation_charges;
+            //$ride->subtotal     += $ride->cancelation_charges;
+            $ride->save();
+    
+            $currency = $default_currency ?? 'USD';
+
+            // Always received by admin for cancellation fees
+            $received_by = 'admin';
+    
+            // Store payment record
+            $payment = Payment::create([
+                'rider_id'          => $ride->rider_id,
+                'ride_request_id'   => $ride->id,
+                'datetime'          => now(),
+                'total_amount'      => $ride->total_amount,
+                'credit_used'       => 0,
+                'admin_commission'  => 0,
+                'received_by'       => $received_by,
+                'driver_fee'        => 0,
+                'driver_tips'       => 0,
+                'driver_commission' => 0,
+                'fleet_commission'  => 0,
+                'company_fee_charge'=> 0,
+                'expenses_charge'   => 0,
+                'payment_type'      => $forceWallet ? 'wallet' : $ride->payment_type,
+                'payment_status'    => 'paid',
+            ]);
+    
+            // Deduct from rider wallet if wallet payment or forced wallet
+            if ($ride->payment_type == 'wallet' || $forceWallet) {
+                $rider_wallet = Wallet::firstOrCreate(['user_id' => $ride->rider_id]);
+                $rider_wallet->total_amount -= $ride->cancelation_charges;
+                $rider_wallet->save();
+    
+                WalletHistory::create([
+                    'user_id'           => $ride->rider_id,
+                    'type'              => 'debit',
+                    'currency'          => $currency,
+                    'transaction_type'  => 'cancellation_fee',
+                    'amount'            => $ride->cancelation_charges,
+                    'balance'           => $rider_wallet->total_amount,
+                    'datetime'          => now(),
+                    'ride_request_id'   => $ride->id,
+                ]);
+            }
+    
+            // Credit to driver wallet
+            $driver_id = $ride->driver_id;
+            $driver_wallet = Wallet::firstOrCreate(['user_id' => $driver_id]);
+            $driver_wallet->total_amount += $ride->cancelation_charges;
+            $driver_wallet->save();
+    
+            WalletHistory::create([
+                'user_id'           => $driver_id,
+                'type'              => 'credit',
+                'transaction_type'  => 'cancellation_fee',
+                'currency'          => $currency,
+                'amount'            => $ride->cancelation_charges,
+                'balance'           => $driver_wallet->total_amount,
+                'ride_request_id'   => $ride->id,
+                'datetime'          => now(),
+                'data'              => [
+                    'payment_id' => $payment->id
+                ]
+            ]);
+        });
+    }
+
+    /**
+     * Deline a accepted scheduled ride
+     */
+    public function declineAcceptedScheduleRide(Request $request, $id){
+        $riderequest = RideRequest::find($id);
+
+        if(!$riderequest) {
+            $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+            return json_message_response($message, 404);
+        }
+
+        if($riderequest->status != 'driver_accepted') {
+            $message = __('message.ride.riderequest_status_is_not_driver_accepted');
+            return json_message_response($message, 400);
+        }
+
+        $user = auth()->user();
+
+        if(!$user->hasRole('driver')){
+            return json_message_response(__('message.ride.unauthorized_action'), 403);
+        }
+
+        // Decline logic
+        $riderequest->driver_id = null;
+        $riderequest->status = 'scheduled';
+        $riderequest->otp = null;
+        $riderequest->max_time_for_find_driver_for_ride_request = 0;
+        $riderequest->riderequest_in_driver_id = null;
+        $riderequest->riderequest_in_datetime = null;
+
+        // Update cancelled drivers list
+        $cancelled_driver_ids = $riderequest->cancelled_driver_ids ?: [];
+        $cancelled_driver_ids[] = $user->id; 
+        $riderequest->cancelled_driver_ids = array_values(array_unique($cancelled_driver_ids));
+
+        $riderequest->save();
+
+        // Save ride history (with driver info)
+        $history_data = [
+            'rider_id'               => $riderequest->rider_id,
+            'rider_name'             => $riderequest->rider->display_name ?? null,
+            'last_declined_driver_id'=> $user->id,
+            'last_declined_driver_name'=> $user->display_name ?? null,
+        ];
+
+        RideRequestHistory::create([
+            'history_type'      => 'scheduled',
+            'history_message'   => 'Rescheduled',
+            'ride_request_id'   => $riderequest->id,
+            'datetime'          => date('Y-m-d H:i:s'),
+            'ride_request'      => $riderequest,
+            'history_data'      => json_encode($history_data),
+        ]);
+
+        $message = __('message.ride.driver_declined',[ 'name' => __('message.driver') ] );
+
+        if($request->is('api/*')) {
+            return json_custom_response([
+                'ride_request_id' => $riderequest->id,
+                'message' => $message
+            ]);
+        }
     }
 }

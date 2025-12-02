@@ -122,7 +122,7 @@ class PointHistoryDataTable extends DataTable
         return [
             Column::make('ride_request_id')->title( __('message.ride_request_id') ),
             Column::make('user_id')->title( __('message.name') ),
-            Column::make('amount')->title( __('message.amount') ),
+            Column::make('amount')->title( __('message.points') ),
             Column::make('transaction_type')->title( __('message.transaction_type') ),
             Column::make('datetime')->title( __('message.datetime') ),
             Column::make('created_at')->title( __('message.created_at') ),

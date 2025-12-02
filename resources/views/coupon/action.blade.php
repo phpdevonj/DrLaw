@@ -7,6 +7,10 @@
     @if($auth_user->can('coupon edit'))
     <a class="mr-2" href="{{ route('coupon.edit', $id) }}" title="{{ __('message.update_form_title',['form' => __('message.coupon') ]) }}"><i class="fas fa-edit text-primary"></i></a>
     @endif
+
+    @if($auth_user->can('coupon show'))
+        <a class="mr-2" href="{{ route('coupon.show',$id) }}"><i class="fas fa-eye text-secondary"></i></a>
+    @endif
     
     @if($auth_user->can('coupon delete'))
     <a class="mr-2 text-danger" href="javascript:void(0)" data--submit="coupon{{$id}}" 

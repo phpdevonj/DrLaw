@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements HasMedia
 {
@@ -166,5 +167,50 @@ class User extends Authenticatable implements HasMedia
             'id',
             'id'
         )->where('payment_status','paid');
+    }
+
+    public function getDriverScoreAttribute()
+    {
+        $driverId = $this->id;
+
+        $data = DB::table('ride_requests')
+                ->selectRaw("
+                    COUNT(*) as total,
+                    SUM(CASE WHEN cancel_by = 'driver' THEN 1 ELSE 0 END) as cancelled,
+                    (
+                        SELECT COUNT(*) 
+                        FROM ride_requests AS r2 
+                        WHERE JSON_CONTAINS(r2.cancelled_driver_ids, ?)
+                    ) as unaccepted
+                ", ["$driverId"])
+                ->where('driver_id', $driverId)
+                ->first();
+
+        $total = $data->total ?? 0;
+        $cancelled = $data->cancelled ?? 0;
+        $unaccepted = $data->unaccepted ?? 0;
+
+        if ($total === 0) {
+            return 100; // full score if no rides yet
+        }
+
+        // Scoring formula: 100 - % of failed rides
+        $score = 100 - (($cancelled + $unaccepted) / $total * 100);
+        return round($score, 2);
+    }
+
+
+    public function completedTripsAsRiderCount()
+    {
+        return RideRequest::where('rider_id', $this->id)
+                        ->where('status', 'completed')
+                        ->count();
+    }
+
+    public function completedTripsAsDriverCount()
+    {
+        return RideRequest::where('driver_id', $this->id)
+                        ->where('status', 'completed')
+                        ->count();
     }
 }

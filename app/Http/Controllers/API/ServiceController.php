@@ -46,11 +46,11 @@ class ServiceController extends Controller
             }
         }
 
-        $service = $service->orderBy('name','asc')->paginate($per_page);
+        $service = $service->orderBy('name','asc')->paginate(200);
         $items = ServiceResource::collection($service);
 
         $response = [
-            'pagination' => json_pagination_response($items),
+            //'pagination' => json_pagination_response($items),
             'data' => $items,
         ];
         

@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class RideRequestResource extends JsonResource
+class ScheduleRideRequestResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,18 +14,33 @@ class RideRequestResource extends JsonResource
      */
     public function toArray($request)
     {
+        $place_details = og_get_distance_matrix(
+            $this->start_latitude, 
+            $this->start_longitude, 
+            $this->end_latitude, 
+            $this->end_longitude
+        );
+
+        $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
+        $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);
+        $dropoff_distance_in_km = round($dropoff_distance_in_meters/1000,2);
+        $dropoff_distance_in_miles = round(km_to_mile($dropoff_distance_in_meters/1000), 2);
+
+        $multi_location = [];
+        $is_credit_used = $this->credit_used ?? 0;
+
         $pdfUrl = null;
         if($this->status == 'completed' ){
             $pdfUrl = route('ride-invoice', ['id' => $this->id]);
         }
-        $surge_price = getSurgePrice($this->datetime);
+        $surge_price = getSurgePrice($this->datetime, optional($this->service)->region_id, $this->start_latitude, $this->start_longitude, $this->end_latitude, $this->end_longitude);
 
         $getBidAmount = $this->approvedBids()->first();
 
         $driver_ratings = optional($this->driver)->driverRating ?? collect();
         $rider_ratings = optional($this->rider)->riderRating ?? collect();
 
-        return [
+        $schedule_ride_data = [
             'id'                => $this->id,
             'rider_id'          => $this->rider_id,
             'service_id'        => $this->service_id,
@@ -33,8 +48,8 @@ class RideRequestResource extends JsonResource
             'is_schedule'       => $this->is_schedule,
             'ride_attempt'      => $this->ride_attempt,
             'otp'               => $this->otp,
-            'total_amount'      => (float) number_format( (float) $this->total_amount, 2,'.',''),
-            'subtotal'          => (!empty($getBidAmount) && $this->ride_has_bid == 1) ? $getBidAmount->bid_amount : (float) number_format( (float) $this->subtotal, 2,'.',''),
+            //'total_amount'      => (float) number_format( (float) $this->total_amount, 2,'.',''),
+            //'subtotal'          => (!empty($getBidAmount) && $this->ride_has_bid == 1) ? $getBidAmount->bid_amount : (float) number_format( (float) $this->subtotal, 2,'.',''),
             'extra_charges_amount'  => $this->extra_charges_amount,
             'driver_id'         => $this->driver_id,
             'driver_name'       => optional($this->driver)->display_name,
@@ -55,7 +70,7 @@ class RideRequestResource extends JsonResource
             'start_time'        => $this->rideRequestStartTime() ?? null,
             'end_time'          => $this->rideRequestCompletedTime() ?? null,
             'riderequest_in_driver_id' => $this->riderequest_in_driver_id,
-            'distance'          => (float) number_format( (float) $this->distance, 2,'.',''),
+            //'distance'          => (float) number_format( (float) $this->distance, 2,'.',''),
             'duration'          => $this->duration,
             'seat_count'        => $this->seat_count,
             'reason'            => $this->reason,
@@ -77,10 +92,11 @@ class RideRequestResource extends JsonResource
             'payment_type'      => $this->payment_type,
             'payment_status'    => optional($this->payment)->payment_status ?? 'pending',
             'extra_charges'     => $this->extra_charges,
-            'fixed_charge'     => $surge_price->value ?? 0,
+            //'fixed_charge'     => $surge_price->value ?? 0,
             'coupon_discount'   => $this->coupon_discount,
             'coupon_code'       => $this->coupon_code,
             'coupon_data'       => $this->coupon_data,
+            //'credit_used'       => $this->credit_used,
             'is_rider_rated'    => $this->is_rider_rated,
             'is_driver_rated'   => $this->is_driver_rated,
             'max_time_for_find_driver_for_ride_request' => $this->max_time_for_find_driver_for_ride_request,
@@ -95,10 +111,40 @@ class RideRequestResource extends JsonResource
             'invoice_name' => 'Ride_' . $this->id,
             'driver_rating' => $driver_ratings->count() > 0 ? (float) number_format(max($driver_ratings->avg('rating'), 0), 2) : 0,
             'rider_rating'  => $rider_ratings->count() > 0 ? (float) number_format(max($rider_ratings->avg('rating'), 0), 2) : 0,
+            'held_payment_intent_id'     => $this->held_payment_intent_id,
+            'held_payment_amount'        => $this->held_payment_amount,
+            'captured_payment_intent_id' => $this->captured_payment_intent_id,
             'rider_complete_trips'    => optional($this->rider)->completedTripsAsRiderCount(),
             'driver_complete_trips'    => optional($this->driver)->completedTripsAsDriverCount(),
-            'expenses_charge'          => $this->expenses_charge,
-            'company_fee_charge'       => $this->company_fee_charge,
+            //'expenses_charge'          => $this->expenses_charge,
+            //'company_fee_charge'       => $this->company_fee_charge,
+            'estimate_time'            => convertSecondsToReadableTime($dropoff_time_in_seconds),
+            'dropoff_distance_in_km' => $dropoff_distance_in_km,
+            'dropoff_distance_in_miles' => $dropoff_distance_in_miles,
         ];
+
+        $service_data = [
+            'id'                      => $this->service_id,
+            'service_id'              => $this->service_id,
+            'name'                    => optional($this->service)->name,
+            'region_id'               => optional($this->service)->region_id, 
+            'distance_unit'           => $this->distance_unit, 
+            'minimum_distance'        => optional($this->service)->minimum_distance,  
+            'base_fare'               => optional($this->service)->base_fare,  
+            'time_fare_short_ride'    => optional($this->service)->time_fare_short_ride,  
+            'time_fare_moderate_ride' => optional($this->service)->time_fare_moderate_ride,  
+            'time_fare_long_ride'     => optional($this->service)->time_fare_long_ride,  
+            'per_distance'            => optional($this->service)->per_distance,
+            'company_fee_threshold'   => optional($this->service)->company_fee_threshold,
+            'company_fee_below_threshold'   => optional($this->service)->company_fee_below_threshold,
+            'company_fee_above_threshold'   => optional($this->service)->company_fee_above_threshold,
+            'expenses'                      => optional($this->service)->expenses,
+            'minimum_fare'                  => optional($this->service)->minimum_fare,    
+        ];
+
+        // caclulate ride
+        $ridefee = calculateRideFares($dropoff_distance_in_km, $this->start_latitude, $this->start_longitude, $this->end_latitude, $this->end_longitude, $multi_location,$dropoff_time_in_seconds, $service_data, $this->coupon_data,$surge_price,$this->scheduled_at, $is_credit_used, $this->rider_id);
+
+        return array_merge($schedule_ride_data, $ridefee);
     }
 }

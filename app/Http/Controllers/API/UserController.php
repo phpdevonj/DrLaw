@@ -66,7 +66,11 @@ class UserController extends Controller
         $input['display_name'] = $input['first_name']." ".$input['last_name'];
         $input['is_available'] = 1;
         $input['last_actived_at'] = now();
-        $input['contact_number'] = trim($input['country_code']) . trim($input['contact_number']);
+        if(isset($input['login_type']) && $input['login_type'] === 'mobile'){
+            $input['contact_number'] =  trim($input['contact_number']);
+        }else{
+            $input['contact_number'] = trim($input['country_code']) . trim($input['contact_number']);
+        } 
         $user = User::create($input);
         $user->assignRole($input['user_type']);
 
@@ -330,6 +334,8 @@ class UserController extends Controller
             if( $clear != null ) {
                 $user->$clear = null;
             }
+            // Revoke the current access token
+            $request->user()->currentAccessToken()->delete();
             $user->save();
             return json_message_response('Logout successfully');
         }
@@ -514,6 +520,7 @@ class UserController extends Controller
         if($request->is_online == 1) {
             $user->is_available = 1;
         }
+        $user->last_actived_at = date('Y-m-d H:i:s');
         $user->save();
         /*
         if( $user->user_type == 'driver') {

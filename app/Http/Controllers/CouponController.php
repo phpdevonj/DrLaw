@@ -63,10 +63,23 @@ class CouponController extends Controller
      */
     public function show($id)
     {
-        $pageTitle = __('message.add_form_title',[ 'form' => __('message.coupon')]);
+        $pageTitle = __('message.view_form_title',[ 'form' => __('message.coupon')]);
         $data = Coupon::findOrFail($id);
+        $selected_region = [];
+        if( isset($data->region_ids)){
+            $selected_region = Region::whereIn('id',$data->region_ids)->get()->mapWithKeys(function ($item) {
+                return [ $item->id => $item->name ];
+            });
+        }
 
-        return view('coupon.show', compact('data'));
+        $selected_service = [];
+        if( isset($data->service_ids)){
+            $selected_service = Service::whereIn('id',$data->service_ids)->get()->mapWithKeys(function ($item) {
+                return [ $item->id => $item->name ];
+            });
+        }
+
+        return view('coupon.show', compact('data','pageTitle', 'id', 'selected_service', 'selected_region'));
     }
 
     /**

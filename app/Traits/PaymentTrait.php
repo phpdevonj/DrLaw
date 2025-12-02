@@ -23,7 +23,12 @@ trait PaymentTrait {
         $payment = $ride_request->payment;
 
         $commission_type = $ride_request->service->commission_type ?? 0;
+        
+        $company_fee_charge = $ride_request->company_fee_charge ?? 0; // Company Fee
+        $expenses_charge    = $ride_request->expenses_charge ?? 0; // Expenses
+
         $admin_commission = $ride_request->service->admin_commission ?? 0;
+        $admin_commission = $admin_commission + $company_fee_charge + $expenses_charge;
 
         $fleet_id = optional($ride_request->driver)->fleet_id;
         
@@ -37,13 +42,13 @@ trait PaymentTrait {
         // if( $commission_type == 'fixed' ) {
         //     $commission_amount = $admin_commission;
         // }
-        if( $commission_type == 'percentage' ) {
-            $admin_commission = $admin_commission ? ( $ride_request_amount / 100) * $admin_commission: 0;
+        // if( $commission_type == 'percentage' ) {
+        //     $admin_commission = $admin_commission ? ( $ride_request_amount / 100) * $admin_commission: 0;
 
-            if( $fleet_id != null ) {
-                $fleet_commission = $fleet_commission ? ( $ride_request_amount / 100) * $fleet_commission: 0;
-            }
-        }
+        //     if( $fleet_id != null ) {
+        //         $fleet_commission = $fleet_commission ? ( $ride_request_amount / 100) * $fleet_commission: 0;
+        //     }
+        // }
         
         if( $payment->payment_type == 'cash') {
             $payment->received_by = 'driver';
@@ -56,9 +61,12 @@ trait PaymentTrait {
         $payment->admin_commission = $admin_commission;
         $payment->fleet_commission = $fleet_commission;
         $driver_fee = $ride_request_amount - $admin_commission - $fleet_commission;
-        $payment->driver_fee = $driver_fee;
+        $payment->driver_fee = (float) number_format( (float) $driver_fee, 2,'.','');
         $payment->driver_tips = $driver_tips;
-        $payment->driver_commission = $driver_fee + $driver_tips + $ride_request->extra_charges_amount;
+        $driver_commission = $driver_fee + $driver_tips + $ride_request->extra_charges_amount;
+        $payment->driver_commission = (float) number_format( (float) $driver_commission, 2,'.','');
+        $payment->company_fee_charge = (float) number_format( (float) $company_fee_charge, 2,'.','');
+        $payment->expenses_charge = (float) number_format( (float) $expenses_charge, 2,'.','');
         $payment->save();
         
         // $currency = optional($ride_request->service) && optional($ride_request->service)->region ? optional($ride_request->service)->region->currency_code : null;

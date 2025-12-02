@@ -37,9 +37,9 @@ class ServiceDataTable extends DataTable
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
             })
-            ->editColumn('commission_type', function ($query) {
-                return ucfirst($query->commission_type);
-            })
+            // ->editColumn('commission_type', function ($query) {
+            //     return ucfirst($query->commission_type);
+            // })
             ->editColumn('payment_method', function ($query) {
                 return str_replace('_' , ' or ' ,ucfirst($query->payment_method));
                 // return str_replace($query->commission_type);
@@ -93,7 +93,7 @@ class ServiceDataTable extends DataTable
             Column::make('region_id')->title( __('message.region') ),
             Column::make('base_fare')->title( __('message.base_fare') ),
             Column::make('payment_method'),
-            Column::make('commission_type'),
+            //Column::make('commission_type'),
             Column::make('created_at')->title( __('message.created_at') ),
             Column::computed('action')
                   ->exportable(false)

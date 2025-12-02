@@ -24,26 +24,27 @@ class LogApiRequests
 
         $status = $response->getStatusCode();
 
-        // Only log if response status is 400 or above
-        if ($status >= 400) {
-            $filteredRequestData = $this->filterSensitiveData($request->all());
+        // Log all API requests and responses
+        $filteredRequestData = $this->filterSensitiveData($request->all());
 
-            $content = method_exists($response, 'getContent') ? $response->getContent() : 'Streamed response';
+        $content = method_exists($response, 'getContent') ? $response->getContent() : 'Streamed response';
 
-            $decodedContent = json_decode($content, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $decodedContent = $content;
-            }
-
-            Log::channel('api')->warning('Failed API Call', [
-                'ip' => $request->ip(),
-                'url' => $request->fullUrl(),
-                'method' => $request->method(),
-                'body' => $filteredRequestData,
-                'status' => $status,
-                'response' => $decodedContent,
-            ]);
+        $decodedContent = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $decodedContent = $content;
         }
+
+        $logLevel = $status >= 400 ? 'warning' : 'info';
+        $message = $status >= 400 ? 'Failed API Call' : 'API Call';
+
+        Log::channel('api')->{$logLevel}($message, [
+            'ip' => $request->ip(),
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'body' => $filteredRequestData,
+            'status' => $status,
+            'response' => $this->filterSensitiveData($decodedContent),
+        ]);
 
         return $response;
     }

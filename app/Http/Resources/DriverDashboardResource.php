@@ -8,14 +8,25 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Models\Sos;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
+
 class DriverDashboardResource extends JsonResource
 {
     public function toArray($request)
     {
+        $ride_block_minutes = (int) SettingData('ride', 'normal_ride_restriction_buffer') ?? 30;
+
         $on_ride_request = $this->driverRideRequestDetail()->whereNotIn('status', ['canceled'])->where('is_driver_rated',false)
                         // ->whereHas('payment',function ($q) {
                         //     $q->whereNull('payment_status')->orWhere('payment_status', 'pending');
                         // })
+                        ->where(function ($q) use ($ride_block_minutes) {
+                            $q->where('is_schedule', 0) // Normal ride
+                              ->orWhere(function ($q2) use ($ride_block_minutes) {
+                                  $q2->where('is_schedule', 1)
+                                     ->where('scheduled_at', '<=', Carbon::now()->addMinutes($ride_block_minutes));
+                              });
+                        })
                         ->first();
         
         $pending_payment_ride_request = $this->driverRideRequestDetail()->where('status', 'completed')->where('is_driver_rated',true)

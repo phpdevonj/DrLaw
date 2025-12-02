@@ -59,7 +59,7 @@ class RideRequestDataTable extends DataTable
             ->editColumn('payment_status', function($riderequest) {
                 
                 $status = 'warning';
-                $payment_status = isset($riderequest->payment) ? $riderequest->payment->payment_status : __('message.pending');
+                $payment_status = $payment_status = isset($riderequest->payment) ? ($riderequest->payment->payment_status == 'pending') ? '' : $riderequest->payment->payment_status : '' ;
                 
                 switch ($payment_status) {
                     case 'pending':
@@ -163,8 +163,14 @@ class RideRequestDataTable extends DataTable
         }
     
         $riderequest_type = request('riderequest_type');
-        if (in_array($riderequest_type, ['pending', 'canceled', 'completed', 'new_ride_requested','scheduled'])) {
-            $model->where('status', $riderequest_type);
+        if (in_array($riderequest_type, ['pending', 'canceled', 'completed', 'new_ride_requested','scheduled','scheduled_upcoming'])) {
+            if($riderequest_type == 'scheduled'){
+                $model->where('is_schedule', 1);
+            }elseif($riderequest_type == 'scheduled_upcoming'){
+                $model->where('is_schedule', 1)->where('scheduled_at', '>', now());            
+            }else{
+                $model->where('status', $riderequest_type);
+            }            
         }
     
         if (request()->payment_status) {

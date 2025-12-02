@@ -33,7 +33,9 @@
                                     <th scope='col'>{{ __('message.pickup_date_time') }}</th>
                                     <th scope='col'>{{ __('message.drop_date_time') }}</th>
                                     <th scope='col'>{{ __('message.total_amount') }}</th>
-                                    <th scope='col' class="text-center">{{ __('message.admin_commission') }}</th>
+                                    <!-- <th scope='col' class="text-center">{{ __('message.admin_commission') }}</th> -->
+                                    <th scope='col' class="text-center">{{ __('message.company_fee') }}</th>
+                                    <th scope='col' class="text-center">{{ __('message.expenses_charge') }}</th>
                                     <th scope='col' class="text-center">{{ __('message.driver_commission') }}</th>
                                     <th scope='col'>{{ __('message.created_at') }}</th>
                                 </tr>
@@ -42,7 +44,9 @@
                                 <tr>
                                     <td colspan="5" class="font-weight-700">{{ __('message.total') }}</td>
                                     <td id="total-payment-amount" class="font-weight-700">0.00</td>
-                                    <td id="total-admin-commission" class="font-weight-700">0.00</td>
+                                    <!-- <td id="total-admin-commission" class="font-weight-700">0.00</td> -->
+                                    <td id="total-company-fee" class="font-weight-700">0.00</td>
+                                    <td id="total-expenses-charge" class="font-weight-700">0.00</td>
                                     <td id="total-driver-commission" class="font-weight-700">0.00</td>
                                     <td></td>
                                 </tr>
@@ -78,7 +82,9 @@
                         },
                         dataSrc: function (json) {
                             $('#total-payment-amount').html(json.totalAmount.toFixed(2));
-                            $('#total-admin-commission').html(json.totalAdminCommission.toFixed(2));
+                            //$('#total-admin-commission').html(json.totalAdminCommission.toFixed(2));
+                            $('#total-company-fee').html(json.totalCompanyFee.toFixed(2));
+                            $('#total-expenses-charge').html(json.totalExpenses.toFixed(2));
                             $('#total-driver-commission').html(json.totalDriverCommission.toFixed(2));
                             return json.data;
                         }
@@ -90,7 +96,9 @@
                         { data: 'pickup_date_time' },
                         { data: 'drop_date_time' },
                         { data: 'payment_total_amount' ,className: 'text-right' },
-                        { data: 'payment_admin_commission' ,className: 'text-right' },
+                        //{ data: 'payment_admin_commission' ,className: 'text-right' },
+                        { data: 'payment_company_fee' ,className: 'text-right' },
+                        { data: 'payment_expenses' ,className: 'text-right' },
                         { data: 'payment_driver_commission' ,className: 'text-right' },
                         { data: 'created_at' }
                     ],

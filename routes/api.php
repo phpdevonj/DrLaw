@@ -64,6 +64,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('save-wallet', [ API\WalletController::class, 'saveWallet'] );
     Route::get('wallet-list', [ API\WalletController::class, 'getList'] );
     Route::post('notification-list', [ API\NotificationController::class, 'getList'] );
+    Route::get('notification-counts',[ API\NotificationController::class ,'notificationCounts']);
+    Route::patch('notifications/{id}/read',[ API\NotificationController::class ,'markAsRead']); // Mark a Single Notification as Read
+    Route::patch('notifications/read-all', [API\NotificationController::class, 'markAllAsRead']); // Mark All Notifications as Read
 
     Route::get('payment-gateway-list', [ API\PaymentGatewayController::class, 'getList'] );
 
@@ -122,10 +125,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('getScheduleRidesList', [ API\RideRequestController::class, 'getScheduleRidesList'] );
     Route::post('cancel-scheduled-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'cancelScheduledRide']);
     Route::post('accept-schedule-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'acceptScheduleRide']);
+    Route::post('decline-accepted-schedule-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'declineAcceptedScheduleRide']);
 
     // create paystack payment transaction
     Route::post('/paystack/transaction', [API\PaystackController::class, 'storeTransaction']);
     Route::post('/paystack/transaction/update-status', [API\PaystackController::class, 'updateTransactionStatus']);
+
+    // surge price
+    Route::get('surge-price-list', [ API\SurgePriceController::class, 'getList'] );
 });
 
 Route::get('place-autocomplete-api', [ API\RideRequestController::class, 'placeAutoComplete' ] );

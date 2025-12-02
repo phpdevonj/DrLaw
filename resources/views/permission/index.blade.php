@@ -7,7 +7,7 @@
                         <div class="d-flex justify-content-between align-items-center p-3">
                             <h5 class="font-weight-bold">{{ $pageTitle ?? __('message.list') }}</h5>
                             @if($auth_user->can('permission add'))
-                                <!-- <a href="{{ route('permission.add',['type'=>'permission']) }}" class="float-right btn btn-md border-radius-10 btn-outline-dark loadRemoteModel"><i class="fa fa-plus-circle"></i> {{ __('message.add_form_title',['form' => __('message.permission')  ]) }}</a> -->
+                                <a href="{{ route('permission.add',['type'=>'permission']) }}" class="float-right btn btn-md border-radius-10 btn-outline-dark loadRemoteModel"><i class="fa fa-plus-circle"></i> {{ __('message.add_form_title',['form' => __('message.permission')  ]) }}</a>
                             @endif
                         </div>
                     </div>

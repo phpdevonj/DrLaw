@@ -9,7 +9,7 @@ class RideRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = [ 'rider_id', 'service_id', 'datetime', 'is_schedule', 'ride_attempt', 'distance_unit', 'total_amount', 'subtotal', 'extra_charges_amount', 'driver_id', 'start_latitude', 'start_longitude', 'end_latitude', 'start_address', 'end_longitude', 'end_address', 'distance', 'duration', 'seat_count', 'reason', 'status','ride_has_bid', 'base_fare', 'minimum_fare', 'base_distance', 'per_distance', 'per_distance_charge', 'per_minute_drive', 'per_minute_drive_charge', 'payment_type', 'extra_charges', 'tips', 'cancel_by', 'cancelation_charges', 'coupon_discount','coupon_code', 'coupon_data', 'otp', 'waiting_time_limit', 'waiting_time', 'per_minute_waiting', 'per_minute_waiting_charge', 'cancelled_driver_ids','nearby_driver_ids','rejected_bid_driver_ids', 'service_data', 'max_time_for_find_driver_for_ride_request', 'is_rider_rated', 'is_driver_rated', 'riderequest_in_driver_id', 'riderequest_in_datetime', 'is_ride_for_other','other_rider_data', 'drop_location', 'datetime_utc','multi_drop_location','last_24hr_notification_sent_at', 'last_1hr_notification_sent_at','scheduled_at' ];
+    protected $fillable = [ 'rider_id', 'service_id', 'datetime', 'is_schedule', 'ride_attempt', 'distance_unit', 'total_amount', 'subtotal', 'extra_charges_amount', 'driver_id', 'start_latitude', 'start_longitude', 'end_latitude', 'start_address', 'end_longitude', 'end_address', 'distance', 'duration', 'seat_count', 'reason', 'status','ride_has_bid', 'base_fare', 'minimum_fare', 'base_distance', 'per_distance', 'per_distance_charge', 'per_minute_drive', 'per_minute_drive_charge', 'payment_type', 'extra_charges', 'tips', 'cancel_by', 'cancelation_charges', 'coupon_discount','coupon_code', 'coupon_data', 'otp', 'waiting_time_limit', 'waiting_time', 'per_minute_waiting', 'per_minute_waiting_charge', 'cancelled_driver_ids','nearby_driver_ids','rejected_bid_driver_ids', 'service_data', 'max_time_for_find_driver_for_ride_request', 'is_rider_rated', 'is_driver_rated', 'riderequest_in_driver_id', 'riderequest_in_datetime', 'is_ride_for_other','other_rider_data', 'drop_location', 'datetime_utc','multi_drop_location','last_24hr_notification_sent_at', 'last_1hr_notification_sent_at','scheduled_at', 'time_fare_short_ride', 'time_fare_moderate_ride', 'time_fare_long_ride', 'per_minute_time_fare_charge', 'company_fee_threshold', 'company_fee_below_threshold', 'company_fee_above_threshold', 'company_fee_charge', 'expenses', 'expenses_charge','destination_latitude', 'destination_longitude', 'destination_address', 'completed_early', 'early_completion_reason', 'remaining_distance' ];
 
     protected $casts = [
         'rider_id'      => 'integer',
@@ -223,5 +223,9 @@ class RideRequest extends Model
     public function setDropLocationAttribute($value)
     {
         $this->attributes['drop_location'] = isset($value) ? json_encode($value) : null;
+    }
+
+    public function rideTip() {
+        return $this->hasOne( RideTip::class, 'ride_request_id', 'id');
     }
 }

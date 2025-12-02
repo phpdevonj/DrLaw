@@ -18,6 +18,10 @@ use App\Models\LanguageVersionDetail;
 use App\Models\RideRequestBid;
 use App\Models\SurgePrice;
 use App\Models\Role;
+use App\Models\RideTip;
+use App\Models\Wallet;
+use App\Models\WalletHistory;
+
 
 function DummyData($key){
     $dummy_title = 'XXXXXXXXXXXX';
@@ -520,7 +524,7 @@ function saveRideHistory($data)
                                 sleep(3);
                                 $rideData['payment_status'] = 'canceled';
                                 $firebaseData->set($rideData, ['merge' => true]);
-                                $firebaseData->delete();
+                                //$firebaseData->delete();
                             } else {
                                 $rideData['payment_status'] = '';
                                 $rideData['payment_type'] = '';
@@ -1155,31 +1159,48 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     $minimum_distance = $service['minimum_distance'] ?? 0;
     
     if ($distance_unit == 'mile') {
-        $distance_in_unit = km_to_mile($distance_in_unit);
+        $distance_in_unit = km_to_mile($distance_in_unit); // convert km distance to miles
     }
 
-    $previousLat = $pickupLat;
-    $previousLng = $pickupLng;
+    // We are using google map api to calculate distance
+    // $previousLat = $pickupLat;
+    // $previousLng = $pickupLng;
 
-    foreach ($multiLocation as $location) {
-        $currentLat = $location['lat'];
-        $currentLng = $location['lng'];
-        $distance = haversineDistance($previousLat, $previousLng, $currentLat, $currentLng);        
-        $distance_in_unit += $distance;
-        $previousLat = $currentLat;
-        $previousLng = $currentLng;
-    }
+    // foreach ($multiLocation as $location) {
+    //     $currentLat = $location['lat'];
+    //     $currentLng = $location['lng'];
+    //     $distance = haversineDistance($previousLat, $previousLng, $currentLat, $currentLng);        
+    //     $distance_in_unit += $distance;
+    //     $previousLat = $currentLat;
+    //     $previousLng = $currentLng;
+    // }
 
-    $finalDistance = haversineDistance($previousLat, $previousLng, $dropLat, $dropLng);
+    //$finalDistance = haversineDistance($previousLat, $previousLng, $dropLat, $dropLng);
     
-    $distance_in_unit += $finalDistance;
+    //$distance_in_unit += $finalDistance;
 
-    if ($distance_unit == 'mile') {
-        $distance_in_unit = km_to_mile($distance_in_unit);
-    }
+    // if ($distance_unit == 'mile') {
+    //     $distance_in_unit = km_to_mile($distance_in_unit);
+    // }
 
     $base_fare = $service['base_fare'];
-    $time_price = ($dropoff_time_in_seconds / 60) * $service['per_minute_drive'];
+    //$time_price = ($dropoff_time_in_seconds / 60) * $service['per_minute_drive'];
+
+    $duration = $dropoff_time_in_seconds / 60;
+
+    // Time Fare
+    if ($duration <= $distance_in_unit) {
+        // Short duration ride
+        $time_price = $duration * $service['time_fare_short_ride'];
+    } elseif ($duration > $distance_in_unit && $duration <= 2 * $distance_in_unit) {
+        // Moderate duration ride
+        $time_price = $duration * $service['time_fare_moderate_ride'];
+    } elseif ($duration > 2 * $distance_in_unit) {
+        // Long duration / heavy traffic
+        $time_price = $duration * $service['time_fare_long_ride'];
+    } else {
+        $time_price = 0;
+    }
     
     if ($distance_in_unit > $minimum_distance) {
         $distance_in_unit -= $minimum_distance;
@@ -1189,24 +1210,39 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
         $distance_in_unit = 0;
     }
 
-    $distance_price = ($distance_in_unit * $service['per_distance']);
+    $distance_price = ($distance_in_unit * $service['per_distance']);   
 
     $base_and_distance_price = ($base_fare + $distance_price);
-    $total_amount = $base_and_distance_price + $time_price;
+    $total_amount = $base_and_distance_price + $time_price; // Total ride fare. We are not including time idling in the fare calculation, as it depends on the waiting time. For estimation purposes, the time idling fare is not considered.
+
+    // Company fee applicable on total ride fare
+    if($total_amount < $service['company_fee_threshold']){
+        $company_fee = $service['company_fee_below_threshold'];
+    }else{
+        $company_fee = $service['company_fee_above_threshold'];
+    }
+
+    $total_amount += $company_fee; // Normal Ride Fare
+
+    // Expenses
+    $expenses = $total_amount * $service['expenses']/100;
+
+    // Total Ride Fee (what rider pays)
+    $total_amount += $expenses;
 
     if ($total_amount < $service['minimum_fare']) {
         $total_amount = $service['minimum_fare'];
     }
 
-    if ($service['commission_type'] == 'fixed') {
-        $commission = $service['admin_commission'] + $service['fleet_commission'];
-        if ($total_amount <= $commission) {
-            $total_amount += $commission;
-        }
-    }
+    // if ($service['commission_type'] == 'fixed') {
+    //     $commission = $service['admin_commission'] + $service['fleet_commission'];
+    //     if ($total_amount <= $commission) {
+    //         $total_amount += $commission;
+    //     }
+    // }
 
     $discount_amount = 0;
-    $subtotal = $base_and_distance_price + $time_price;
+    $subtotal = $total_amount;
 
     if ($coupon) {
         if ($coupon->minimum_amount < $total_amount) {
@@ -1225,7 +1261,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
 
     $surge_amount = 0;
     $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
-    if ($surge_price_setting_value == 1 && isset($surge_price)) {
+    if ($surge_price_setting_value == 1 && isset($surge_price) && (is_object($surge_price) || is_array($surge_price))) {
         
         $timezone = $service->region->timezone ?? 'UTC';
         $ride_time = \Carbon\Carbon::parse($ride_datetime)->setTimezone('Asia/Kolkata')->toDateTimeString();
@@ -1245,15 +1281,21 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
         }
     }
 
+    $final_subtotal = $subtotal + ($surge_amount ? $surge_amount : 0);
+    $driver_earning = $final_subtotal - $company_fee - $expenses;
+
     return [
         'distance' => round($distance_in_unit, 2),
         'minimum_distance_in_km' => $minimum_distance,
-        'distance_price' => $distance_price,
-        'time_price' => $time_price,
-        'total_amount' => $total_amount,
-        'subtotal' => $subtotal + ($surge_amount ? $surge_amount : 0),
+        'distance_price' => (float) number_format( (float) $distance_price, 2,'.',''),
+        'time_price' => (float) number_format( (float) $time_price, 2,'.',''),
+        'total_amount' => (float) number_format( (float) $total_amount, 2,'.',''),
+        'subtotal' => (float) number_format( (float) $final_subtotal, 2,'.',''),
         'discount_amount' => $discount_amount,
-        'fixed_charge' => $surge_amount ?? 0,
+        'fixed_charge' => (float) number_format( (float) $surge_amount, 2,'.',''),
+        'company_fee_charge' => (float) number_format( (float) $company_fee, 2,'.',''),
+        'expenses_charge' => (float) number_format( (float) $expenses, 2,'.',''),
+        'driver_earning' => (float) number_format( (float) $driver_earning, 2,'.',''),
     ];
 }
 
@@ -1646,32 +1688,54 @@ if (!function_exists('getDaysOfWeek')) {
 
 if (!function_exists('getSurgePrice')) {
     function getSurgePrice($ride_datetime) {
-        if ($ride_datetime === null) {
+        if ($ride_datetime === null || $region_id === null  || $pickup_lat === null || $pickup_lng === null || $drop_lat === null || $drop_lng === null) {
             return null;
         }
         $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
         if ($surge_price_setting_value == 1) {
-            $ride_datetime = \Carbon\Carbon::parse($ride_datetime);
-            $day_id = $ride_datetime->format('N');
+            $ride_datetime = \Carbon\Carbon::parse($ride_datetime);             
+            $day_id = $ride_datetime->format('N');            
             $current_time = $ride_datetime->format('H:i');
 
-            $surge_price = SurgePrice::whereJsonContains('day', $day_id)->first();
-            if ($surge_price) {
-                $from_times = $surge_price->from_time;
-                $to_times = $surge_price->to_time;
-            
-                foreach ($from_times as $index => $from_time) {
-                    $to_time = $to_times[$index];
-            
-                    if (strtotime($current_time) >= strtotime($from_time) && strtotime($current_time) <= strtotime($to_time)) {
-                        return $surge_price;
+            $region = Region::select('distance_unit')->find($region_id);
+            $distance_unit = $region?->distance_unit ?? 'km'; // default to km if not found
+
+            $surge_prices = SurgePrice::where('region_id',$region_id)->whereJsonContains('day', $day_id)->get();
+
+            if ($surge_prices) {
+                foreach ($surge_prices as $surge_price) {
+                    $from_times = $surge_price->from_time;               
+                    $to_times = $surge_price->to_time;
+
+                    foreach ($from_times as $index => $from_time) {
+                        $to_time = $to_times[$index];
+                
+                        // Check radius match
+                        if (strtotime($current_time) >= strtotime($from_time) && strtotime($current_time) <= strtotime($to_time)) {
+                            // Now check lat/lng/radius                            
+                            if($surge_price->latitude && $surge_price->longitude && $surge_price->radius){ 
+                                
+                                
+                                $pickup_distance = haversineDistance($pickup_lat, $pickup_lng, $surge_price->latitude, $surge_price->longitude);
+                                //$drop_distance = haversineDistance($drop_lat, $drop_lng, $surge_price->latitude, $surge_price->longitude);
+
+                                if($distance_unit == 'mile'){
+                                    $pickup_distance = km_to_mile($pickup_distance);
+                                    //$drop_distance = km_to_mile($drop_distance);
+                                }                                
+                                if($pickup_distance <= $surge_price->radius) {
+                                    return $surge_price;
+                                }
+                            }else{
+                                // No lat/lng/radius defined — treat as global for that region & time
+                                return $surge_price;
+                            }                        
+                        }
                     }
                 }
             }
-        } else {
-            $surge_price = 0;
-        }
-
+        } 
+        $surge_price = 0;
         return $surge_price;
     }
 }
@@ -1747,4 +1811,56 @@ function convertSecondsToReadableTime($totalSeconds)
 
 function getActiveAdminsRoles() {
     return Role::where('status', 1)->whereNotIn('name', ['driver', 'rider'])->pluck('name')->toArray();
+}
+
+if (!function_exists('debitRiderWallet')) {
+    function debitRiderWallet($rider_id, $amount, $currency, $ride_id)
+    {
+        $wallet = Wallet::firstOrCreate(['user_id' => $rider_id]);
+        $wallet->decrement('total_amount', $amount);
+
+        WalletHistory::create([
+            'user_id'          => $rider_id,
+            'type'             => 'debit',
+            'transaction_type' => 'tips',
+            'currency'         => $currency,
+            'amount'           => $amount,
+            'balance'          => $wallet->total_amount,
+            'ride_request_id'  => $ride_id,
+            'datetime'         => now(),
+        ]);
+    }
+}
+
+if (!function_exists('creditDriverWallet')) {
+    function creditDriverWallet($driver_id, $amount, $currency, $ride_id)
+    {
+        $wallet = Wallet::firstOrCreate(['user_id' => $driver_id]);
+        $wallet->increment('total_amount', $amount);
+
+        WalletHistory::create([
+            'user_id'          => $driver_id,
+            'type'             => 'credit',
+            'transaction_type' => 'tips',
+            'currency'         => $currency,
+            'amount'           => $amount,
+            'balance'          => $wallet->total_amount,
+            'ride_request_id'  => $ride_id,
+            'datetime'         => now(),
+        ]);
+    }
+}
+
+if (!function_exists('recordRideTip')) {
+    function recordRideTip($ride_id, $amount, $payment_type, $status, $received_by, $payment_intent_id = null)
+    {
+        RideTip::create([
+            'ride_request_id'   => $ride_id,
+            'tip_amount'        => $amount,
+            'payment_type'      => $payment_type,
+            'status'            => $status,
+            'received_by'       => $received_by,
+            'payment_intent_id' => $payment_intent_id,
+        ]);
+    }
 }

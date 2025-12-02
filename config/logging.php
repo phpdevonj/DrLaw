@@ -115,6 +115,24 @@ return [
             'level' => 'info',
             'days' => 14,
         ],
+        'driver_assignment_regular' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api/driver_assignment_regular.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+        'cancel_overdue_schedule_rides' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api/cancel_overdue_schedule_rides.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+        'process_schedule_rides' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api/process_schedule_rides.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
 
         'syslog' => [
             'driver' => 'syslog',

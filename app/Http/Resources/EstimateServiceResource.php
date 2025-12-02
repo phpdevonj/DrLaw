@@ -58,6 +58,13 @@ class EstimateServiceResource extends JsonResource
             'commission_type'   => $this->commission_type,
             'admin_commission'  => $this->admin_commission,
             'fleet_commission'  => $this->fleet_commission,
+            'time_fare_short_ride'          => $this->time_fare_short_ride,
+            'time_fare_moderate_ride'       => $this->time_fare_moderate_ride,
+            'time_fare_long_ride'           => $this->time_fare_long_ride,
+            'company_fee_threshold'         => $this->company_fee_threshold,
+            'company_fee_below_threshold'   => $this->company_fee_below_threshold,
+            'company_fee_above_threshold'   => $this->company_fee_above_threshold,
+            'expenses'                      => $this->expenses,
         ];
 
         // caclulate ride

@@ -45,6 +45,7 @@ class UserResource extends JsonResource
             'user_bank_account' => $this->userBankAccount,
             'otp_verify_at'     => $this->otp_verify_at,
             'user_address'         => UserAddressResource::collection($this->userAddresses),
+            'rider_complete_trips'    => $this->completedTripsAsRiderCount(),
         ];
     }
 }

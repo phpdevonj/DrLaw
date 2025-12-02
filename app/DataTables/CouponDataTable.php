@@ -92,6 +92,7 @@ class CouponDataTable extends DataTable
             Column::make('code')->title( __('message.code') ),
             Column::make('title')->title( __('message.title') ),
             // Column::make('coupon_type')->title( __('message.coupon_type') ),
+            Column::make('usage_limit_per_rider')->title( __('message.usage_limit_per_rider') ),
             Column::make('start_date')->title( __('message.start_date') ),
             Column::make('end_date')->title( __('message.end_date') ),
             Column::make('created_at')->title( __('message.created_at') ),

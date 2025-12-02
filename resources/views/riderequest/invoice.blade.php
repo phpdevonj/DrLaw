@@ -277,15 +277,15 @@
                             <td class="addressdetails">{{ getPriceFormat($ride_detail->base_fare) }}</td>
                         </tr>
                         <tr>
-                            <td>{{ __('message.distance') }}</td>
+                            <td>{{ __('message.distance_fare') }}</td>
                             <td class="addressdetails">{{ getPriceFormat($ride_detail->per_distance_charge) }}</td>
                         </tr>
                         <tr>
-                            <td>{{ __('message.duration') }}</td>
+                            <td>{{ __('message.time_fare') }}</td>
                             <td class="addressdetails">{{ getPriceFormat($ride_detail->per_minute_drive_charge) }}</td>
                         </tr>
                         <tr>
-                            <td>{{ __('message.wait_time') }}</td>
+                            <td>{{ __('message.time_idling') }}</td>
                             <td class="addressdetails">{{ getPriceFormat($ride_detail->per_minute_waiting_charge) }}</td>
                         </tr>
                     @endif
@@ -302,6 +302,14 @@
                             {{ getPriceFormat($ride_detail->extra_charges_amount) }}
                             @endif
                         </td>
+                    </tr>
+                    <tr>
+                        <td>{{ __('message.company_fee') }}</td>
+                        <td class="addressdetails">{{ getPriceFormat($ride_detail->company_fee_charge) }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ __('message.expenses_charge') }}</td>
+                        <td class="addressdetails">{{ getPriceFormat($ride_detail->expenses_charge) }}</td>
                     </tr>
                     <tr>
                         <td>{{ __('message.coupon_discount') }}</td>

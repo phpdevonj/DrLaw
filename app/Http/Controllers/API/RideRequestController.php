@@ -22,6 +22,7 @@ use Validator;
 use App\Models\Point as RiderPoints;
 use App\Models\PointHistory;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\ScheduleRideRequestResource;
 
 class RideRequestController extends Controller
 {
@@ -51,7 +52,15 @@ class RideRequestController extends Controller
             if( request('status') == 'upcoming' ) {
                 return $query->where('scheduled_at', '>=', Carbon::now()->format('Y-m-d H:i:s'));
             }else if( request('status') == 'history' ) {
-                return $query->where('created_at', '<', Carbon::now()->format('Y-m-d H:i:s'));
+                //return $query->where('created_at', '<', Carbon::now()->format('Y-m-d H:i:s'));
+
+                return $query->where(function ($q) {
+                    $q->where('is_schedule', 0) // normal rides
+                      ->orWhere(function ($sub) {
+                          $sub->where('is_schedule', 1) // scheduled rides
+                              ->whereIn('status', ['completed', 'canceled']);
+                      });
+                });
             }  else if( request('status') == 'canceled' ) {
                 return $query->whereIn('status',['canceled']);
             } else {
@@ -272,6 +281,15 @@ class RideRequestController extends Controller
         if( $ride_request->is_ride_for_other == 1 ) {
             $ridefee['is_rider_rated'] = true;
         }
+
+        // early ride complete
+        if(!empty($request->early_completion_reason)){
+            $ridefee['completed_early'] = 1;
+            $ridefee['early_completion_reason'] = $request->early_completion_reason ?? '';
+            $ridefee['remaining_distance'] = $request->remaining_distance ?? 0;
+        }
+
+        
         $ride_request->update($ridefee);
 
         // $ride_datetime = $ride_request->datetime;
@@ -344,28 +362,57 @@ class RideRequestController extends Controller
             // because the base fare already covers up to the minimum distance.
             $distance = 0;
         }
-        $per_distance_charge = $distance * $service->per_distance;
+        $per_distance_charge = $distance * $service->per_distance; // Distance Fare
 
-        $per_minute_waiting_charge = $waiting_time * $service->per_minute_wait;
+        // Time Fare
+        if ($duration <= $distance) {
+            // Short duration ride
+            $per_minute_time_fare_charge = $duration * $service->time_fare_short_ride;
+        } elseif ($duration > $distance && $duration <= 2 * $distance) {
+            // Moderate duration ride
+            $per_minute_time_fare_charge = $duration * $service->time_fare_moderate_ride;
+        } elseif ($duration > 2 * $distance) {
+            // Long duration / heavy traffic
+            $per_minute_time_fare_charge = $duration * $service->time_fare_long_ride;
+        } else {
+            $per_minute_time_fare_charge = 0;
+        }
+
+        $per_minute_waiting_charge = $waiting_time * $service->per_minute_wait; // Time Idling
         
-        $base_fare = $service->base_fare;
-        $minimum_fare = $service->minimum_fare;
+        $base_fare = $service->base_fare; // Base Fare
+        $minimum_fare = $service->minimum_fare; // Minimum Fare
 
-        $total_amount = $base_fare + $per_distance_charge + $per_minute_drive_charge + $per_minute_waiting_charge;
+        $total_amount = $base_fare + $per_distance_charge + $per_minute_time_fare_charge + $per_minute_waiting_charge; // Total ride fare
+
+        // Company fee applicable on total ride fare
+        if($total_amount < $service->company_fee_threshold){
+            $company_fee = $service->company_fee_below_threshold;
+        }else{
+            $company_fee = $service->company_fee_above_threshold;
+        }
+        
+        $total_amount += $company_fee; // Normal Ride Fare
+
+        // Expenses
+        $expenses = $total_amount * $service->expenses/100;
+
+        // Total Ride Fee (what rider pays)
+        $total_amount += $expenses;
 
         if( $total_amount < $service->minimum_fare ){
             $total_amount = $service->minimum_fare;
         } else {
             $minimum_fare = 0;
         }
-        $total_amount += $extra_charges_amount;
+        $total_amount += $extra_charges_amount; // Additional fees
         
-        if( $service->commission_type == 'fixed' ) {
-            $commission = $service->admin_commission + $service->fleet_commission;
-            if( $total_amount <= $commission) {
-                $total_amount += $commission;
-            }
-        }
+        // if( $service->commission_type == 'fixed' ) {
+        //     $commission = $service->admin_commission + $service->fleet_commission;
+        //     if( $total_amount <= $commission) {
+        //         $total_amount += $commission;
+        //     }
+        // }
         $subtotal = $total_amount;
 
         // Check for coupon data
@@ -391,14 +438,24 @@ class RideRequestController extends Controller
             'minimum_fare'              => $minimum_fare,
             'base_distance'             => $service->minimum_distance,
             'per_distance'              => $service->per_distance,
-            'per_distance_charge'       => $per_distance_charge,
-            'per_minute_drive_charge'   => $per_minute_drive_charge,
+            'per_distance_charge'       => (float) number_format( (float) $per_distance_charge, 2,'.',''), // Distance Fare
+            'per_minute_drive_charge'   => (float) number_format( (float) $per_minute_drive_charge, 2,'.',''), // Time Idling
             'waiting_time'              => $waiting_time,
             'per_minute_waiting_charge' => $per_minute_waiting_charge,
-            'subtotal'                  => $subtotal,
-            'total_amount'              => $total_amount,
+            'subtotal'                  => (float) number_format( (float) $subtotal, 2,'.',''),
+            'total_amount'              => (float) number_format( (float) $total_amount, 2,'.',''),
             'extra_charges_amount'      => $extra_charges_amount,
             'coupon_discount'           => $discount_amount,
+            'time_fare_short_ride'      => $service->time_fare_short_ride,
+            'time_fare_moderate_ride'   => $service->time_fare_moderate_ride,
+            'time_fare_long_ride'       => $service->time_fare_long_ride,
+            'per_minute_time_fare_charge' => $per_minute_time_fare_charge, // Time fare  
+            'company_fee_threshold'       => $service->company_fee_threshold,
+            'company_fee_below_threshold' => $service->company_fee_below_threshold,
+            'company_fee_above_threshold' => $service->company_fee_above_threshold,
+            'company_fee_charge'          => $company_fee, // Company fee
+            'expenses'                    => $service->expenses,
+            'expenses_charge'             => (float) number_format( (float) $expenses, 2,'.',''), // Expenses
         ];
     }
 
@@ -420,52 +477,65 @@ class RideRequestController extends Controller
 
     public function rideRating(Request $request)
     {
-        $ride_request = RideRequest::where('id',request('ride_request_id'))->first();
+        DB::beginTransaction();
+        try {
+            $ride_request = RideRequest::find($request->ride_request_id);
 
-        $message = __('message.not_found_entry', ['name' => __('message.riderequest')]);
+            if (!$ride_request) {
+                return json_message_response(__('message.not_found_entry', ['name' => __('message.riderequest')]));
+            }
 
-        if($ride_request == '') {
-            return json_message_response( $message );
+            $user = auth()->user();
+            $data = $request->all();
+
+            // Assign rider_id or driver_id based on who rated
+            $data['rider_id'] = auth()->user()->user_type == 'driver' ? $ride_request->rider_id : null;
+            $data['driver_id'] = auth()->user()->user_type == 'rider' ? $ride_request->driver_id : null;
+            $data['rating_by'] = $user->user_type;
+
+            // Store or update rating
+            RideRequestRating::updateOrCreate([ 'id' => $request->id ], $data);
+            
+            // Update rating flags
+            if(auth()->user()->hasRole('rider')) {
+                $ride_request->update(['is_rider_rated' => true]);
+                $msg = __('message.rated_successfully', ['form' => __('message.rider')]);
+            }elseif ($user->hasRole('driver')) {
+                $ride_request->update(['is_driver_rated' => true]);
+                $msg = __('message.rated_successfully', ['form' => __('message.driver')]);
+            }
+
+            // Update Firestore if required
+            if( auth()->user()->hasRole('driver') && $ride_request->status !== 'completed' && $ride_request->payment->payment_status != 'paid') {
+                $this->updateFirestoreRideDocument($ride_request, 'driver');
+                // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->rider_id, json_encode($notify_data)));
+            }
+
+            // fixed ride issue on driver
+            // if( auth()->user()->hasRole('rider') && $ride_request->status !== 'completed' && $ride_request->payment->payment_status != 'paid') {
+            //     $this->updateFirestoreRideDocument($ride_request, 'rider');
+            //     // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->driver_id, json_encode($notify_data)));
+            // }
+
+            // Handle tip payment if provided
+            if ($request->filled('tips')) {
+                $this->processTipPayment($request, $ride_request);
+            }
+
+            DB::commit();
+
+            return json_message_response(__('message.save_form', ['form' => __('message.rating')]));
+        } catch (\Exception $e) {
+            DB::rollBack();
+    
+            // Log the error for debugging
+            \Log::error('Ride Rating Failed: ' . $e->getMessage(), [
+                'ride_request_id' => $request->ride_request_id,
+                'user_id' => auth()->id(),
+            ]);
+    
+            return json_message_response(__('message.something_wrong') . ' - ' . $e->getMessage(), 500);
         }
-        $data = $request->all();
-
-        $data['rider_id'] = auth()->user()->user_type == 'driver' ? $ride_request->rider_id : null;
-        $data['driver_id'] = auth()->user()->user_type == 'rider' ? $ride_request->driver_id : null;
-
-        $data['rating_by'] = auth()->user()->user_type;
-        RideRequestRating::updateOrCreate([ 'id' => $request->id ], $data);
-        
-        if(auth()->user()->hasRole('rider')) {
-            $ride_request->update(['is_rider_rated' => true]);
-            $msg = __('message.rated_successfully', ['form' => __('message.rider')]);
-        }
-        if(auth()->user()->hasRole('driver')) {
-            $ride_request->update(['is_driver_rated' => true]);
-            $msg = __('message.rated_successfully', ['form' => __('message.driver')]);
-        }
-        if($ride_request->payment->payment_status == 'pending' && $request->has('tips') && request('tips') != null) {
-            $ride_request->update(['tips' => request('tips')]);
-        }
-
-        $notify_data = new \stdClass();
-        $notify_data->success = true;
-        $notify_data->success_type = 'rating';
-        $notify_data->success_message = $msg;
-        $notify_data->result = new RideRequestResource($ride_request);
-
-        if( auth()->user()->hasRole('driver') && $ride_request->status !== 'completed' && $ride_request->payment->payment_status != 'paid') {
-            $this->updateFirestoreRideDocument($ride_request, 'driver');
-            // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->rider_id, json_encode($notify_data)));
-        }
-
-        if( auth()->user()->hasRole('rider') && $ride_request->status !== 'completed' && $ride_request->payment->payment_status != 'paid') {
-            $this->updateFirestoreRideDocument($ride_request, 'rider');
-            // dispatch(new NotifyViaMqtt('ride_request_status_'.$ride_request->driver_id, json_encode($notify_data)));
-        }
-
-        $message = __('message.save_form',[ 'form' => __('message.rating') ] );
-        
-        return json_message_response($message);
     }
 
     public function placeAutoComplete(Request $request)
@@ -610,7 +680,7 @@ class RideRequestController extends Controller
      * Get scheduled rides list
      */
     public function getScheduleRidesList(Request $request){
-        $schedule_rides = RideRequest::where('status', 'scheduled')->where('is_schedule', 1)->where('datetime', '>=', Carbon::now()->format('Y-m-d H:i:s'));
+        $schedule_rides = RideRequest::whereIn('status', ['scheduled','driver_accepted'])->where('is_schedule', 1)->where('scheduled_at', '>=', Carbon::now()->format('Y-m-d H:i:s'));
 
         $schedule_rides->when(request('service_id'), function ($q) {
             return $q->where('service_id', request('service_id'));
@@ -620,11 +690,25 @@ class RideRequestController extends Controller
             return $q->where('rider_id',request('rider_id'));
         });
 
+        // Driver filter (scheduled → all drivers, driver_accepted → only that driver, exclude cancelled drivers)
         $schedule_rides->when(request('driver_id'), function ($q) {
             $driverId = (int) request('driver_id');
-            return $q->where(function ($query) use ($driverId) {
-                $query->whereNull('cancelled_driver_ids')
-                      ->orWhereRaw("JSON_CONTAINS(cancelled_driver_ids, '[$driverId]') = 0");
+
+            $q->where(function ($query) use ($driverId) {
+                // Case 1: Scheduled rides (apply 5-hour rule, exclude cancelled drivers)
+                $query->where(function ($sub) use ($driverId) {
+                    $sub->where('status', 'scheduled')
+                        ->where('scheduled_at', '>=', Carbon::now()->addHours(5))
+                        ->where(function ($cancel) use ($driverId) {
+                            $cancel->whereNull('cancelled_driver_ids')
+                                ->orWhereRaw("JSON_CONTAINS(cancelled_driver_ids, '[$driverId]') = 0");
+                        });
+                })
+                // Case 2: Driver already accepted this ride (show always)
+                ->orWhere(function ($sub) use ($driverId) {
+                    $sub->where('status', 'driver_accepted')
+                        ->where('driver_id', $driverId);
+                });
             });
         });
         
@@ -647,7 +731,7 @@ class RideRequestController extends Controller
         }
 
         $schedule_rides = $schedule_rides->orderBy('datetime',$order)->paginate($per_page);
-        $items = RideRequestResource::collection($schedule_rides);
+        $items = ScheduleRideRequestResource::collection($schedule_rides);
 
         $response = [
             'pagination' => json_pagination_response($items),
@@ -655,5 +739,41 @@ class RideRequestController extends Controller
         ];
 
         return json_custom_response($response);
+    }
+
+    /**
+     * Handle Tip Payment Logic
+     */
+    private function processTipPayment(Request $request, $ride_request)
+    {
+        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+        $currency_data = currencyArray($currency_code);
+        $currency = strtolower($currency_data['code']);
+        $amount = $request->tips;
+
+        if ($request->payment_type === 'card') {
+            // Try capturing Stripe payment
+            
+            $captureRes = captureStripePaymentIntent($request->payment_intent_id, $amount * 100);
+
+            if (!$captureRes['success']) {
+                throw new \Exception("Stripe capture failed: " . json_encode($captureRes['error'] ?? []));
+            }
+
+            // Credit driver wallet
+            creditDriverWallet($ride_request->driver_id, $amount, $currency, $ride_request->id);
+
+            // Record tip
+            recordRideTip($ride_request->id, $amount, 'card', 'completed', 'driver', $request->payment_intent_id);
+        } else {
+            // Debit rider wallet
+            debitRiderWallet($ride_request->rider_id, $amount, $currency, $ride_request->id);
+
+            // Credit driver wallet
+            creditDriverWallet($ride_request->driver_id, $amount, $currency, $ride_request->id);
+
+            // Record tip
+            recordRideTip($ride_request->id, $amount, 'wallet', 'completed', 'driver');
+        }
     }
 }

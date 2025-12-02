@@ -54,6 +54,12 @@ return [
         'point_ratio'  => '',
         'point_value'  => '',
         'min_points_withdrawal'  => '',
+        'rider_rating' => '',
+        'driver_rating' => '',
+        'normal_ride_restriction_buffer' => '',
+        'scheduled_ride_restriction_buffer' => '',
+        'ride_accept_button_distance' => '',
+        'completed_before_destination_distance' => '',
     ],
     'ride_status' => ['new_ride_requested', 'no_drivers_available', 'accepted', 'arriving', 'arrived', 'in_progress', 'canceled', 'completed' , 'sos'],
     'notification' => [

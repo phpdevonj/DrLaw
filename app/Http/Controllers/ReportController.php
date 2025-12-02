@@ -46,12 +46,14 @@ class ReportController extends Controller
                 ->when($params['rider_id'], fn($q) => $q->where('rider_id', $params['rider_id']))
                 ->when($params['driver_id'], fn($q) => $q->where('driver_id', $params['driver_id']));
         })
-        ->selectRaw('SUM(total_amount) as totalAmount, SUM(admin_commission) as totalAdminCommission, SUM(driver_commission) as totalDriverCommission')
+        ->selectRaw('SUM(total_amount) as totalAmount, SUM(admin_commission) as totalAdminCommission, SUM(driver_commission) as totalDriverCommission, SUM(company_fee_charge) as totalCompanyFee, SUM(expenses_charge) as totalExpenses')
         ->first();
         
         $totalAmount = $totals->totalAmount ?? 0;
-        $totalAdminCommission = $totals->totalAdminCommission ?? 0;
+        //$totalAdminCommission = $totals->totalAdminCommission ?? 0;
         $totalDriverCommission = $totals->totalDriverCommission ?? 0;
+        $totalCompanyFee = $totals->totalCompanyFee ?? 0;
+        $totalExpenses = $totals->totalExpenses ?? 0;
         
         if ($request->ajax()) {
             return datatables()->of($ride_requests)
@@ -71,8 +73,14 @@ class ReportController extends Controller
                 ->addColumn('payment_total_amount', function ($row) {
                     return getPriceFormat(optional($row->payment)->total_amount) ?? '-';
             })
-            ->addColumn('payment_admin_commission', function ($row) {
-                return getPriceFormat(optional($row->payment)->admin_commission) ?? '-';
+            // ->addColumn('payment_admin_commission', function ($row) {
+            //     return getPriceFormat(optional($row->payment)->admin_commission) ?? '-';
+            // })
+            ->addColumn('payment_company_fee', function ($row) {
+                return getPriceFormat(optional($row->payment)->company_fee_charge) ?? '-';
+            })
+            ->addColumn('payment_expenses', function ($row) {
+                return getPriceFormat(optional($row->payment)->expenses_charge) ?? '-';
             })
             ->addColumn('payment_driver_commission', function ($row) {
                 return getPriceFormat(optional($row->payment)->driver_commission) ?? '-';
@@ -81,7 +89,9 @@ class ReportController extends Controller
                 return $row->created_at ? dateAgoFormate($row->created_at, true) : '-';
             })
             ->with('totalAmount', $totalAmount)
-            ->with('totalAdminCommission', $totalAdminCommission)
+            //->with('totalAdminCommission', $totalAdminCommission)
+            ->with('totalCompanyFee', $totalCompanyFee)
+            ->with('totalExpenses', $totalExpenses)
             ->with('totalDriverCommission', $totalDriverCommission)
             ->make(true);
         }
@@ -274,12 +284,14 @@ class ReportController extends Controller
                 ->when($params['rider_id'], fn($q) => $q->where('rider_id', $params['rider_id']))
                 ->when($params['driver_id'], fn($q) => $q->where('driver_id', $params['driver_id']));
         })
-        ->selectRaw('SUM(total_amount) as totalAmount, SUM(admin_commission) as totalAdminCommission, SUM(driver_commission) as totalDriverCommission')
+        >selectRaw('SUM(total_amount) as totalAmount, SUM(admin_commission) as totalAdminCommission, SUM(driver_commission) as totalDriverCommission, SUM(company_fee_charge) as totalCompanyFee, SUM(expenses_charge) as totalExpenses')
         ->first();
 
         // Total amounts
         $totalAmount = $totals->totalAmount ?? 0;
-        $totalAdminCommission = $totals->totalAdminCommission ?? 0;
+        //$totalAdminCommission = $totals->totalAdminCommission ?? 0;
+        $totalCompanyFee = $totals->totalCompanyFee ?? 0;
+        $totalExpenses = $totals->totalExpenses ?? 0;
         $totalDriverCommission = $totals->totalDriverCommission ?? 0;
 
         // Check if the request is AJAX
@@ -301,8 +313,14 @@ class ReportController extends Controller
                 ->addColumn('payment_total_amount', function ($row) {
                     return getPriceFormat(optional($row->payment)->total_amount) ?? '-';
                 })
-                ->addColumn('payment_admin_commission', function ($row) {
-                    return getPriceFormat(optional($row->payment)->admin_commission) ?? '-';
+                // ->addColumn('payment_admin_commission', function ($row) {
+                //     return getPriceFormat(optional($row->payment)->admin_commission) ?? '-';
+                // })
+                ->addColumn('payment_company_fee', function ($row) {
+                    return getPriceFormat(optional($row->payment)->company_fee_charge) ?? '-';
+                })
+                ->addColumn('payment_expenses', function ($row) {
+                    return getPriceFormat(optional($row->payment)->expenses_charge) ?? '-';
                 })
                 ->addColumn('payment_driver_commission', function ($row) {
                     return getPriceFormat(optional($row->payment)->driver_commission) ?? '-';
@@ -312,7 +330,9 @@ class ReportController extends Controller
                 })
                 ->with([
                     'totalAmount' => $totalAmount,
-                    'totalAdminCommission' => $totalAdminCommission,
+                    //'totalAdminCommission' => $totalAdminCommission,
+                    'totalCompanyFee' => $totalCompanyFee,
+                    'totalExpenses' => $totalExpenses,
                     'totalDriverCommission' => $totalDriverCommission,
                 ])
                 ->make(true);

@@ -66,14 +66,54 @@
                             </div>
                         </div>
                     @elseif( $key == 'point_ratio' )
-                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::label($key,__('message.'.$key).' <span data-toggle="tooltip" data-placement="right" title="'.__('message.point_ratio_info').'"><i class="fas fa-question-circle"></i></span>',['class'=>'form-control-label'],false ) }}
                         {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Point ratio', 'class' => 'form-control' ]) }}
                     @elseif( $key == 'point_value' )
-                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::label($key,__('message.'.$key).' <span data-toggle="tooltip" data-placement="right" title="'.__('message.point_value_info').'"><i class="fas fa-question-circle"></i></span>',['class'=>'form-control-label'],false ) }}
                         {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Point value', 'class' => 'form-control' ]) }}
                     @elseif( $key == 'min_points_withdrawal' )
-                    {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
-                    {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Minimum Points for Withdrawal', 'class' => 'form-control' ]) }}
+                        {{ Form::label($key,__('message.'.$key).' <span data-toggle="tooltip" data-placement="right" title="'.__('message.min_points_withdrawal_info').'"><i class="fas fa-question-circle"></i></span>',['class'=>'form-control-label'],false ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => 'Minimum Points for Withdrawal', 'class' => 'form-control' ]) }}
+                    @elseif( $key == 'rider_rating' )
+                        {{ Form::label($key, __('message.'.$key), ['class' => 'form-control-label']) }}
+                        <div class="custom-switch custom-switch-text custom-switch-color custom-control-inline mt-2">
+                            <div class="custom-switch-inner">
+                                {{ Form::hidden($key, 0) }}
+                                {{ Form::checkbox($key, 1, $value == '1' , [
+                                    'class' => 'custom-control-input bg-dark',
+                                    'data-type' => 'pages',
+                                    'data-id' => $key,
+                                    'id' => 'switch_'.$key
+                                ]) }} 
+                                <label class="custom-control-label ml-2" for="switch_{{ $key }}"></label>
+                            </div>
+                        </div>
+                    @elseif( $key == 'driver_rating' )
+                        {{ Form::label($key, __('message.'.$key), ['class' => 'form-control-label']) }}
+                        <div class="custom-switch custom-switch-text custom-switch-color custom-control-inline mt-2">
+                            <div class="custom-switch-inner">
+                                {{ Form::hidden($key, 0) }}
+                                {{ Form::checkbox($key, 1, $value == '1' , [
+                                    'class' => 'custom-control-input bg-dark',
+                                    'data-type' => 'pages',
+                                    'data-id' => $key,
+                                    'id' => 'switch_'.$key
+                                ]) }} 
+                                <label class="custom-control-label ml-2" for="switch_{{ $key }}"></label>
+                            </div>
+                        </div>
+                    @elseif( $key == 'normal_ride_restriction_buffer' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}
+                    @elseif( $key == 'scheduled_ride_restriction_buffer' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}
+                    @elseif( $key == 'ride_accept_button_distance' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}
+                    @elseif( $key == 'completed_before_destination_distance' )
+                        {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}
                     @else
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         {{ Form::number($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'min' => 0, 'step' => 'any', 'class' => 'form-control' ]) }}

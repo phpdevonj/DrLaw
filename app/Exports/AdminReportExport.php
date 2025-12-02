@@ -29,6 +29,8 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
     protected $endDate;
     protected $riderId;
     protected $driverId;
+    protected $companyFee;
+    protected $expenses;
 
     public function __construct(Request $request)
     {
@@ -41,6 +43,8 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
         $this->endDate;
         $this->riderId;
         $this->driverId;
+        $this->companyFee;
+        $this->expenses;
     }
 
     public function collection()
@@ -79,7 +83,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
         $rider_request = $ride_requests_rider->get()->merge($ride_requests_driver->get());
 
         $this->totalAmount = $rider_request->sum('payment.total_amount');
-        $this->admin_commission = $rider_request->sum('payment.admin_commission');
+        //$this->admin_commission = $rider_request->sum('payment.admin_commission');
+        $this->companyFee = $rider_request->sum('payment.company_fee_charge');
+        $this->expenses = $rider_request->sum('payment.expenses_charge');
         $this->driver_commission = $rider_request->sum('payment.driver_commission');
 
         $data = $rider_request->map(function ($q) {
@@ -93,7 +99,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
                 'pickup_date_time' => $in_progress_ride_history ? dateAgoFormate($in_progress_ride_history->datetime,true) : '-',
                 'drop_date_time' => $completed_ride_history ? dateAgoFormate($completed_ride_history->datetime,true) : '-',
                 'total_amount' => getPriceFormat(optional($q->payment)->total_amount),
-                'admin_commission' => getPriceFormat(optional($q->payment)->admin_commission),
+                'company_fee_charge' => getPriceFormat(optional($q->payment)->company_fee_charge),
+                'expenses_charge' => getPriceFormat(optional($q->payment)->expenses_charge),
+                //'admin_commission' => getPriceFormat(optional($q->payment)->admin_commission),
                 'driver_commission' => getPriceFormat(optional($q->payment)->driver_commission),
                 'created_at' => dateAgoFormate($q->created_at, true) ,
                 // 'status' => $q->status,
@@ -107,7 +115,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
             'pickup_date_time' => '',
             'drop_date_time' => '',
             'total_amount' => getPriceFormat($this->totalAmount) ?? '-',
-            'admin_commission' => getPriceFormat($this->admin_commission) ?? '-',
+            //'admin_commission' => getPriceFormat($this->admin_commission) ?? '-',
+            'company_fee_charge' => getPriceFormat($this->companyFee) ?? '-',
+            'expenses_charge' => getPriceFormat($this->expenses) ?? '-',
             'driver_commission' => getPriceFormat($this->driver_commission) ?? '-',
             'created_at' => '-',
         ];
@@ -128,7 +138,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
                 '',
                 $order['total_amount'],
                 // '',
-                $order['admin_commission'],
+                //$order['admin_commission'],
+                $order['company_fee_charge'],
+                $order['expenses_charge'],
                 $order['driver_commission'],
                 '',
                 // '',
@@ -142,7 +154,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
             $order['pickup_date_time'] ?? '-',
             $order['drop_date_time'] ?? '-',
             $order['total_amount'] ?? '-',
-            $order['admin_commission'] ?? '-',
+            //$order['admin_commission'] ?? '-',
+            $order['company_fee_charge'] ?? '-',
+            $order['expenses_charge'] ?? '-',
             $order['driver_commission'] ?? '-',
             $order['created_at'] ?? '-',
             // $order['status'] ?? '-',
@@ -169,7 +183,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
                     __('message.pickup_date_time'),
                     __('message.drop_date_time'),
                     __('message.total_amount'),
-                    __('message.admin_commission'),
+                    // __('message.admin_commission'),
+                    __('message.company_fee'),
+                    __('message.expenses'),
                     __('message.driver_commission'),
                     __('message.created_at'),
                     // __('message.status'),
@@ -184,7 +200,9 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
                 __('message.pickup_date_time'),
                 __('message.drop_date_time'),
                 __('message.total_amount'),
-                __('message.admin_commission'),
+                __('message.company_fee'),
+                __('message.expenses'),
+               // __('message.admin_commission'),
                 __('message.driver_commission'),
                 __('message.created_at'),
                 // __('message.status'),

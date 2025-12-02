@@ -128,6 +128,8 @@ class DriverController extends Controller
         $profileImage = getSingleMedia($data, 'profile_image');
         $type = request('type') ?? 'detail';
 
+        $driver_score = $data->driver_score;
+
         // $validStatuses = [
         //     'new_ride_requested',
         //     'accepted',
@@ -144,7 +146,7 @@ class DriverController extends Controller
         
         switch ($type) {
                 case 'detail':
-                    return view('driver.show', compact('pageTitle', 'data', 'profileImage','type'));
+                    return view('driver.show', compact('pageTitle', 'data', 'profileImage','type','driver_score'));
                 break;
 
                 case 'bank_detail':

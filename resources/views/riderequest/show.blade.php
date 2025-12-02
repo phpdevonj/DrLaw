@@ -58,19 +58,27 @@
                         @if(optional($data)->payment != null && optional($data)->payment->payment_status == 'paid')
                             <hr>
                             <div class="row">
-                                <div class="col-3">
+                                <div class="col-2">
                                     <p>{{ __('message.total_distance') }}</p>
                                     {{ $data->distance }} {{ $data->distance_unit }}
                                 </div>
-                                <div class="col-3">
+                                <div class="col-2">
                                     <p>{{ __('message.total_duration') }}</p>
                                     {{ $data->duration }} {{ __('message.min') }}
                                 </div>
-                                <div class="col-3">
+                                <!-- <div class="col-3">
                                     <p>{{ __('message.admin_commission') }}</p>
                                     {{ getPriceFormat(optional($data->payment)->admin_commission ?? 0 ) }}
-                                </div>
+                                </div> -->
                                 <div class="col-3">
+                                    <p>{{ __('message.total_company_fee') }}</p>
+                                    {{ getPriceFormat($data->company_fee_charge ?? 0 ) }}
+                                </div>
+                                <div class="col-2">
+                                    <p>{{ __('message.total_expenses') }}</p>
+                                    {{ getPriceFormat($data->expenses_charge ?? 0 ) }}
+                                </div>
+                                <div class="col-2">
                                     <p>{{ __('message.driver_earning') }}</p>
                                     {{ getPriceFormat(optional($data->payment)->driver_commission ?? 0 ) }}
                                 </div> 
@@ -116,7 +124,7 @@
                                         <span class="">{{ getPriceFormat($data->base_fare) }}</span>
                                     </li>
                                     <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
-                                        <span>{{ __('message.distance') }}</span>
+                                        <span>{{ __('message.distance_fare') }}</span>
                                         @if($data->distance > $data->base_distance)
                                             <span>{{ $data->distance - $data->base_distance }} {{ $distance_unit }} x {{ $data->per_distance }}/{{ __('message.'.$distance_unit) }}</span>
                                         @else
@@ -125,12 +133,12 @@
                                         <span class="">{{ getPriceFormat($data->per_distance_charge) }}</span>
                                     </li>
                                     <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
-                                        <span>{{ __('message.duration') }}</span>
-                                        <span>{{ $data->duration }} {{ __('message.min') }} x {{ $data->per_minute_drive }}/{{ __('message.min') }}</span>
-                                        <span class="">{{ getPriceFormat($data->per_minute_drive_charge) }}</span>
+                                        <span>{{ __('message.time_fare') }}</span>
+                                        <span>{{ $data->duration }} {{ __('message.min') }} x {{ $time_fare_value }}/{{ __('message.min') }}</span>
+                                        <span class="">{{ getPriceFormat($data->per_minute_time_fare_charge) }}</span>
                                     </li>
                                     <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
-                                        <span>{{ __('message.wait_time') }}</span>
+                                        <span>{{ __('message.time_idling') }}</span>
                                         @if($data->waiting_time == 0)
                                             <span></span>
                                         @else
@@ -152,10 +160,20 @@
                                         <span class="">{{ getPriceFormat($data->extra_charges_amount) }}</span>
                                     </li>
                                     <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
+                                        <span>{{ __('message.company_fee') }}</span>
+                                        <span></span>
+                                        <span class="">{{ getPriceFormat($data->company_fee_charge) }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
+                                        <span>{{ __('message.expenses_charge') }}</span>
+                                        <span></span>
+                                        <span class="">{{ getPriceFormat($data->expenses_charge) }}</span>
+                                    </li>
+                                    <!-- <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
                                         <span>{{ __('message.tip') }}</span>
                                         <span></span>
                                         <span class="">{{ getPriceFormat($data->tips) }}</span>
-                                    </li>
+                                    </li> -->
                                     <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
                                         <span>{{ __('message.coupon_discount') }}</span>
                                         <span></span>
@@ -194,6 +212,27 @@
                         @endif
                     </div>
                 </div>
+
+                @if($data->rideTip?->status === 'completed')
+                <div class="card card-block border-radius-20">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title mb-0">{{ __('message.tip_payment') }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">        
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
+                                <span>{{ __('message.driver_tip') }}</span>
+                                <span></span>
+                                <span class="">{{ ($data->rideTip?->status === 'completed') ? getPriceFormat($data->rideTip->tip_amount) : 0 }}</span>
+                                
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                @endif
+                
                 @if(count($data->rideRequestHistory) > 0)
                     <div class="card card-block border-radius-20">
                         <div class="card-header d-flex justify-content-between">

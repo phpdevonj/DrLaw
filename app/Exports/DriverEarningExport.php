@@ -25,6 +25,8 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
     protected $endDate;
     protected $riderId;
     protected $driverId;
+    protected $companyFee;
+    protected $expenses;
 
     public function __construct(Request $request)
     {
@@ -36,6 +38,8 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
         $this->endDate;
         $this->riderId;
         $this->driverId;
+        $this->companyFee;
+        $this->expenses;
     }
 
     public function collection()
@@ -71,7 +75,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
 
         $this->total_amount = $rider_request->sum('payment.total_amount');
         $this->driver_commission = $rider_request->sum('payment.driver_commission');
-        $this->admin_commission = $rider_request->sum('payment.admin_commission');
+        //$this->admin_commission = $rider_request->sum('payment.admin_commission');
+        $this->companyFee = $rider_request->sum('payment.company_fee_charge');
+        $this->expenses = $rider_request->sum('payment.expenses_charge');
 
         $data = $rider_request->map(function ($q) {
             return [
@@ -79,7 +85,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
                 'driver_name' => optional($q->driver)->display_name,
                 'total_amount' => getPriceFormat(optional($q->payment)->total_amount),
                 'driver_commission' => getPriceFormat(optional($q->payment)->driver_commission),
-                'admin_commission' => getPriceFormat(optional($q->payment)->admin_commission),
+                //'admin_commission' => getPriceFormat(optional($q->payment)->admin_commission),
+                'company_fee_charge' => getPriceFormat(optional($q->payment)->company_fee_charge),
+                'expenses_charge' => getPriceFormat(optional($q->payment)->expenses_charge),
                 'created_at' => dateAgoFormate($q->created_at,true),
             ];
         })->toArray();
@@ -91,7 +99,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
             'driver_name' => 'Total',
             'total_amount' => getPriceFormat($this->total_amount) ?? '-',
             'driver_commission' => getPriceFormat($this->driver_commission) ?? '-',
-            'admin_commission' => getPriceFormat($this->admin_commission) ?? '-',
+            //'admin_commission' => getPriceFormat($this->admin_commission) ?? '-',
+            'company_fee_charge' => getPriceFormat($this->companyFee) ?? '-',
+            'expenses_charge' => getPriceFormat($this->expenses) ?? '-',
             'created_at' => ''
         ];
         return collect($data);
@@ -106,7 +116,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
                 '',
                 $driver['total_amount'],
                 $driver['driver_commission'],
-                $driver['admin_commission'],
+                $driver['company_fee_charge'],
+                $driver['expenses_charge'],
+                //$driver['admin_commission'],
                 '',
             ];
         }
@@ -116,7 +128,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
             $driver['driver_name'] ?? '-',
             $driver['total_amount'] ?? '-',
             $driver['driver_commission'] ?? '-',
-            $driver['admin_commission'] ?? '-',
+            $driver['company_fee_charge'] ?? '-',
+            $driver['expenses_charge'] ?? '-',
+            //$driver['admin_commission'] ?? '-',
             $driver['created_at'] ?? '-',
         ];
     }
@@ -139,7 +153,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
                     __('message.title_name',['title' => __('message.driver')]),
                     __('message.total_amount'),
                     __('message.driver_earning'),
-                    __('message.admin_commission'),
+                    //__('message.admin_commission'),
+                    __('message.company_fee'),
+                    __('message.expenses'),
                     __('message.created_at'),
                 ],
             ];
@@ -150,7 +166,9 @@ class DriverEarningExport implements FromCollection, WithHeadings, WithMapping, 
                 __('message.title_name',['title' => __('message.driver')]),
                 __('message.total_amount'),
                 __('message.driver_earning'),
-                __('message.admin_commission'),
+                //__('message.admin_commission'),
+                __('message.company_fee'),
+                __('message.expenses'),
                 __('message.created_at'),
             ];
         }
