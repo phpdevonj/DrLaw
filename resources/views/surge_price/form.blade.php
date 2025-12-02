@@ -18,6 +18,26 @@
                         <div class="new-user-info">
                             <div class="row">
                                 <div class="form-group col-md-4">
+                                    {{ Form::label('region_id', __('message.region').' <span class="text-danger">*</span>', ['class'=>'form-control-label'], false ) }}
+                                    {{ Form::select('region_id', $regions, old('region_id'), [
+                                        'class' =>'form-control select2js',
+                                        'placeholder' => __('message.select_name',[ 'select' => __('message.region') ])
+                                    ]) }}
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    {{ Form::label('address', __('message.address'), ['class'=>'form-control-label'], false ) }}
+                                    {{ Form::text('address', old('address'), ['class' => 'form-control', 'id' => 'address-input']) }}
+                                    {{ Form::hidden('latitude', old('latitude'), ['id' => 'latitude']) }}
+                                    {{ Form::hidden('longitude', old('longitude'), ['id' => 'longitude']) }}
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    {{ Form::label('radius', __('message.radius'), ['class'=>'form-control-label'], false ) }}
+                                    {{ Form::number('radius', old('radius'), ['class' => 'form-control', 'step' => '0.01', 'min' => '0.1']) }}
+                                </div>
+
+                                <div class="form-group col-md-4">
                                     {{ Form::label('day',__('message.day').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
                                     {{ Form::select('day[]',getDaysOfWeek(), old('day'), [ 'class' =>'form-control select2js' ,'multiple' => 'multiple','data-placeholder' => __('message.select_name',[ 'select' => __('message.day') ])]) }}
                                 </div>
@@ -71,13 +91,13 @@
                                                         <td class="col-md-5">
                                                             <div class="form-group mt-3">
                                                                 {{ Form::label('from_time', __('message.from_time'),['class' => 'form-control-label'] ) }}
-                                                                {{ Form::text('from_time[]', is_array(old('from_time')),[ 'id' => 'from_time_no_0', 'placeholder' => __('message.from_time'),'class' =>'form-control  clone-min-timerange-picker']) }}
+                                                                {{ Form::text('from_time[]', old('from_time.0', '00:00'),[ 'id' => 'from_time_no_0', 'placeholder' => __('message.from_time'),'class' =>'form-control  clone-min-timerange-picker']) }}
                                                             </div>
                                                         </td>
                                                         <td class="col-md-5">
                                                             <div class="form-group mt-3">
                                                                 {{ Form::label('to_time', __('message.to_time'),['class' => 'form-control-label'] ) }}
-                                                                {{ Form::text('to_time[]', is_array(old('to_time')),[ 'id' => 'to_time_no_0', 'placeholder' => __('message.to_time'),'class' =>'form-control  clone-min-timerange-picker']) }}
+                                                                {{ Form::text('to_time[]', old('to_time.0', '23:59'),[ 'id' => 'to_time_no_0', 'placeholder' => __('message.to_time'),'class' =>'form-control  clone-min-timerange-picker']) }}
                                                             </div>
                                                         </td>
                                                         <td class="col-md-2">
@@ -198,6 +218,33 @@
                     }) 
                 });
             })(jQuery);
+        </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&libraries=places" defer></script>
+        <script>
+            $(function() {
+
+                if(window.google || window.google.maps) {
+                    initialize();
+                }
+                function initialize() {
+                    var address_input = document.getElementById('address-input');
+                    var address = new google.maps.places.Autocomplete(address_input);
+
+                    address.addListener('place_changed', function () {
+                        var place = address.getPlace();
+                        if (!place.geometry) {
+                            alert("{{ __('message.address_autocomplete_error', ['address' => __('message.address')]) }}");
+                            $('#address-input').focus();
+                            return;
+                        }
+                        start_latitude  = place.geometry['location'].lat();
+                        start_longitude = place.geometry['location'].lng();
+                        $('#latitude').val(start_latitude);
+                        $('#longitude').val(start_longitude);
+                        $('#address-input').val(place.formatted_address);                       
+                    });
+                }
+            });
         </script>
     @endsection
 </x-master-layout>

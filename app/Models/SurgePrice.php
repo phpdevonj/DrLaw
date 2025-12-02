@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class SurgePrice extends Model
 {
     use HasFactory , SoftDeletes;
-    protected $fillable = [ 'day', 'type', 'value', 'from_time', 'to_time' ];
+    protected $fillable = [ 'day', 'type', 'value', 'from_time', 'to_time', 'region_id', 'address', 'latitude', 'longitude', 'radius' ];
 
     protected $casts = [
         'day' => 'array',
@@ -45,5 +45,10 @@ class SurgePrice extends Model
     public function setToTimeAttribute($value)
     {
         $this->attributes['to_time'] = isset($value) ? json_encode($value) : null;
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
     }
 }

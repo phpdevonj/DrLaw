@@ -31,6 +31,7 @@ class SurgePriceRequest extends FormRequest
         switch ($method) {
             case 'post':
                 $rules = [
+                    'region_id' => 'required|exists:regions,id',
                     'day'  => 'required|unique:surge_prices,day',
                     'value'     => 'required|numeric',
                     'from_time.*' => 'required|date_format:H:i',

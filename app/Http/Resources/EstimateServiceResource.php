@@ -27,7 +27,7 @@ class EstimateServiceResource extends JsonResource
         $drop_lng = request('drop_lng');
         $multi_location = request('multi_location', []);
         $date_time = now()->format('Y-m-d h:i');
-        $surge_price = getSurgePrice($date_time);
+        $surge_price = getSurgePrice($date_time, $this->region_id, $pick_lat, $pick_lng, $drop_lat, $drop_lng);
         
         $service_data = [
             'id'                => $this->id,

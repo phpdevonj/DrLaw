@@ -6,6 +6,7 @@ use App\DataTables\SurgePriceDataTable;
 use App\Http\Requests\SurgePriceRequest;
 use App\Models\SurgePrice;
 use Illuminate\Http\Request;
+use App\Models\Region;
 
 class SurgePriceController extends Controller
 {
@@ -32,8 +33,10 @@ class SurgePriceController extends Controller
     public function create()
     {
         $pageTitle = __('message.add_form_title',[ 'form' => __('message.surge_price')]);
-        
-        return view('surge_price.form', compact('pageTitle'));
+        $regions = Region::pluck('name', 'id');
+        $regionDetails = Region::get(['id', 'coordinates']);
+
+        return view('surge_price.form', compact('pageTitle', 'regions', 'regionDetails'));
     }
 
     /**
@@ -76,6 +79,8 @@ class SurgePriceController extends Controller
     {
         $pageTitle = __('message.update_form_title',[ 'form' => __('message.surge_price')]);
         $data = SurgePrice::findOrFail($id);
+        $regions = Region::pluck('name', 'id');
+        $regionDetails = Region::get(['id', 'coordinates']);
         
         if (is_string($data->from_time)) {
             $data->from_time = json_decode($data->from_time, true);
@@ -85,7 +90,7 @@ class SurgePriceController extends Controller
             $data->to_time = json_decode($data->to_time, true);
         }
 
-        return view('surge_price.form', compact('data', 'pageTitle', 'id'));
+        return view('surge_price.form', compact('data', 'pageTitle', 'id', 'regions', 'regionDetails'));
     }
 
     /**

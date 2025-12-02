@@ -720,4 +720,5 @@ return array(
     'scheduled_ride_active_not_allowed' => 'You have an active scheduled ride in progress. Please complete or cancel your scheduled ride before booking a new ride.',
     'tip_payment' => 'Tip Payment',
     'driver_tip'  => 'Driver’s Tip',
+    'radius' => 'Radius',
 );

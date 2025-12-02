@@ -7,6 +7,7 @@ use App\Traits\DataTableTrait;
 use DateTime;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
+use Illuminate\Support\Str;
 
 class SurgePriceDataTable extends DataTable
 {
@@ -72,6 +73,15 @@ class SurgePriceDataTable extends DataTable
                 $id = $surge_price->id;
                 return view('surge_price.action',compact('surge_price','id'))->render();
             })
+            ->editColumn('region_id', function ($row) {
+                return $row->region ? $row->region->name : '-';
+            })
+            ->editColumn('address', function ($row) {
+                return Str::limit($row->address, 30);
+            })
+            ->editColumn('radius', function ($row) {
+                return $row->radius;
+            })
             ->order(function ($query) {
                 if (request()->has('order')) {
                     $order = request()->order[0];
@@ -98,7 +108,7 @@ class SurgePriceDataTable extends DataTable
      */
     public function query(SurgePrice $model)
     {
-        return $model->newQuery();
+        return $model->newQuery()->with('region');
     }
 
     /**
@@ -114,6 +124,9 @@ class SurgePriceDataTable extends DataTable
                 ->title(__('message.srno'))
                 ->orderable(false)
                 ->width(60),
+            Column::make('region_id')->title(__('message.region'))->data('region_id'),
+            Column::make('address')->title(__('message.address')),
+            Column::make('radius')->title(__('message.radius')),
             Column::make('day')->title( __('message.day') ),
             Column::make('type')->title( __('message.type') ),
             Column::make('value')->title( __('message.value') ),

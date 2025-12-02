@@ -484,7 +484,9 @@ class RideRequestController extends Controller
         $fixed_amount = 0;
         $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
         if ($surge_price_setting_value == 1) {
-            $surge_price = getSurgePrice($data->datetime);
+            $service_id = $data->service_id;
+            $region_id = Service::where('id', $service_id)->pluck('region_id')->first();
+            $surge_price = getSurgePrice($data->datetime, $region_id, $data->start_latitude, $data->start_longitude, $data->end_latitude, $data->end_longitude);
             if (isset($surge_price) && !empty($surge_price)) {
                 if ($surge_price->type == 'fixed') {
                     $fixed_amount = $surge_price->value;
@@ -673,7 +675,13 @@ class RideRequestController extends Controller
         $ride_detail = RideRequest::find($id);
         $today = now()->format('d/m/Y');
         $app_setting = AppSetting::first();
-        $surge_price = getSurgePrice($ride_detail->datetime);
+        $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
+        if ($surge_price_setting_value == 1) {
+            $service_id = $ride_detail->service_id;
+            $region_id = Service::where('id', $service_id)->pluck('region_id')->first();
+
+            $surge_price = getSurgePrice($ride_detail->datetime, $region_id, $ride_detail->start_latitude, $ride_detail->start_longitude, $ride_detail->end_latitude, $ride_detail->end_longitude);
+        }
         
         if (isset($surge_price) && !empty($surge_price)) {
             if ($surge_price->type == 'fixed') {

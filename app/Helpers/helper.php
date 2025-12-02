@@ -1687,7 +1687,7 @@ if (!function_exists('getDaysOfWeek')) {
 }
 
 if (!function_exists('getSurgePrice')) {
-    function getSurgePrice($ride_datetime) {
+    function getSurgePrice($ride_datetime, $region_id, $pickup_lat = null, $pickup_lng = null, $drop_lat = null, $drop_lng = null) {
         if ($ride_datetime === null || $region_id === null  || $pickup_lat === null || $pickup_lng === null || $drop_lat === null || $drop_lng === null) {
             return null;
         }

@@ -18,7 +18,7 @@ class RideRequestResource extends JsonResource
         if($this->status == 'completed' ){
             $pdfUrl = route('ride-invoice', ['id' => $this->id]);
         }
-        $surge_price = getSurgePrice($this->datetime);
+        $surge_price = getSurgePrice($this->datetime, optional($this->service)->region_id, $this->start_latitude, $this->start_longitude, $this->end_latitude, $this->end_longitude);
 
         $getBidAmount = $this->approvedBids()->first();
 

@@ -122,7 +122,7 @@ class DispatchController extends Controller
         $service_data = $service;
         $service_data['distance_unit'] = $distance_in_unit;
         $date_time = now()->format('Y-m-d h:i');
-        $surge_price = getSurgePrice($date_time);
+        $surge_price = getSurgePrice($date_time, $service->region_id, $pick_lat, $pick_lng, $drop_lat, $drop_lng);
         // caclulate ride
         $pick_lat = request('pick_lat');
         $pick_lng = request('pick_lng');
