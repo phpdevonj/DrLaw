@@ -21,6 +21,7 @@ use App\Models\Role;
 use App\Models\RideTip;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
+use App\Models\Region;
 
 
 function DummyData($key){

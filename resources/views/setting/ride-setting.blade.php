@@ -108,9 +108,9 @@
                     @elseif( $key == 'scheduled_ride_restriction_buffer' )
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}
-                    @elseif( $key == 'ride_accept_button_distance' )
+                    <!-- @elseif( $key == 'ride_accept_button_distance' )
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
-                        {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}
+                        {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }} -->
                     @elseif( $key == 'completed_before_destination_distance' )
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         {{ Form::text($key,$value ?? null,[ 'placeholder' => __('message.'.$key), 'class' => 'form-control' ]) }}

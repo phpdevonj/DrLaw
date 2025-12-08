@@ -190,7 +190,7 @@
                                             <tr>
                                                 <td>{{ $riderequest->id }}</td>
                                                 <td>{{ optional($riderequest->rider)->display_name ?? '-' }}</td>
-                                                <td>{{ dateAgoFormate($riderequest->datetime, true) }}</td>
+                                                <td>{{ $riderequest->datetime }}</td>
                                                 <td>{{ optional($riderequest->driver)->display_name ?? '-' }}</td>
                                                 <td><span class="badge badge-light-{{$status}} text-{{$status}}">{{ __('message.'.$riderequest->status) }}</span></td>
                                             </tr>

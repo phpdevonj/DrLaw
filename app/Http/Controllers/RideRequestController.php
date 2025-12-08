@@ -26,6 +26,7 @@ use App\Notifications\CommonNotification;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
 use App\Models\RideRequestHistory;
+use Illuminate\Support\Facades\Log;
 
 class RideRequestController extends Controller
 {

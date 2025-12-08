@@ -693,30 +693,28 @@ class RideRequestController extends Controller
         // Driver filter (scheduled → all drivers, driver_accepted → only that driver, exclude cancelled drivers)
         $schedule_rides->when(request('driver_id'), function ($q) {
             $driverId = (int) request('driver_id');
-
-            $q->where(function ($query) use ($driverId) {
-                // Case 1: Scheduled rides (apply 5-hour rule, exclude cancelled drivers)
-                $query->where(function ($sub) use ($driverId) {
+            $now = Carbon::now();
+        
+            $q->where(function ($query) use ($driverId, $now) {
+                // Case 1: Scheduled rides (apply 30-min & 5-hour rule, exclude cancelled drivers)
+                $query->where(function ($sub) use ($driverId, $now) {
                     $sub->where('status', 'scheduled')
-                        ->where('scheduled_at', '>=', Carbon::now()->addHours(5))
+                        ->where(function ($time) use ($now) {
+                            // Allow rides after 30 minutes from now (future rides only)
+                            $time->where('scheduled_at', '>', $now->addMinutes(30));
+                        })
                         ->where(function ($cancel) use ($driverId) {
                             $cancel->whereNull('cancelled_driver_ids')
-                                ->orWhereRaw("JSON_CONTAINS(cancelled_driver_ids, '[$driverId]') = 0");
+                                   ->orWhereRaw("JSON_CONTAINS(cancelled_driver_ids, '[$driverId]') = 0");
                         });
                 })
-                // Case 2: Driver already accepted this ride (show always)
+                // Case 2: Driver already accepted this ride (always show)
                 ->orWhere(function ($sub) use ($driverId) {
                     $sub->where('status', 'driver_accepted')
                         ->where('driver_id', $driverId);
                 });
             });
         });
-        
-        // $schedule_rides->when(request('driver_id'), function ($query) {
-        //     return $query->whereHas('driver',function ($q) {
-        //         $q->where('driver_id',request('driver_id'));
-        //     });
-        // });
 
         $order = 'desc';
         $per_page = config('constant.PER_PAGE_LIMIT');
