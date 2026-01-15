@@ -338,6 +338,7 @@ return array(
         'already_scheduled_same_time' => 'You already have a scheduled ride around this time. Please choose a different time.',
         'schedule_already_active' => 'You already have an active scheduled ride. Complete or cancel it before accepting another.',
         'must_be_5_hours_later' => 'You can only accept scheduled rides that start at least 5 hours from now.',
+        'must_be_after_30_minutes' => 'You can only accept rides scheduled at least 30 minutes after the current time.',
     ),
     'notification_settings' => 'Notification Setting',
     'notification_list' => 

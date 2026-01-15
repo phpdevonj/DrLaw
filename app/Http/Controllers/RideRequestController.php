@@ -905,8 +905,16 @@ class RideRequestController extends Controller
         // }
 
         // Check if ride is at least 5 hours away
-        if (Carbon::parse($riderequest->scheduled_at)->lt(Carbon::now()->addHours(5))) {
-            return json_message_response(__('message.ride.must_be_5_hours_later'), 400);
+        // if (Carbon::parse($riderequest->scheduled_at)->lt(Carbon::now()->addHours(5))) {
+        //     return json_message_response(__('message.ride.must_be_5_hours_later'), 400);
+        // }
+
+        $scheduledTime = Carbon::parse($riderequest->scheduled_at);
+        $now = Carbon::now();
+        
+        // Reject if ride is within 30 minutes from now or in the past
+        if ($scheduledTime->lte($now->addMinutes(30))) {
+            return json_message_response(__('message.ride.must_be_after_30_minutes'), 400);
         }
 
         $hasActiveSchedule = RideRequest::where([
