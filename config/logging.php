@@ -134,6 +134,13 @@ return [
             'days' => 14,
         ],
 
+        'payfast_itn' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payfast_itn.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),

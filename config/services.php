@@ -41,4 +41,11 @@ return [
     'fcm' => [
         'key' => env('FIREBASE_SERVER_KEY')
     ],
+
+    'payfast' => [
+        'merchant_id' => env('PAYFAST_MERCHANT_ID'),
+        'merchant_key' => env('PAYFAST_MERCHANT_KEY'),
+        'passphrase' => env('PAYFAST_PASSPHRASE'),
+        'env' => env('PAYFAST_ENV', 'sandbox'),
+    ],
 ];

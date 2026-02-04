@@ -220,3 +220,7 @@ Route::get('/', [FrontendController::class, 'index'])->name('browse');
 Route::get('termofservice', [FrontendController::class, 'termofservice'])->name('termofservice');
 Route::get('privacypolicy', [FrontendController::class, 'privacypolicy'])->name('privacypolicy');
 Route::get('page/{slug}', [FrontendController::class, 'page'])->name('pages');
+// PayFast ITN Webhook
+Route::post('payfast/itn', [App\Http\Controllers\API\PayFastController::class, 'itnCallback']);
+Route::get('payfast/success', [App\Http\Controllers\API\PayFastController::class, 'paymentSuccess'])->name('payfast.success');
+Route::get('payfast/cancel', [App\Http\Controllers\API\PayFastController::class, 'paymentCancel'])->name('payfast.cancel');
