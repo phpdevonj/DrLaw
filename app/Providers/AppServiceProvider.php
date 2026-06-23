@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Database\Events\MigrationsStarted;
@@ -39,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // if (app()->environment('local')) {
+        //     URL::forceScheme('https');
+        // }
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });

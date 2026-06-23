@@ -46,7 +46,7 @@
         {!! Form::close() !!}
     </div>
     @section('bottom_script')
-    <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&libraries=places" defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&v=3.64&libraries=places" defer></script>
     <script>
         $(function() {
 
