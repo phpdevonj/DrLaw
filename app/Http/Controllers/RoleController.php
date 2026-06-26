@@ -88,6 +88,35 @@ class RoleController extends Controller
      */
     public function destroy($id)
     {
-        //
+        if(env('APP_DEMO')){
+            $message = __('message.demo_permission_denied');
+            if(request()->ajax()) {
+                return response()->json(['status' => false, 'message' => $message]);
+            }
+            return redirect()->route('role.index')->withErrors($message);
+        }
+
+        $role = Role::find($id);
+        $status = 'errors';
+        $message = __('message.not_found_entry', ['name' => __('message.role')]);
+
+        if($role != '') {
+            if($role->permissions()->count() > 0) {
+                $message = __('message.role_has_permission_delete');
+                if(request()->ajax()) {
+                    return response()->json(['status' => false, 'message' => $message]);
+                }
+                return redirect()->route('role.index')->withErrors($message);
+            }
+
+            $role->delete();
+            $status = 'success';
+            $message = __('message.delete_form', ['form' => __('message.role')]);
+        }
+
+        if(request()->ajax()) {
+            return response()->json(['status' => $status == 'success', 'message' => $message]);
+        }
+        return redirect()->route('role.index')->with($status, $message);
     }
 }

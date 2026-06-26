@@ -47,6 +47,7 @@ return array(
     'msg_removed' => ':name has been removed successfully.',
     'remove_file_msg' => 'Do you want to remove this file ?',
     'delete_msg' => 'Are you sure you want to delete?',
+    'role_has_permission_delete' => 'This role cannot be deleted because it has permissions assigned to it.',
     'choose_profile_image' => 'Choose Profile Image',
     'profile_image' => 'Profile Image',
     'choose_file' => 'Choose :file',
