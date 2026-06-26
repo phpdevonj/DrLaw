@@ -228,4 +228,9 @@ class RideRequest extends Model
     public function rideTip() {
         return $this->hasOne( RideTip::class, 'ride_request_id', 'id');
     }
+
+    public function getMultiDropLocationAttribute($value)
+    {
+        return isset($value) ? json_decode($value, true) : null;
+    }
 }

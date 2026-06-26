@@ -141,161 +141,143 @@
 @include('helper.app_message')
 
 {{-- Google Translate: hidden widget + custom switcher logic --}}
+<style>
+/* Hide the Google top frame that pushes the page down */
+body > .skiptranslate { display: none !important; }
+body { top: 0px !important; }
+
+/* Custom language switcher dropdown */
+.og-lang-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    min-width: 160px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.12);
+    z-index: 9999;
+}
+.og-lang-menu.open {
+    display: block;
+}
+.og-lang-menu .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    font-size: 14px;
+}
+.og-lang-menu .list-group-item:first-child {
+    border-top: 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+.og-lang-menu .list-group-item:last-child {
+    border-bottom: 0;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+.og-lang-menu .list-group-item:hover,
+.og-lang-menu .lang-option.active {
+    background: #f0f0f0;
+}
+</style>
 <script type="text/javascript">
-    // Helper to get cookie value
-    function getGoogTransCookieVal() {
-        var name = "googtrans=";
-        var decodedCookie = decodeURIComponent(document.cookie);
-        var ca = decodedCookie.split(';');
-        for(var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length).replace(/"/g, '');
-            }
-        }
-        return null;
-    }
-
-    /* ── 1. Set/Delete googtrans cookie ── */
-    // Helper to clear existing cookies on all potential domain/path permutations to prevent duplicate conflicts
-    function clearGoogTransCookiePermutations() {
-        var domain = location.hostname;
-        var expirePast = 'expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
-        document.cookie = 'googtrans=; path=/; expires=' + expirePast;
-        document.cookie = 'googtrans=; path=/; domain=' + domain + '; expires=' + expirePast;
-        document.cookie = 'googtrans=; path=/; domain=.' + domain + '; expires=' + expirePast;
-        document.cookie = 'googtrans=; expires=' + expirePast;
-    }
-
-    function setGoogTransCookie(langCode) {
-        var sourceLang = 'en'; // The source HTML of the templates is always English
-        var domain = location.hostname;
-
-        // Always clean any existing cookie variants first
-        clearGoogTransCookiePermutations();
-
-        var val = '/' + sourceLang + '/' + langCode;
-        var cookieStr = 'googtrans=' + val + '; path=/; expires=Thu, 01 Jan 2099 00:00:00 GMT';
-
-        // Add Secure attribute if the site is served over HTTPS
-        if (location.protocol === 'https:') {
-            cookieStr += '; Secure';
-        }
-
-        // Set cookie for exact hostname
-        document.cookie = cookieStr;
-
-        // Set cookie with leading dot domain if applicable (non-IP and has dots)
-        if (domain.indexOf('.') !== -1 && !/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(domain)) {
-            document.cookie = cookieStr + '; domain=.' + domain;
-        }
-    }
-
-    /* ── 2. Google Translate widget initialisation ── */
+    // 1. Initialize Google Translate
     function googleTranslateElementInit() {
         new google.translate.TranslateElement({
-            pageLanguage: 'en', // The source document text is English
-            includedLanguages: window._adminLangCodes || 'en,fr,hi',
+            pageLanguage: 'en',
+            // Comma-separated list of languages you want to support
+            // includedLanguages: 'en,fr',
             layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
             autoDisplay: false
         }, 'google_translate_element');
     }
 
-    /* ── 3. Update the toggle-button UI from a specific language code ── */
-    function syncUIFromActiveLanguage() {
-        var activeCode = window._defaultLangCode || 'en';
-        var cookieVal = getGoogTransCookieVal();
-        
-        if (cookieVal) {
-            var parts = cookieVal.split('/');
-            if (parts.length >= 3) {
-                activeCode = parts[2];
-            }
+    // 2. Aggressively clear old cookies to prevent getting stuck
+    function clearGoogTransCookie() {
+        var d = location.hostname.split('.');
+        var domains = [''];
+        domains.push('; domain=' + location.hostname);
+        domains.push('; domain=.' + location.hostname);
+        while (d.length > 1) {
+            var dom = d.join('.');
+            domains.push('; domain=' + dom);
+            domains.push('; domain=.' + dom);
+            d.shift();
         }
+        domains.forEach(function(dom) {
+            document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT' + dom;
+        });
+    }
 
-        // Find the option in our DOM list
-        var opt = document.querySelector('#custom-lang-switcher .lang-option[data-code="' + activeCode + '"]');
-        if (opt) {
-            var name = opt.dataset.name;
-            var flag = opt.dataset.flag;
-            
-            var flagEl  = document.getElementById('selected-lang-flag');
-            var labelEl = document.getElementById('selected-lang-label');
-            if (flagEl) flagEl.src = flag;
-            if (labelEl) labelEl.textContent = name;
-
-            document.querySelectorAll('#custom-lang-switcher .lang-option').forEach(function (el) {
-                el.classList.toggle('active', el.dataset.code === activeCode);
-            });
+    // 3. Set new cookie
+    function setGoogTransCookie(lang) {
+        clearGoogTransCookie();
+        if (lang && lang !== 'en') {
+            var domain = location.hostname;
+            var val = '/en/' + lang;
+            document.cookie = 'googtrans=' + val + '; path=/; expires=Thu, 01 Jan 2099 00:00:00 GMT';
+            if (domain.indexOf('.') !== -1 && !/^\d{1,3}(\.\d{1,3}){3}$/.test(domain)) {
+                document.cookie = 'googtrans=' + val + '; path=/; expires=Thu, 01 Jan 2099 00:00:00 GMT; domain=.' + domain;
+            }
         }
     }
 
-    /* ── 4. User picks a language from the custom dropdown ── */
-    function selectLanguage(code, name, flag) {
-        if (code === 'default') {
-            clearGoogTransCookiePermutations();
-            var defaultCode = window._defaultLangCode || 'en';
-            if (defaultCode !== 'en') {
-                setGoogTransCookie(defaultCode);
-            }
-            location.reload();
-            return;
-        }
+    // 4. Read active language on page load
+    function getActiveLang() {
+        var m = decodeURIComponent(document.cookie).match(/(?:^|;)\s*googtrans=\/en\/([^;]+)/);
+        return m ? m[1] : 'en';
+    }
 
-        // Update cookie
+    // 5. Update UI to match active language
+    function syncUI(lang) {
+        var opt = document.querySelector('.lang-option[data-code="' + lang + '"]');
+        if (!opt) return;
+        var flag = document.getElementById('selected-lang-flag');
+        var label = document.getElementById('selected-lang-label');
+        if (flag) flag.src = opt.dataset.flag;
+        if (label) label.textContent = opt.dataset.name;
+        document.querySelectorAll('.lang-option').forEach(function(el) {
+            el.classList.toggle('active', el.dataset.code === lang);
+        });
+    }
+
+    // 6. Handle selection
+    function selectLanguage(code) {
         setGoogTransCookie(code);
-        // Reload page to let Google Translate apply it cleanly
-        location.reload();
+        location.reload(); // Reload to let Google Translate read the new cookie
     }
 
-    /* ── 5. Wire up dropdown events after DOM ready ── */
+    // 7. Event Listeners
     document.addEventListener('DOMContentLoaded', function () {
-        var defaultCode = window._defaultLangCode || 'en';
-        var cookieVal = getGoogTransCookieVal();
+        syncUI(getActiveLang());
 
-        // If no translation cookie exists and the default language is not English,
-        // automatically set the cookie and reload to display the page in the default language.
-        if (!cookieVal && defaultCode !== 'en') {
-            setGoogTransCookie(defaultCode);
-            location.reload();
-            return;
-        }
-
-        // Sync UI on load
-        syncUIFromActiveLanguage();
-
-        var switcher  = document.getElementById('custom-lang-switcher');
+        var switcher = document.getElementById('custom-lang-switcher');
         var toggleBtn = document.getElementById('lang-toggle-btn');
-        var menu      = document.getElementById('lang-menu');
-        var caret     = document.getElementById('lang-caret');
+        var menu = document.getElementById('lang-menu');
 
         if (!switcher || !toggleBtn || !menu) return;
 
-        // Toggle button — open / close
+        // Open/close dropdown
         toggleBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            var isOpen = menu.classList.contains('open');
-            menu.classList.toggle('open', !isOpen);
-            if (caret) caret.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            menu.classList.toggle('open');
         });
 
-        // Language option click
+        // Click an option
         menu.addEventListener('click', function (e) {
             e.stopPropagation();
             var opt = e.target.closest('.lang-option');
-            if (!opt) return;
-            selectLanguage(opt.dataset.code, opt.dataset.name, opt.dataset.flag);
+            if (opt) selectLanguage(opt.dataset.code);
         });
 
-        // Close when clicking anywhere outside the switcher
+        // Click outside to close
         document.addEventListener('click', function (e) {
-            if (switcher && !switcher.contains(e.target)) {
+            if (!switcher.contains(e.target)) {
                 menu.classList.remove('open');
-                if (caret) caret.style.transform = 'rotate(0deg)';
             }
         });
     });

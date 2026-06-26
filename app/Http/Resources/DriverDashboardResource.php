@@ -82,8 +82,8 @@ class DriverDashboardResource extends JsonResource
                 }
 
                 $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
-                $coupon_code = $on_ride_request->coupon_code;
-                $coupon = Coupon::where('id', $coupon_code)->first();
+                // $coupon_code = $on_ride_request->coupon_code;
+                // $coupon = Coupon::where('id', $coupon_code)->first();
 
                 // $status = $coupon_code ? 400 : 200;
                 // if ($coupon) {
@@ -98,14 +98,13 @@ class DriverDashboardResource extends JsonResource
                 $request['distance_in_unit'] = $distance_in_unit;
                 $request['dropoff_distance_in_meters'] = $dropoff_distance_in_meters;
                 $request['dropoff_time_in_seconds'] = $dropoff_time_in_seconds;
-                $request['coupon'] = $coupon;
-
+                $request['coupon'] = $on_ride_request->coupon_data;
                 $request['pick_lat'] = $on_ride_request->start_latitude;
                 $request['pick_lng'] = $on_ride_request->start_longitude;
                 $request['drop_lat'] = $on_ride_request->end_latitude;
                 $request['drop_lng'] = $on_ride_request->end_longitude;
                 $request['multi_location'] = $on_ride_request->multi_drop_location;
-
+                $request['datetime'] = $on_ride_request->datetime;
                 $services = collect([$service]);
                 $items = EstimateServiceResource::collection($services);
             }

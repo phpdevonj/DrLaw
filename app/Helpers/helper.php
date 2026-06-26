@@ -2332,3 +2332,35 @@ if (!function_exists('getPaystackSecretKey')) {
         return $paymentGateway['is_test'] == 1 ? $paymentGateway['test_value']['secret_key'] : $paymentGateway['live_value']['secret_key'];
     }
 }
+if (!function_exists('generateUniqueUsername')) {
+
+    function generateUniqueUsername(?string $firstName, ?string $lastName): string 
+    {
+        // 1. Clean and combine names into lowercase alphanumeric only
+        $base = preg_replace('/[^a-z0-9]/', '', strtolower(trim(($firstName ?? '') . ($lastName ?? '')))) ?: 'user';
+
+        // 2. Pad with random numbers if total length is under 6 characters
+        if (($len = strlen($base)) < 6) {
+            $base .= random_int((int)str_repeat('1', 6 - $len), (int)str_repeat('9', 6 - $len));
+        }
+
+        // 3. Fast check: If 'laxmanroriyatesting' is free, take it immediately
+        if (!User::where('username', $base)->exists()) {
+            return $base;
+        }
+
+        // 4. If it exists, fetch all matches starting with 'laxmanroriyatesting'
+        // We use flip() to turn values into array keys for blazing fast O(1) lookups
+        $existing = User::where('username', 'LIKE', "{$base}%")
+            ->pluck('username')
+            ->flip(); 
+
+        // 5. Safely loop to find the first open slot (e.g., laxmanroriyatesting1, laxmanroriyatesting2)
+        $counter = 1;
+        while ($existing->has($base . $counter)) {
+            $counter++;
+        }
+
+        return $base . $counter;
+    }
+}

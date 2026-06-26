@@ -21,21 +21,21 @@ class Kernel extends ConsoleKernel
     protected $command = [
         // FindDriverForRegularRide::class,
         // FindNearbyDriver::class,
-        AssignDriverToRide::class,
-        CancelOverdueScheduledRides::class,
+        // AssignDriverToRide::class,
+        // CancelOverdueScheduledRides::class,
     ];
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('find_driver:for_regular_ride')->everyMinute();
+        // $schedule->command('find_driver:for_regular_ride')->everyMinute();
         // $schedule->command('ride:find-nearby-driver')->everyMinute();
         //$schedule->command('ride:assign-drivers-for-regular-rides')->everyMinute();
         //$schedule->command('scheduleride:assign-drivers-for-schedule-rides')->everyMinute();
-        $schedule->command('scheduleride:process-schedule-rides')->everyMinute();
-        $schedule->command('scheduleride:send-notifications')->everyFifteenMinutes();
-        $schedule->command('scheduleride:cancel-overdue-rides')->everyFiveMinutes();
-        $schedule->command('rides:auto-cancel-arrived')->everyFiveMinutes();
-        $schedule->command('drivers:mark-inactive-offline')->everyFiveMinutes();
+        // $schedule->command('scheduleride:process-schedule-rides')->everyMinute();
+        // $schedule->command('scheduleride:send-notifications')->everyFifteenMinutes();
+        // $schedule->command('scheduleride:cancel-overdue-rides')->everyFiveMinutes();
+        // $schedule->command('rides:auto-cancel-arrived')->everyFiveMinutes();
+        // $schedule->command('drivers:mark-inactive-offline')->everyFiveMinutes();
     }
 
     /**

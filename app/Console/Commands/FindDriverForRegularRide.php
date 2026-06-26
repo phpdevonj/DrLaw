@@ -219,10 +219,27 @@ class FindDriverForRegularRide extends Command
                 // ];
 
                 // get distance and time using google map api
-                $place_details = og_get_distance_matrix($ride_request->start_latitude, $ride_request->start_longitude, $ride_request->end_latitude, $ride_request->end_longitude);
+                if (!empty($ride_request->multi_drop_location)) {
+                    $place_details = og_get_distance_matrix_multiple_destination(
+                        $ride_request->start_latitude, 
+                        $ride_request->start_longitude, 
+                        $ride_request->end_latitude, 
+                        $ride_request->end_longitude, 
+                        $ride_request->multi_drop_location
+                    );
+                    $dropoff_distance_in_meters = $place_details['distance'];
+                    $dropoff_time_in_seconds = $place_details['duration'];
+                } else {
+                    $place_details = og_get_distance_matrix(
+                        $ride_request->start_latitude, 
+                        $ride_request->start_longitude, 
+                        $ride_request->end_latitude, 
+                        $ride_request->end_longitude
+                    );
+                    $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
+                    $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);
+                }
 
-                $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
-                $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);
                 $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
 
                 $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
@@ -238,8 +255,9 @@ class FindDriverForRegularRide extends Command
                     'pick_lng'                  => $ride_request->start_longitude ?? null,
                     'drop_lat'                  => $ride_request->end_latitude ?? null,
                     'drop_lng'                  => $ride_request->end_longitude ?? null,
-                    'multi_location'            => [],
-                    'coupon'                    => null,
+                    'multi_location'            => $ride_request->multi_drop_location ?? [],
+                    'datetime'                  => $ride_request->datetime ?? null,
+                    'coupon'                    => $ride_request->coupon_data ?? null,
                     'is_credit_used'            => false,
                     'rider_id'                  => $ride_request->rider_id,
                 ]);

@@ -56,6 +56,7 @@ class UserController extends Controller
         
         $input['user_type'] = isset($input['user_type']) ? $input['user_type'] : 'rider';
         $input['password'] = Hash::make($input['contact_number']);
+        $input['username'] = generateUniqueUsername($input['first_name'], $input['last_name']);
         $input['login_type'] = 'mobile';
         $input['referral_code'] = generateUniqueReferralCode();
         $input['referred_by'] = $referrer?->id;
@@ -145,6 +146,7 @@ class UserController extends Controller
 
         $input['display_name'] = $input['first_name']." ".$input['last_name'];
         $input['is_available'] = 1;
+        $input['username'] = generateUniqueUsername($input['first_name'], $input['last_name']);
         $input['last_actived_at'] = now();
         if(isset($input['login_type']) && $input['login_type'] === 'mobile'){
             $input['contact_number'] =  trim($input['contact_number']);
@@ -578,7 +580,7 @@ class UserController extends Controller
             try {
                 $password = !empty($input['accessToken']) ? $input['accessToken'] : ($input['email'] ?? 'social_pass');
                 
-                $input['username'] = $this->generateUniqueUsername($input['first_name'], $input['last_name']);
+                $input['username'] = generateUniqueUsername($input['first_name'], $input['last_name']);
                 $input['display_name'] = $input['first_name'] . " " . $input['last_name'];
                 $input['password'] = Hash::make($password);
                 $input['user_type'] = $user_type;
@@ -675,23 +677,6 @@ protected function syncSocialIdentityAcrossRoles($user, $login_type, $uid)
 /**
  * Generates a unique username based on the user's first and last name.
  */
-protected function generateUniqueUsername($firstName, $lastName)
-{
-    $baseUsername = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $firstName . $lastName));
-    if (empty($baseUsername)) {
-        $baseUsername = 'user';
-    }
-
-    $username = $baseUsername;
-    $counter = 1;
-
-    while (User::where('username', $username)->exists()) {
-        $username = $baseUsername . $counter;
-        $counter++;
-    }
-
-    return $username;
-}
     public function updateUserStatus(Request $request)
     {
         $user_id = $request->id ?? auth()->user()->id;

@@ -50,6 +50,15 @@ class PushNotificationController extends Controller
      */
     public function store(Request $request)
     {
+         $request->validate([
+            'title' => 'required',
+            'message' => 'required',
+            'rider' => 'required_without:driver', // should se please select receriver or driver
+            'driver' => 'required_without:rider', // should se please select receriver or driver
+        ], [
+            'rider.required_without' => __('message.select_rider_or_driver'),
+            'driver.required_without' => __('message.select_rider_or_driver'),
+        ]); 
         $pushnotification = PushNotification::create($request->all());
 
         uploadMediaFile($pushnotification, $request->notification_image, 'notification_image');

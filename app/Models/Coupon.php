@@ -72,7 +72,7 @@ class Coupon extends Model
         
         switch ($coupon_data->coupon_type) {
             case 'first_ride':
-                $total = RideRequest::where('rider_id',request('rider_id'))->count();
+                $total = RideRequest::where('rider_id',request('rider_id'))->where('status', 'completed')->count();
                 return $total < $coupon_data->usage_limit_per_rider ? 200 : 406 ;
                 break;
             case 'region_wise':
@@ -85,7 +85,7 @@ class Coupon extends Model
                 break;
             case 'service_wise':
                 if(isset($coupon_data->service_ids)) {
-                    return !in_array($service_id, $coupon_data->service_ids) ? 200 : 400 ;
+                    return in_array($service_id, $coupon_data->service_ids) ? 200 : 400 ;
                 }
                 break;
             case 'new_user':

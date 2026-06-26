@@ -22,7 +22,7 @@ return [
         // 'MULTIPLE_DROP_LOCATION' => '',
     ],
 
-    'FIREBASE' => [
-        'SERVER_KEY' => env('FIREBASE_SERVER_KEY'),
-    ],
+    // 'FIREBASE' => [
+    //     'SERVER_KEY' => env('FIREBASE_SERVER_KEY'),
+    // ],
 ];

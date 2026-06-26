@@ -141,16 +141,7 @@ class RideRequestController extends Controller
                 })->where('id', $service->id)->first();
             }
 
-            // if ($riderequest->coupon_code && !in_array($riderequest->status, ['completed', 'canceled'])) {
-            //     $rider_coupon_code = Coupon::where('id', $riderequest->coupon_code)->value('code');
-            //     $response = verify_coupon_code($rider_coupon_code);
-
-            //     if ($response['status'] != 200) {
-            //         return json_custom_response($response, $response['status']);
-            //     }
-            // }
-
-            if (!empty($riderequest->multi_drop_location)) {
+            if (!empty($riderequest->multi_drop_location) && (int) SettingData('RIDE', 'RIDE_MULTIPLE_DROP_LOCATION') === 1) {
                 $place_details = og_get_distance_matrix_multiple_destination(
                     $riderequest->start_latitude, 
                     $riderequest->start_longitude, 
@@ -173,32 +164,18 @@ class RideRequestController extends Controller
             }
 
             $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
-            // if(!in_array($riderequest->status, ['completed', 'canceled'])){
-            //     $coupon_code = $riderequest->coupon_code;
-            //     $coupon = Coupon::where('id', $coupon_code)->first();
-
-            //     $status = $coupon_code ? 400 : 200;
-            //     if ($coupon) {
-            //         $status = Coupon::isValidCoupon($coupon);
-            //     }
-                
-            //     if ($status != 200) {
-            //         $response = couponVerifyResponse($status);
-            //         return json_custom_response($response, $status);
-            //     }
-            // }            
 
             $request['distance_in_unit'] = $distance_in_unit;
             $request['dropoff_distance_in_meters'] = $dropoff_distance_in_meters;
             $request['dropoff_time_in_seconds'] = $dropoff_time_in_seconds;
-            $request['coupon'] = $coupon ?? null;
-
-
+            $request['coupon'] = $riderequest->coupon_data;
+            
             $request['pick_lat'] = $riderequest->start_latitude;
             $request['pick_lng'] = $riderequest->start_longitude;
             $request['drop_lat'] = $riderequest->end_latitude;
             $request['drop_lng'] = $riderequest->end_longitude;
             $request['multi_location'] = $riderequest->multi_drop_location;
+            $request['datetime'] = $riderequest->datetime;
 
             $services = collect([$service]);
             $items = EstimateServiceResource::collection($services);
@@ -309,29 +286,6 @@ class RideRequestController extends Controller
 
         $ride_request->update($ridefee);
 
-        // $ride_datetime = $ride_request->datetime;
-        // $surge_price = $this->getSurgePrice($ride_datetime);
-
-        // if (isset($surge_price) && !empty($surge_price)) {
-        //     if ($surge_price->type == 'fixed') {
-        //         $surge_amount = $surge_price->value;
-        //     } elseif ($surge_price->type == 'multiply') {
-        //         $surge_amount = ($ridefee['total_amount'] * $surge_price->value) / 100;
-        //     }
-        //     $ridefee['total_amount'] += $surge_amount;
-        // }
-
-        $ride_request->update($ridefee);
-        
-        $payment_data = [
-            'rider_id'          => $ride_request->rider_id,
-            'ride_request_id'   => $ride_request->id,
-            'payment_type'      => $ride_request->payment_type ?? 'cash',
-            'datetime'          => date('Y-m-d H:i:s'),
-            'payment_status'    => 'pending',
-            'total_amount'      => $ridefee['total_amount'],
-            'credit_used'       => $ride_request->credit_used,
-        ];
         if ($ride_request->ride_has_bid == 1) {
             $ride_bid_data = $ride_request->bids()->where('is_bid_accept',1)->first();
             $payment_data = [
@@ -350,7 +304,7 @@ class RideRequestController extends Controller
                 'payment_type'      => $ride_request->payment_type ?? 'cash',
                 'datetime'          => date('Y-m-d H:i:s'),
                 'payment_status'    => 'pending',
-                'total_amount'      => $ridefee['total_amount'],
+                'total_amount'      => $ridefee['subtotal'],
                 'credit_used'       => $ride_request->credit_used,
             ];
         }
@@ -460,8 +414,6 @@ class RideRequestController extends Controller
         } else {
             $minimum_fare = 0;
         }
-        $total_amount += $extra_charges_amount; // Additional fees
-        
         // if( $service->commission_type == 'fixed' ) {
         //     $commission = $service->admin_commission + $service->fleet_commission;
         //     if( $total_amount <= $commission) {
@@ -530,6 +482,8 @@ class RideRequestController extends Controller
         }
 
         $subtotal = $subtotal + ($surge_amount ? $surge_amount : 0);
+        $total_amount = $total_amount + ($extra_charges_amount ? $extra_charges_amount : 0); // Additional fees
+        $subtotal = $subtotal + ($extra_charges_amount ? $extra_charges_amount : 0); // Additional fees
 
         return [
             'base_fare'                 => $base_fare,
@@ -687,32 +641,6 @@ class RideRequestController extends Controller
         return $response->json();
     }
 
-    public function getSurgePrice($ride_datetime) {
-        if ($ride_datetime === null) {
-            return null;
-        }
-        $ride_datetime = Carbon::parse($ride_datetime);
-        $day = $ride_datetime->format('l');
-        $current_time = $ride_datetime->format('H:i');
-        
-        $surge_prices = SurgePrice::where('day', $day)->get();
-    
-        foreach ($surge_prices as $surge) {
-            $from_times = $surge->from_time;
-            $to_times = $surge->to_time;
-    
-            foreach ($from_times as $index => $from_time) {
-                $to_time = $to_times[$index];
-    
-                if (strtotime($current_time) >= strtotime($from_time) && strtotime($current_time) <= strtotime($to_time)) {
-                    return $surge;
-                }
-            }
-        }
-    
-        return "";
-    }
-
     public function updateFirestoreRideDocument($ride_request, $role)
     {
         try {
@@ -864,8 +792,8 @@ class RideRequestController extends Controller
 
             // Record tip
             recordRideTip($ride_request->id, $amount, 'card', 'completed', 'driver', $request->payment_intent_id);
-        } else {
-            // Debit rider wallet (no Stripe or non-card payment)
+        } else if ($request->payment_type === 'wallet') {
+            // Debit rider wallet
             debitRiderWallet($ride_request->rider_id, $amount, $currency, $ride_request->id);
 
             // Credit driver wallet
@@ -873,6 +801,9 @@ class RideRequestController extends Controller
 
             // Record tip
             recordRideTip($ride_request->id, $amount, 'wallet', 'completed', 'driver');
+        } else {
+            // Record tip
+            recordRideTip($ride_request->id, $amount, 'cash', 'completed', 'driver');
         }
     }
 }

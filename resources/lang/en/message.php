@@ -761,6 +761,7 @@ return array(
     'is_call_enabled' => 'Enable Call Button',
     'rider_terms_condition' => 'Rider Terms & Conditions',
     'driver_terms_condition' => 'Driver Terms & Conditions',
+    'about_us' => 'About us',
     'no_user_found' => 'No user found with the provided credentials.',
     'about_us' => 'About us',
     'service_base_fare' => 'Fixed starting amount for every ride',

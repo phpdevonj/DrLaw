@@ -50,7 +50,7 @@ return [
         'preset_tip_amount'   => '',
         'apply_additional_fee'  => '',
         'surge_price'  => '',
-        'is_bidding'  => '',
+        // 'is_bidding'  => '',
         'loyalty_program'  => '',
         'point_ratio'  => '',
         'point_value'  => '',
