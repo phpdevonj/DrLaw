@@ -27,7 +27,6 @@ class RideRequestResource extends JsonResource
 
 
         $driver_earning = $this->total_amount - $this->company_fee_charge - $this->expenses_charge;
-        $driver_earning = $driver_earning + ($this->rideTip->tip_amount ?? 0);
 
         return [
             'id'                => $this->id,

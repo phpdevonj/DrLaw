@@ -155,13 +155,16 @@ class FindDriverForRegularRide extends Command
             ->toArray();
 
         $nearby_driver = User::selectRaw("id, user_type, player_id, fcm_token, latitude, longitude, ( $unit_value * acos( cos( radians($latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians($longitude) ) + sin( radians($latitude) ) * sin( radians( latitude ) ) ) ) AS distance")
-                        ->where('user_type', 'driver')->where('status', 'active')->where('is_online',1)->where('is_available',1)
+                        ->where('user_type', 'driver')
+                        ->where('status', 'active')
+                        ->where('is_online',1)
+                        ->where('is_available',1)
                         ->where('service_id', $ride_request->service_id )
                         ->whereNotIn('id', $cancelled_driver_ids)
                         ->whereNotIn('id', $busy_driver_ids) // Exclude busy drivers
                         ->where('last_actived_at', '>=', $limitTime) // NEW CONDITION
-                        ->having('distance', '<=', $radius)
-                        ->orderBy('distance','asc');
+                        ->having('distance', '<=', $radius);
+
         if( $minumum_amount_get_ride != null ) {
             $nearby_driver = $nearby_driver->whereHas('userWallet', function($q) use($minumum_amount_get_ride) {
                 $q->where('total_amount', '>=', $minumum_amount_get_ride);
@@ -206,20 +209,9 @@ class FindDriverForRegularRide extends Command
                 $firebaseData->set($rideData);
                 Log::channel('driver_assignment_regular')->info("Firebase updated for Ride ID: {$ride_request->id} [Line: " . __LINE__ . "]");
 
-
-                // $notification_data = [
-                //     'id' => $ride_request->id,
-                //     'type' => 'new_ride_requested',
-                //     'data' => [
-                //         'rider_id' => $ride_request->rider_id,
-                //         'rider_name' => optional($ride_request->rider)->display_name ?? '',
-                //     ],
-                //     'message' => __('message.new_ride_requested'),
-                //     'subject' => __('message.ride.new_ride_requested'),
-                // ];
-
                 // get distance and time using google map api
-                if (!empty($ride_request->multi_drop_location)) {
+                $multi_drop_enabled = (int) SettingData('RIDE', 'RIDE_MULTIPLE_DROP_LOCATION') === 1;
+                if ($multi_drop_enabled && !empty($ride_request->multi_drop_location)) {
                     $place_details = og_get_distance_matrix_multiple_destination(
                         $ride_request->start_latitude, 
                         $ride_request->start_longitude, 
@@ -257,7 +249,7 @@ class FindDriverForRegularRide extends Command
                     'drop_lng'                  => $ride_request->end_longitude ?? null,
                     'multi_location'            => $ride_request->multi_drop_location ?? [],
                     'datetime'                  => $ride_request->datetime ?? null,
-                    'coupon'                    => $ride_request->coupon_data ?? null,
+                    'coupon'                    => null,
                     'is_credit_used'            => false,
                     'rider_id'                  => $ride_request->rider_id,
                 ]);

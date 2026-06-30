@@ -26,6 +26,8 @@ use App\Models\Region;
 use App\Models\Role;
 use App\Models\PaymentGateway;
 use App\Models\RideTip;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 function DummyData($key){
     $dummy_title = 'XXXXXXXXXXXX';
@@ -1012,13 +1014,13 @@ function dateAgoFormate($date,$type2='')
         return '-';
     }
 
-    $diff_time1 = \Carbon\Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
+    $diff_time1 = Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
     $datetime = new \DateTime($date);
     $la_time = new \DateTimeZone(auth()->check() ? auth()->user()->timezone ?? 'UTC' : 'UTC');
     $datetime->setTimezone($la_time);
     $diff_date = $datetime->format('Y-m-d H:i:s');
 
-    $diff_time = \Carbon\Carbon::parse($diff_date)->isoFormat('LLL');
+    $diff_time = Carbon::parse($diff_date)->isoFormat('LLL');
 
     if($type2 != ''){
         return $diff_time;
@@ -1035,7 +1037,7 @@ function timeAgoFormate($date)
 
     date_default_timezone_set('UTC');
 
-    $diff_time= \Carbon\Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
+    $diff_time= Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
 
     return $diff_time;
 }
@@ -1294,7 +1296,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     if ($surge_price_setting_value == 1 && isset($surge_price) && (is_object($surge_price) || is_array($surge_price))) {
 
         $timezone = $service?->region?->timezone ?? $service?->timezone ?? 'UTC';
-        $rideTimeOnly = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $ride_datetime, $timezone)->format('H:i');
+        $rideTimeOnly = \Carbon\Carbon::parse($ride_datetime, $timezone)->format('H:i');
         foreach ($surge_price->from_time as $index => $from_time) {
             $to_time = $surge_price->to_time[$index];
 
@@ -1320,7 +1322,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     }
 
     $final_subtotal = $subtotal + ($surge_amount ? $surge_amount : 0);
-    $driver_earning = $final_subtotal - $company_fee - $expenses;
+    $driver_earning = $total_amount - $company_fee - $expenses;
 
     return [
         'distance' => round($distance_in_unit, 2),
@@ -1328,7 +1330,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
         'distance_price' => (float) number_format( (float) $distance_price, 2,'.',''),
         'time_price' => (float) number_format( (float) $time_price, 2,'.',''),
         'total_amount' => (float) number_format( (float) $total_amount, 2,'.',''),
-        'subtotal' => (float) number_format( (float) $final_subtotal, 2,'.',''),
+        'subtotal' => (float) number_format( (float) $final_subtotal, 2,'.',''), // total amount - coupon discount
         'discount_amount' => $discount_amount,
         'fixed_charge' => (float) number_format( (float) $surge_amount, 2,'.',''),
         'credit_used' => $credit_used ?? 0,
@@ -1360,8 +1362,8 @@ function haversineDistance($lat1, $lng1, $lat2, $lng2) {
 function calculateRideDuration($start_time, $current_time = null)
 {
     $current_time = $current_time ?? date('Y-m-d H:i:s');
-    $start_time = Carbon\Carbon::parse($start_time);
-    $end_time = Carbon\Carbon::parse($current_time);
+    $start_time = Carbon::parse($start_time);
+    $end_time = Carbon::parse($current_time);
     $total_duration = $end_time->diffInMinutes($start_time);
 
     return $total_duration;
@@ -1661,15 +1663,40 @@ function stringLong($str = '', $type = 'title', $length = 0) //Add … if string
 
 function og_get_distance_matrix_multiple_destination($pick_lat, $pick_lng, $drop_lat, $drop_lng, $drop_latlng, $traffic = false)
 {
+    if (is_string($drop_latlng)) {
+        $drop_latlng = json_decode($drop_latlng, true);
+    }
+    if (!is_array($drop_latlng)) {
+        $drop_latlng = [];
+    }
+
+    $drop_latlng = array_map(function($item) {
+        if (is_array($item)) {
+            $item['latitude'] = $item['latitude'] ?? $item['lat'] ?? null;
+            $item['longitude'] = $item['longitude'] ?? $item['lng'] ?? null;
+        }
+        return $item;
+    }, $drop_latlng);
+
+    // If there are no multi drop locations, fallback to simple pick to drop
+    if (empty($drop_latlng)) {
+        $response = og_get_distance_matrix($pick_lat, $pick_lng, $drop_lat, $drop_lng);
+        return [
+            'duration' => duration_value_from_distance_matrix($response) ?? 0,
+            'distance' => distance_value_from_distance_matrix($response) ?? 0,
+        ];
+    }
+
     $distance = 0;
     $duration = 0;
-    for ($i = 0; $i <= count($drop_latlng); $i++)
+    $count = count($drop_latlng);
+    for ($i = 0; $i <= $count; $i++)
     {
         if( $i == 0 ) {
             $response = og_get_distance_matrix($pick_lat, $pick_lng, $drop_latlng[$i]['latitude'], $drop_latlng[$i]['longitude']);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);
-        } elseif( count($drop_latlng) == $i ) {
+        } elseif( $count == $i ) {
             $response = og_get_distance_matrix($drop_latlng[$i-1]['latitude'], $drop_latlng[$i-1]['longitude'], $drop_lat, $drop_lng);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);

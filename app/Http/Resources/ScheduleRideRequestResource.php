@@ -116,7 +116,7 @@ class ScheduleRideRequestResource extends JsonResource
             'is_ride_for_other' => $this->is_ride_for_other,
             'other_rider_data'  => $this->other_rider_data ?? null,
             'drop_location'     => $this->drop_location,
-            'multi_drop_location'     => json_decode($this->multi_drop_location),
+            'multi_drop_location'     => $this->multi_drop_location,
             'invoice_url' => $pdfUrl,
             'invoice_name' => 'Ride_' . $this->id,
             'driver_rating' => $driver_ratings->count() > 0 ? (float) number_format(max($driver_ratings->avg('rating'), 0), 2) : 0,

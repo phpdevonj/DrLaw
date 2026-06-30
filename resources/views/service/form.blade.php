@@ -60,7 +60,7 @@
                            
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('base_fare', __('message.base_fare').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}                                    
+                                    {{ Form::label('base_fare', __('message.base_fare').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
                                     <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_base_fare')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
@@ -221,7 +221,14 @@
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
                                     {{ Form::label('payment_method',__('message.payment_method').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                    {{ Form::select('payment_method',[ 'cash' => __('message.cash') ,'wallet' => __('message.wallet')  , 'cash_wallet' => __('message.cash_wallet'), 'card' => __('message.card') , 'card_wallet' => __('message.card_wallet') ], old('payment_method') ,[ 'class' =>'form-control select2js','required']) }}
+                                    {{ Form::select('payment_method',[ 
+                                        'card' => __('message.card'), 
+                                        'wallet' => __('message.wallet'),
+                                        'card_wallet' => __('message.card_wallet'),
+                                        'cash' => __('message.cash'), 
+                                        'cash_wallet' => __('message.cash_wallet'),
+                                        'cash_card_wallet' => __('message.cash_card_wallet'),
+                                        ], old('payment_method') ,[ 'class' =>'form-control select2js','required']) }}
                                 </div>
 
                                 <!-- <div class="form-group col-md-4">

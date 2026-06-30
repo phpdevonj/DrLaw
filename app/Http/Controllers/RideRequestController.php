@@ -23,6 +23,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Notifications\CommonNotification;
+use Illuminate\Support\Facades\Log;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
 use App\Models\RideRequestHistory;
@@ -93,6 +94,11 @@ class RideRequestController extends Controller
         //          return json_message_response($message, 400);
         //      }
         //  }
+
+        if( auth()->user()->status == 'banned' ) {
+            $message = __('message.account_banned');
+            return json_message_response($message,400);
+        }
         $blockedScheduleStatuses = ['accepted','arriving','arrived','in progress'];
         $rider_has_blocking_scheduled_ride = RideRequest::where('rider_id', auth()->user()->id)
             ->where('is_schedule', 1) // check only scheduled ride
@@ -354,8 +360,12 @@ class RideRequestController extends Controller
 
     public function acceptRideRequest(Request $request)
     {
+        if( auth()->user()->status == 'banned' ) {
+            $message = __('message.account_banned');
+            return json_message_response($message,400);
+        }
         if(request()->has('is_accept') && request('is_accept') == 1){
-            $normal_ride_restriction_buffer = SettingData('ride', 'normal_ride_restriction_buffer') ?? 0;
+            $normal_ride_restriction_buffer = (int) (SettingData('ride', 'normal_ride_restriction_buffer') ?? 0);
 
             if($normal_ride_restriction_buffer > 0){
                 $utcNow = Carbon::now('UTC');
@@ -582,7 +592,7 @@ class RideRequestController extends Controller
                 }
         
             } catch (\Exception $e) {
-                \Log::error('Error updating Firestore document for Ride:-405 ' . $e->getMessage());
+                Log::error('Error updating Firestore document for Ride:-405 ' . $e->getMessage());
             }
             // dispatch(new NotifyViaMqtt('ride_request_status_'.$riderequest->driver_id, json_encode($notify_data)));
 
@@ -664,9 +674,15 @@ class RideRequestController extends Controller
             $search = "id".'":'.$id;
             Notification::where('data','like',"%{$search}%")->delete();
 
-            $document_name = 'ride_' . $riderequest->id;
-            $firebaseData = app('firebase.firestore')->database()->collection('rides')->document($document_name);
-            $firebaseData->delete();
+            try {
+                $document_name = 'ride_' . $riderequest->id;
+                $firebaseData = app('firebase.firestore')->database()->collection('rides')->document($document_name);
+                if ($firebaseData->snapshot()->exists()) {
+                    $firebaseData->delete();
+                }
+            } catch (\Exception $e) {
+                Log::error("Firebase deletion failed for ride {$riderequest->id}: " . $e->getMessage());
+            }
             $riderequest->delete();
             
             $status = 'success';
@@ -746,6 +762,11 @@ class RideRequestController extends Controller
      * Scheduled rides for the authenticated rider
      */
     public function saveScheduleRide(Request $request){
+
+        if( auth()->user()->status == 'banned' ) {
+            $message = __('message.account_banned');
+            return json_message_response($message,400);
+        }
         $data = $request->all();
         $service = Service::with('region')->where('id',$request->service_id)->first();
 
@@ -778,7 +799,7 @@ class RideRequestController extends Controller
             $scheduledAtUTC = $riderScheduleDateTime->clone()->setTimezone('UTC');
 
             // Add buffer (x minutes before & after)
-            $scheduled_ride_restriction_buffer = SettingData('ride', 'scheduled_ride_restriction_buffer') ?? 0;
+            $scheduled_ride_restriction_buffer = (int) (SettingData('ride', 'scheduled_ride_restriction_buffer') ?? 0);
             $startTime = $scheduledAtUTC->clone()->subMinutes($scheduled_ride_restriction_buffer);
             $endTime   = $scheduledAtUTC->clone()->addMinutes($scheduled_ride_restriction_buffer);
 
@@ -864,9 +885,10 @@ class RideRequestController extends Controller
             return json_message_response(__('message.ride.unauthorized_action'), 403);
         }
 
-        // Don't allow cancellation if less than 30 mins before scheduled time
-        $scheduleTime = \Carbon\Carbon::parse($ride->datetime);
-        if ($scheduleTime->diffInMinutes(now()) < 30) {
+        $scheduleTime = Carbon::parse($ride->scheduled_at);
+        
+        
+        if ($scheduleTime->lessThanOrEqualTo(now()->addMinutes(30))) {
             return json_message_response(__('message.ride.too_late_to_cancel_scheduled_ride'), 400);
         }
 
@@ -893,6 +915,11 @@ class RideRequestController extends Controller
      * Accept a scheduled ride
      */
     public function acceptScheduleRide(Request $request, $id){
+
+        if( auth()->user()->status == 'banned' ) {
+            $message = __('message.account_banned');
+            return json_message_response($message,400);
+        }
         $riderequest = RideRequest::find($id);
 
         if($riderequest == null) {

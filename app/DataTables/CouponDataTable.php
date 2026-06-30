@@ -44,6 +44,16 @@ class CouponDataTable extends DataTable
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
             })
+            ->editColumn('coupon_type', function ($query) {
+                return __('message.'.$query->coupon_type);
+            })
+            ->editColumn('discount', function ($query) {
+                $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+                $currecy = currencyArray($currency_code);
+                $code = $query->discount_type == 'percentage' ? '' : $currecy['symbol'] ?? '$';
+                $discount_type = $query->discount_type == 'percentage' ? '%' : '';
+                return $code.$query->discount.$discount_type;
+            })
             ->addIndexColumn()
             ->addColumn('action', 'coupon.action')
             ->order(function ($query) {
@@ -92,6 +102,7 @@ class CouponDataTable extends DataTable
             Column::make('code')->title( __('message.code') ),
             Column::make('title')->title( __('message.title') ),
             Column::make('usage_limit_per_rider')->title( __('message.usage_limit_per_rider') ),
+            Column::make('coupon_type')->title( __('message.coupon_type') ),
             Column::make('discount')->title( __('message.discount') ),
             Column::make('start_date')->title( __('message.start_date') ),
             Column::make('end_date')->title( __('message.end_date') ),

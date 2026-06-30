@@ -36,20 +36,8 @@ trait PaymentTrait {
         if( $fleet_id != null ) {
             $fleet_commission = $ride_request->service->fleet_commission ?? 0;
         }
-        // tips not added in the riderequest total_amount
-        // tips and extra_charges_amount added in the driver_commission
         $ride_request_amount = $payment->total_amount - $ride_request->extra_charges_amount;
-        // if( $commission_type == 'fixed' ) {
-        //     $commission_amount = $admin_commission;
-        // }
-        // if( $commission_type == 'percentage' ) {
-        //     $admin_commission = $admin_commission ? ( $ride_request_amount / 100) * $admin_commission: 0;
-
-        //     if( $fleet_id != null ) {
-        //         $fleet_commission = $fleet_commission ? ( $ride_request_amount / 100) * $fleet_commission: 0;
-        //     }
-        // }
-        
+      
         if( $payment->payment_type == 'cash') {
             $payment->received_by = 'driver';
         } elseif ($payment->payment_type == 'wallet') {
@@ -60,7 +48,7 @@ trait PaymentTrait {
         $driver_tips = $ride_request->tips ?? 0;
         $payment->admin_commission = $admin_commission - $coupon_discount; // less coupon discount amount form admin commission
         $payment->fleet_commission = $fleet_commission;
-        $driver_fee = $ride_request_amount - $admin_commission - $fleet_commission;
+        $driver_fee = $ride_request_amount - $admin_commission - $fleet_commission + $coupon_discount;
         $payment->driver_fee = (float) number_format( (float) $driver_fee, 2,'.','');
         $payment->driver_tips = $driver_tips;
         $driver_commission = $driver_fee + $driver_tips + $ride_request->extra_charges_amount;
@@ -195,15 +183,33 @@ trait PaymentTrait {
                 $driver_wallet = Wallet::firstOrCreate(
                     [ 'user_id' => $ride_request->driver_id ]
                 );
+                
+                if ($payment->payment_type == 'cash') {
+                    $admin_commission = $admin_commission - $coupon_discount;
+                } else {
+                    $admin_commission = $admin_commission; // Can be omitted, but kept for clarity
+                }
+
+                // 1. Deduct from wallet (Subtracting a negative will automatically add to the wallet)
                 $driver_wallet->total_amount -= $admin_commission;
                 $driver_wallet->save();
 
+                // 2. Determine transaction type and normalize the amount for history logs
+                if ($admin_commission < 0) {
+                    $transaction_type = 'credit';
+                    $log_amount = abs($admin_commission); // Converts the negative value to positive (e.g., -50 becomes 50)
+                } else {
+                    $transaction_type = 'debit';
+                    $log_amount = $admin_commission;
+                }
+
+                // 3. Save to history
                 $driver_wallet_history = [
                     'user_id'           => $ride_request->driver_id,
-                    'type'              => 'debit',
+                    'type'              => $transaction_type, // Dynamic: 'credit' or 'debit'
                     'transaction_type'  => 'correction',
                     'currency'          => $currency,
-                    'amount'            => $admin_commission,
+                    'amount'            => $log_amount,        // Always stored as a positive representation
                     'balance'           => $driver_wallet->total_amount,
                     'ride_request_id'   => $payment->ride_request_id,
                     'datetime'          => date('Y-m-d H:i:s'),
