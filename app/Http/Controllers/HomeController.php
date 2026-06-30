@@ -50,18 +50,60 @@ class HomeController extends Controller
     {
         $auth_user = auth()->user();
         
+        $filter = $request->input('dashboard_filter', 'all'); // Default to today as requested "with today... filter"
+        
+        $applyDateFilter = function($query) use ($filter, $request) {
+            if ($filter == 'today') {
+                $query->whereDate('created_at', Carbon::today());
+            } elseif ($filter == 'week') {
+                $query->whereBetween('created_at', [Carbon::now()->subWeek(), Carbon::now()]);
+            } elseif ($filter == 'month') {
+                $query->whereBetween('created_at', [Carbon::now()->subMonth(), Carbon::now()]);
+            } elseif ($filter == 'custom') {
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+                
+                if ($startDate && $endDate) {
+                    $query->whereBetween('created_at', [
+                        Carbon::parse($startDate)->startOfDay(),
+                        Carbon::parse($endDate)->endOfDay()
+                    ]);
+                } elseif ($startDate) {
+                    $query->whereDate('created_at', '>=', Carbon::parse($startDate));
+                } elseif ($endDate) {
+                    $query->whereDate('created_at', '<=', Carbon::parse($endDate));
+                }
+            }
+            return $query;
+        };
+
+        $baseRideQuery = RideRequest::myRide(); // Use myRide scope to respect permissions
+        $applyDateFilter($baseRideQuery);
+
         $data['dashboard'] = [
             'pending_driver' => User::where('user_type','driver')->where('is_verified_driver',0)->count(),
             'total_driver' => User::getUser('driver')->count(),
             'total_rider' => User::getUser('rider')->count(),
             'total_ride' => RideRequest::count(),
-            'today_earning' => Payment::where('payment_status','paid')->whereDate('datetime', Carbon::today())->sum('total_amount'),
-            'monthly_earning' => Payment::where('payment_status','paid')->whereMonth('datetime', Carbon::now()->month)->sum('total_amount'),
-            'total_earning' => Payment::where('payment_status','paid')->sum('total_amount'),
+            'today_earning' => Payment::where('payment_status', 'paid')
+                ->whereDate('datetime', Carbon::today())
+                ->selectRaw('SUM(expenses_charge + company_fee_charge) as total')
+                ->value('total'),
+            'monthly_earning' => Payment::where('payment_status','paid')->whereMonth('datetime', Carbon::now()->month)->selectRaw('SUM(expenses_charge + company_fee_charge) as total')
+                ->value('total'),
+            'total_earning' => Payment::where('payment_status','paid')->selectRaw('SUM(expenses_charge + company_fee_charge) as total')
+                ->value('total'),
             'complaint' => Complaint::where('status','pending')->count()
         ];
-
-        $chart_data = [];
+        // Earning Breakdown (based on time filter)
+        $earningQuery = Payment::where('payment_status', 'paid');
+        $applyDateFilter($earningQuery);
+        
+        $data['earnings'] = [
+            'cash' => (clone $earningQuery)->where('payment_type', 'cash')->sum('total_amount'),
+            'card' => (clone $earningQuery)->where('payment_type', 'card')->sum('total_amount'),
+            'wallet' => (clone $earningQuery)->where('payment_type', 'wallet')->sum('total_amount'),
+        ];
 
         $cash_payment = Payment::selectRaw('sum(total_amount) as total , DATE_FORMAT(datetime , "%m") as month' )
                         ->myPayment()
@@ -81,6 +123,26 @@ class HomeController extends Controller
             }
             if($paymentData == 0) {
                 $data['cash_yearly'][] = 0 ;
+            }
+        }
+
+        $card_payment = Payment::selectRaw('sum(total_amount) as total , DATE_FORMAT(datetime , "%m") as month' )
+                    ->myPayment()
+                    ->where('payment_status', 'paid')
+                    ->where('payment_type', 'card')
+                    ->whereYear('datetime',date('Y'))
+                    ->groupBy('month')
+                    ->get()->toArray();
+        for($i = 1; $i <= 12; $i++ ) {
+            $paymentData = 0;
+            foreach($card_payment as $payment){
+                if((int) $payment['month'] == $i){
+                    $data['card_yearly'][] = (int) $payment['total'];
+                    $paymentData++;
+                }
+            }
+            if($paymentData == 0) {
+                $data['card_yearly'][] = 0 ;
             }
         }
 
@@ -281,20 +343,20 @@ class HomeController extends Controller
                 $items = $items->get();
                 break;
             case 'fleet_driver':
-                    if( $auth_user->hasRole('admin')) {
-                        $user_type = ['driver','fleet'];
-                    } else {
-                        $user_type = $auth_user->user_type;
+                if( $auth_user->hasRole('admin')) {
+                    $user_type = ['driver','fleet'];
+                } else {
+                    $user_type = $auth_user->user_type;
+                }
+                $items = User::select('id','display_name as text')
+                    ->whereIn('user_type',$user_type)
+                    ->where('status','active');
+    
+                    if($value != ''){
+                        $items->where('display_name', 'LIKE', $value.'%');
                     }
-                    $items = User::select('id','display_name as text')
-                        ->whereIn('user_type',$user_type)
-                        ->where('status','active');
-        
-                        if($value != ''){
-                            $items->where('display_name', 'LIKE', $value.'%');
-                        }
-        
-                        $items = $items->get();
+    
+                    $items = $items->get();
                 break;
             case 'rider':
                 $items = \App\Models\User::select('id','display_name as text')
@@ -319,9 +381,12 @@ class HomeController extends Controller
                     $items = $items->get();
                     break;
             case 'driver':
-                $items = \App\Models\User::select('id','display_name as text')
-                ->where('user_type','driver');
-                
+                $items = \App\Models\User::select('id', 'display_name as text')
+                ->where('user_type', 'driver');
+
+                if($request->fetchFor == 'map_view'){
+                    $items->whereNotNull('latitude')->whereNotNull('longitude');
+                }
 
                 if(isset($request->fleet_id)){
                     $items->where('fleet_id', $request->fleet_id);
@@ -342,16 +407,23 @@ class HomeController extends Controller
 
 
             case 'region' :
-                $items = \App\Models\Region::select('id','name as text', 'distance_unit')->where('status',1);
-                    if($value != ''){
-                        $items->where('name', 'LIKE', '%'.$value.'%');
-                    }
-                            
-                    $items = $items->get();
+                $query = \App\Models\Region::select('id', 'name as text', 'distance_unit');
+
+                if($request->fetchFor == 'service'){
+                    $query->whereHas('services');
+                } else {
+                    $query->where('status', 1);
+                }
+
+                if (!empty($value)) {
+                    $query->where('name', 'LIKE', '%' . $value . '%');
+                }
+
+                $items = $query->get();
 
                 break;
             case 'service':
-                        $items = \App\Models\Service::select('id','name as text')->where('status',1);
+                        $items = \App\Models\Service::select('id','name as text');
         
                         if($value != ''){
                             $items->where('name', 'LIKE', '%'.$value.'%');
@@ -405,10 +477,32 @@ class HomeController extends Controller
                     ];
                     $i++;
                 }
-                $items=$data ;
+                $items = $data;
                 break;
-                case 'transaction_type':
-                    if( request('type_val') != null && request('type_val') == 'debit' ){
+            case 'timezoneByCountry':
+                $items = getTimezonesByCountryCode(session('current_country_code') ?? '' );
+                foreach ($items as $k => $v) {
+                    if ($value != '') {
+                        if (stripos($v, $value) !== false) {
+
+                        } else {
+                            unset($items[$k]);
+                        }
+                    }
+                }
+                $data = [];
+                $i = 0;
+                foreach ($items as $key => $row) {
+                    $data[$i] = [
+                        'id' => $key,
+                        'text' => $row,
+                    ];
+                    $i++;
+                }
+                $items = $data;
+                break;
+            case 'transaction_type':
+                if (request('type_val') != null && request('type_val') == 'debit') {
 
                         if( request('user_type') == 'rider' ) {
                             $items = [
@@ -467,11 +561,11 @@ class HomeController extends Controller
                         ->where('is_online',1)
                         ->where('is_available',1)
                         ->orderBy('distance','asc');
-                        if( $minumum_amount_get_ride != null ) {
-                            $items = $items->whereHas('userWallet', function($q) use($minumum_amount_get_ride) {
-                                $q->where('total_amount', '>=', $minumum_amount_get_ride);
-                            });
-                        }
+                    if( $minumum_amount_get_ride != null ) {
+                        $items = $items->whereHas('userWallet', function($q) use($minumum_amount_get_ride) {
+                            $q->where('total_amount', '>=', $minumum_amount_get_ride);
+                        });
+                    }
                                 
                     $items = $items->get();
                 break;

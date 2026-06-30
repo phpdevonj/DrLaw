@@ -768,6 +768,69 @@ function timeZoneList()
     return $options;
 }
 
+
+/**
+ * Get timezone identifiers for a given ISO 3166-1 alpha-2 country code.
+ * Returns an array keyed by timezone_id with formatted label values.
+ * Falls back to UTC if the code is invalid or yields no results.
+ */
+function getTimezonesByCountryCode(string $countryCode = ''): array
+{
+    if ($countryCode == '') {
+        return timeZoneList();
+    }
+    // Normalise: uppercase, map UK alias to ISO 'GB'
+    $countryCode = strtoupper(trim($countryCode));
+    if ($countryCode === 'UK') {
+        $countryCode = 'GB';
+    }
+
+    $preferred = config("timezones.$countryCode");
+    if ($preferred) {
+        // Handle both simple arrays and associative arrays (with labels)
+        $identifiers = is_numeric(array_key_first($preferred)) ? $preferred : array_keys($preferred);
+    } else {
+        try {
+            $identifiers = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $countryCode);
+        } catch (\Exception $e) {
+            $identifiers = [];
+        }
+    }
+
+    if (empty($identifiers)) {
+        return ['UTC' => 'UTC'];
+    }
+
+    $options = [];
+    foreach ($identifiers as $tzId) {
+        try {
+            $z = new \DateTimeZone($tzId);
+            $c = new \DateTime('now', $z);
+            //$offset = $z->getOffset($c);
+            //$options[$tzId] = formatOffset($offset) . ' — ' . $tzId;
+            $label = $tzId;
+            if ($preferred && isset($preferred[$tzId]) && !is_numeric($tzId)) {
+                $label = $tzId . ' (' . $preferred[$tzId] . ')';
+            }
+            $options[$tzId] = $label;
+        } catch (\Exception $e) {
+            $options[$tzId] = $tzId;
+        }
+    }
+
+    return $options;
+}
+
+/**
+ * Convenience wrapper — reads country code from the current session.
+ * Usage: getTimezonesByCurrentCountry()
+ */
+function getTimezonesByCurrentCountry(): array
+{
+    $code = session('current_country_code', 'UTC');
+    return getTimezonesByCountryCode($code);
+}
+
 function formatOffset($offset)
 {
     $hours = $offset / 3600;
