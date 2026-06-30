@@ -100,7 +100,26 @@
                                                 data-message='{{ __("message.remove_file_msg") }}'>
                                                 <i class="ri-close-circle-line"></i>
                                             </a>
-                                            <a href="{{ $image }}" class="d-block mt-2" download target="_blank"><i class="fas fa-download "></i> {{ __('message.download') }}</a>
+                                            <div class="d-flex mt-2">
+                                                <a href="javascript:void(0)" data-toggle="modal" data-target="#documentModal" class="mr-3"><i class="fas fa-eye "></i> {{ __('message.view') }}</a>
+                                                <a href="{{ $image }}" download target="_blank"><i class="fas fa-download "></i> {{ __('message.download') }}</a>
+                                            </div>
+
+                                            <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="documentModalLabel">{{ __('message.document') }}</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body text-center">
+                                                            <img src="{{ $image }}" alt="Document" class="img-fluid">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                     </div>
                                 @endif
                             </div>

@@ -24935,7 +24935,11 @@ button.close-popup {
 
 .dark .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background-color: #181818;
-    border-color: #252525
+    border-color: #252525;
+    color: #ffffff;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border-radius: 10px !important;
 }
 
 .dark .select2-container--default .select2-results__option[aria-selected=true] {
@@ -25019,7 +25023,8 @@ button.close-popup {
 }
 
 .dark .profile-box {
-    background: #222
+    background: #222;
+    border-radius: 20px !important;
 }
 
 .dark .pro-content {
@@ -26234,4 +26239,30 @@ body.mm-hotel.header-style-1 .main-circle i {
     right: 0;
     top: -750px;
     width: 1500px
+}
+
+.profile-image-container {
+    width: 100px;
+    height: 100px;
+}
+
+.upload-icon-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #007bff; /* Change to your theme color */
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    font-size: 14px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    transition: transform 0.2s ease;
+}
+
+.profile-image-container:hover .upload-icon-overlay {
+    transform: scale(1.1);
 }

@@ -1,24 +1,32 @@
 <div class="col-md-12">
+	{{ Form::model($user_data, ['route'=>'updateProfile','method' => 'POST','data-toggle'=>"validator" , 'enctype'=> 'multipart/form-data','id' => 'user-form']) }}
     <div class="row ">
+		<input type="hidden" name="profile" value="profile">
+		{{ Form::hidden('username') }}
+		{{ Form::hidden('email') }}
+		{{ Form::hidden('id', null, [ 'placeholder' => 'id','class' => 'form-control' ]) }}
 		<div class="col-md-3">
-			<div class="user-sidebar">
-				<div class="user-body user-profile text-center">
-					<div class="user-img">
-						<img class="rounded-circle avatar-100 image-fluid profile_image_preview" src="{{ getSingleMedia($user_data,'profile_image', null) }}" alt="profile-pic">
-					</div>
-					<div class="sideuser-info">
-						<span class="mb-2">{{ $user_data->display_name }}</span>
-					</div>
+			<div class="form-group col-md-12 text-center">
+				<div class="profile-image-container position-relative d-inline-block">
+					<img class="rounded-circle avatar-100 image-fluid profile_image_preview" 
+						src="{{ getSingleMedia($user_data,'profile_image', null) }}" 
+						alt="profile-pic" 
+						style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;">
+					
+					<div class="upload-icon-overlay" style="cursor: pointer;">
+						<i class="fas fa-pen"></i> </div>
+
+					{{ Form::file('profile_image', [
+						'class' => "d-none", 
+						'id' => "profile_image", 
+						'accept' => "image/*"
+					]) }}
 				</div>
 			</div>
 		</div>
 		<div class="col-md-9">
 			<div class="user-content">
-				{{ Form::model($user_data, ['route'=>'updateProfile','method' => 'POST','data-toggle'=>"validator" , 'enctype'=> 'multipart/form-data','id' => 'user-form']) }}
-					<input type="hidden" name="profile" value="profile">
-					{{ Form::hidden('username') }}
-					{{ Form::hidden('email') }}
-				    {{ Form::hidden('id', null, [ 'placeholder' => 'id','class' => 'form-control' ]) }}
+				
 				    <div class="row ">
 				        
 						<div class="form-group col-md-6">
@@ -46,33 +54,33 @@
 							{{ Form::text('contact_number', old('contact_number'),[ 'placeholder' => __('message.contact_number'), 'class' => 'form-control', 'id' => 'phone' ]) }}
 						</div>
 
-				        <div class="form-group col-md-6">
-							{{ Form::label('profile_image',__('message.choose_profile_image'),['class'=>'form-control-label col-md-12'] ) }}
-							<div class="custom-file">
-								{{ Form::file('profile_image', ['class'=>"custom-file-input custom-file-input-sm detail" , 'id'=>"profile_image" , 'lang'=>"en" , 'accept'=>"image/*"]) }}
-								<label class="custom-file-label" id="imagelabel" for="profile_image">{{ __('message.profile_image') }}</label>
-							</div> 
-				        </div>
-
 						<div class="form-group col-md-12">
 							{{ Form::label('address',__('message.address'), ['class' => 'form-control-label']) }}
 							{{ Form::textarea('address', null, ['class'=>"form-control textarea" , 'rows'=>3  , 'placeholder'=> __('message.address') ]) }}
 						</div>
-				        <div class="col-md-12">
-							{{ Form::submit(__('message.update'), ['class'=>"btn btn-md btn-primary float-md-right"]) }}
-				        </div>
+				       
 				    </div>
+				
 			</div>
 		</div>
     </div>
+	<div class="col-md-12">
+		{{ Form::submit(__('message.update'), ['class'=>"btn btn-md btn-primary float-md-right"]) }}
+	</div>
 </div>
 
 <script>
 	$(document).ready(function (){
 				
-        $(document).on('change','#profile_image',function(){
+        // Trigger file input click when clicking the preview image or overlay icon
+		$(document).on('click', '.profile_image_preview, .upload-icon-overlay', function() {
+			$('#profile_image').trigger('click');
+		});
+
+		$(document).on('change', '#profile_image', function() {
 			readURL(this);
-		})
+		});
+
 		function readURL(input) {
 			if (input.files && input.files[0]) {
 				var reader = new FileReader();
@@ -80,7 +88,7 @@
 				var res=isImage(input.files[0].name);
 
 				if(res==false){
-					var msg = "{{ __('message.image_png_gif') }}";
+					var msg = "{!!  __('message.image_png_gif') !!}";
 					Snackbar.show({text: msg ,pos: 'bottom-center',backgroundColor:'#d32f2f',actionTextColor:'#fff'});
 					return false;
 				}
