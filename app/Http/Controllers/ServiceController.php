@@ -31,8 +31,10 @@ class ServiceController extends Controller
     public function create()
     {
         $pageTitle = __('message.add_form_title',[ 'form' => __('message.service')]);
-        
-        return view('service.form', compact('pageTitle'));
+        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+        $currency = currencyArray($currency_code);
+        $current_currency_symbol = $currency['symbol'] ?? '$';  
+        return view('service.form', compact('pageTitle', 'current_currency_symbol'));
     }
 
     /**
@@ -75,8 +77,10 @@ class ServiceController extends Controller
     {
         $pageTitle = __('message.update_form_title',[ 'form' => __('message.service')]);
         $data = Service::findOrFail($id);
-        
-        return view('service.form', compact('data', 'pageTitle', 'id'));
+        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+        $currency = currencyArray($currency_code);
+        $current_currency_symbol = $currency['symbol'] ?? '$';
+        return view('service.form', compact('data', 'pageTitle', 'id', 'current_currency_symbol'));
     }
 
     /**

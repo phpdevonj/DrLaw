@@ -114,6 +114,8 @@ return array(
     'card' => 'Card',
     'card_wallet' => 'Card & Wallet',
     'cash_wallet' => 'Cash & Wallet',
+    'cash_card' => 'Cash & Card',
+    'cash_card_wallet' => 'Cash, Card & Wallet',
     'time_fare_short_ride' => 'Time Fare Short Ride',
     'time_fare_moderate_ride' => 'Time Fare Moderate Ride',
     'time_fare_long_ride' => 'Time Fare Long Ride',

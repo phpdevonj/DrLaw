@@ -87,7 +87,7 @@
 
                                 <div class="form-group col-md-4">
                                     {{ Form::label('discount_type',__('message.discount_type'), ['class' => 'form-control-label']) }}
-                                    {{ Form::select('discount_type',[ 'fixed' => __('message.fixed') ,'percentage' => __('message.percentage') ], old('discount_type') ,[ 'class' =>'form-control select2js','required']) }}
+                                    {{ Form::select('discount_type',[ 'fixed' => __('message.fixed'). ' (' . $current_currency_symbol.')' ,'percentage' => __('message.percentage').' (%)' ], old('discount_type') ,[ 'class' =>'form-control select2js','required']) }}
                                 </div>
 
                                 <div class="form-group col-md-4">
@@ -96,12 +96,12 @@
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('minimum_amount', __('message.minimum_amount').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::label('minimum_amount', __('message.minimum_discount').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
                                     {{ Form::number('minimum_amount', old('minimum_amount'), ['class' => 'form-control', 'min' => 0, 'step' => 'any', 'required', 'placeholder' => __('message.minimum_amount') ]) }}
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('maximum_discount', __('message.maximum_discount').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                                                        {{ Form::label('maximum_discount', __('message.maximum_discount').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
                                     {{ Form::number('maximum_discount', old('maximum_discount'), ['class' => 'form-control', 'min' => 0, 'step' => 'any', 'required', 'placeholder' => __('message.maximum_discount') ]) }}
                                 </div>
                                 

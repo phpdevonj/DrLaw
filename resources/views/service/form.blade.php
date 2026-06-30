@@ -60,7 +60,7 @@
                            
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('base_fare', __('message.base_fare').'<span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::label('base_fare', __('message.base_fare').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}                                    
                                     <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_base_fare')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
@@ -86,7 +86,7 @@
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('cancellation_fee', __('message.cancellation_fee').'  <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::label('cancellation_fee', __('message.cancellation_fee').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
                                     <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_cancellation_charge')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
@@ -175,7 +175,7 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('company_fee_threshold',__('message.company_fee_threshold').'  <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('company_fee_threshold',__('message.company_fee_threshold').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
                                     <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_platform_fee_threshold')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
@@ -183,7 +183,7 @@
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('company_fee_below_threshold',__('message.company_fee_below_threshold').'  <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('company_fee_below_threshold',__('message.company_fee_below_threshold').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
                                     <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_platform_fee_below_threshold')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
@@ -191,7 +191,7 @@
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('company_fee_above_threshold',__('message.company_fee_above_threshold').'  <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('company_fee_above_threshold',__('message.company_fee_above_threshold').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
                                     <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_platform_fee_above_threshold')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
