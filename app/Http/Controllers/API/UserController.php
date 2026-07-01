@@ -691,6 +691,23 @@ protected function syncSocialIdentityAcrossRoles($user, $login_type, $uid)
             $user->status = $request->status;
         }
         if($request->has('is_online')) {
+            if ($request->is_online == 1) {
+                if ($user->status == 'banned') {
+                    $message = __('message.account_banned');
+                    return json_message_response($message,400);
+                }
+                if ($user->is_verified_driver != 1 || $user->status != 'active') {
+                    $hasExpiredDoc = $user->hasExpiredDocuments();
+                    $response = [
+                        'data' => [
+                            'status' => false,
+                            'step' => 'documents'
+                        ],
+                        'message' => $hasExpiredDoc ? __('message.doc_expired') : __('message.driver_doc_pending'),
+                    ];
+                    return json_custom_response($response,400);
+                }
+            }
             $user->is_online = $request->is_online;
         }
         // if($request->has('is_available')) {

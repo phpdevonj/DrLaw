@@ -55,12 +55,12 @@ class DriverDocumentController extends Controller
 
         $message = __('message.save_form',['form' => __('message.driver_document')]);
         $is_verified = $driver_document->is_verified;
-        if( in_array($is_verified, [ 0, 1, 2 ])  || $driver_document->driver->is_verified_driver == 0 ) {
+        if( in_array($is_verified, [ 0, 1, 2, 3 ])  || $driver_document->driver->is_verified_driver == 0 ) {
             $is_verified_driver = (int) $driver_document->verifyDriverDocument($driver_document->driver->id);
             $driver_document->driver->update(['is_verified_driver' => $is_verified_driver ]);
         }
 
-        if( in_array($is_verified, [ 1, 2 ]) )
+        if( in_array($is_verified, [ 1, 2, 3 ]) )
         {
             $type = 'document_approved';
             $status = __('message.approved');
@@ -73,14 +73,23 @@ class DriverDocumentController extends Controller
                 $type = 'document_rejected';
                 $status = __('message.rejected');
             }
+
+            if( $is_verified == 3 ) {
+                $type = 'document_expired';
+                $status = __('message.expired');
+            }
+
             $notification_data = [
                 'id'   => $driver_document->driver->id,
                 'is_verified_driver' => (int) $driver_document->driver->is_verified_driver,
                 'type' => $type,
                 'subject' => __('message.'.$type),
-                'message' => __('message.approved_reject_form', [ 'form' => $driver_document->document->name, 'status' => $status ]),
+                'message' => $is_verified == 3
+                    ? __('message.driver_expired_document', ['document' => $driver_document->document->name])
+                    : __('message.approved_reject_form', [ 'form' => $driver_document->document->name, 'status' => $status ]),
             ];
     
+            $driver_document->driver->notify(new RideNotification($notification_data)); 
             $driver_document->driver->notify(new CommonNotification($notification_data['type'], $notification_data));
         }
         
@@ -146,17 +155,24 @@ class DriverDocumentController extends Controller
         if (isset($request->driver_document) && $request->driver_document != null) {
             $driver_document->clearMediaCollection('driver_document');
             $driver_document->addMediaFromRequest('driver_document')->toMediaCollection('driver_document');
+            
+            // If re-uploading, reset status to pending and clear rejection reason
+            if ($driver_document->is_verified == 2) {
+                $driver_document->is_verified = 0;
+                $driver_document->rejection_reason = null;
+                $driver_document->save();
+            }
         }
         
         $message = __('message.update_form',['form' => __('message.driver_document') ] );
 
         $is_verified = $driver_document->is_verified;
-        if( in_array($is_verified, [ 0, 1, 2 ])  || $driver_document->driver->is_verified_driver == 0 ) {
+        if( in_array($is_verified, [ 0, 1, 2, 3 ])  || $driver_document->driver->is_verified_driver == 0 ) {
             $is_verified_driver = (int) $driver_document->verifyDriverDocument($driver_document->driver->id);
             $driver_document->driver->update(['is_verified_driver' => $is_verified_driver ]);            
         }
         
-        if($old_is_verified != $is_verified && in_array($is_verified, [ 0, 1, 2 ] )) {
+        if($old_is_verified != $is_verified && in_array($is_verified, [ 0, 1, 2, 3 ] )) {
             
             $type = 'document_approved';
             $status = __('message.approved');
@@ -169,12 +185,20 @@ class DriverDocumentController extends Controller
                 $type = 'document_rejected';
                 $status = __('message.rejected');
             }
+
+            if( $is_verified == 3 ) {
+                $type = 'document_expired';
+                $status = __('message.expired');
+            }
+            
             $notification_data = [
                 'id'   => $driver_document->driver->id,
                 'is_verified_driver' => (int) $driver_document->driver->is_verified_driver,
                 'type' => $type,
                 'subject' => __('message.'.$type),
-                'message' => __('message.approved_reject_form', [ 'form' => $driver_document->document->name, 'status' => $status ]),
+                'message' => $is_verified == 3
+                    ? __('message.driver_expired_document', ['document' => $driver_document->document->name])
+                    : __('message.approved_reject_form', [ 'form' => $driver_document->document->name, 'status' => $status ]),
             ];
     
             $driver_document->driver->notify(new RideNotification($notification_data)); 

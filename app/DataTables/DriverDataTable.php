@@ -83,7 +83,8 @@ class DriverDataTable extends DataTable
             // ->addColumn('action', 'driver.action')
             ->addColumn('action', function($data){
                 $id = $data->id;
-                return view('driver.action',compact('data','id'))->render();
+                $hasExpiredDocs = (int) $data->hasExpiredDocuments();
+                return view('driver.action', compact('data', 'id', 'hasExpiredDocs' ))->render();
             })
             ->order(function ($query) {
                 if (request()->has('order')) {
@@ -133,6 +134,10 @@ class DriverDataTable extends DataTable
             } elseif ($last_active == 'inactive_user') {
                 $model = $model->where('last_actived_at', '<=', now()->subDays(15))->orWhereNull('last_actived_at');
             }
+        }
+
+        if (request()->has('is_document_expired') && request()->input('is_document_expired') != '') {
+            $model->withExpiredDocument();
         }
 
         if($this->status != null){

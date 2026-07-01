@@ -29,7 +29,7 @@
                     </div>
                     <div class="form-group mb-3">
                         {{ Form::label('is_verified', __('message.is_verify'), ['class' => 'form-label']) }}
-                        {{ Form::select('is_verified',[ '' => '', '0' => __('message.pending') ,'1' => __('message.approved'),'2' => __('message.rejected')], request('is_verified') , [
+                        {{ Form::select('is_verified',[ '' => '', '0' => __('message.pending') ,'1' => __('message.approved'),'2' => __('message.rejected'),'3' => __('message.expired')], request('is_verified') , [
                                 'class' =>'form-control select2',
                                 'id' =>'is_verified',
                                 'data-placeholder' => __('message.select_field', [ 'name' => __('message.is_verify') ]),

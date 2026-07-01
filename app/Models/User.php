@@ -232,4 +232,24 @@ class User extends Authenticatable implements HasMedia
                         ->where('status', 'completed')
                         ->count();
     }
+
+    public static function scopeDriverBaseQuery($query)
+    {
+        $query = $query->where('user_type', 'driver');
+        return $query;
+    }
+    
+    public function hasExpiredDocuments()
+    {
+        return $this->driverDocument()
+            ->where('is_verified', 3)
+            ->exists();
+    }
+
+    public function scopeWithExpiredDocument($query)
+    {
+        return $query->whereHas('driverDocument', function ($q) {
+            $q->where('is_verified', 3);
+        });
+    }
 }

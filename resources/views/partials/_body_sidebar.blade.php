@@ -87,6 +87,14 @@
                 ->prepend('<i class="fas fa-list"></i>')
                 ->link->attr(['class' => '']);
 
+            $with_expired_docuemtts = (clone App\Models\User::driverBaseQuery())
+                ->withExpiredDocument()
+                ->count();
+            $menu->driver->add('<span>' . __('message.with_expired_document') . '</span>' . ($with_expired_docuemtts > 0 ? '<span class="badge badge-dark ride-badge">' . $with_expired_docuemtts . '</span>' : ''), ['class' => 'sidebar-layout', 'route' => ['driver.pending', 'status' => 'pending', 'is_document_expired' => 1]])
+                ->data('permission', 'driver list')
+                ->prepend('<i class="fas fa-id-card"></i>')
+                ->link->attr(['class' => '']);
+
             $menu->driver->add('<span>'.__('message.add_form_title',['form' => __('message.driver')]).'</span>', ['class' => request()->is('driver/*/edit') ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'driver.create'])
                 ->data('permission', [ 'driver add', 'driver edit'])
                 ->prepend('<i class="fas fa-plus-square"></i>')
