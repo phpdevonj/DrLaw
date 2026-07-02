@@ -24,6 +24,8 @@ Route::post('register',[API\UserController::class, 'register']);
 Route::post('driver-register',[API\UserController::class, 'driverRegister']);
 Route::post('/driver/register/step-one', [API\UserController::class, 'validateDriverStepOne']);
 Route::post('login',[API\UserController::class,'login']);
+Route::post('check-email', [API\UserController::class, 'checkEmail']);
+Route::post('check-phone', [API\UserController::class, 'checkPhone']);
 Route::post('forget-password',[ API\UserController::class,'forgetPassword']);
 Route::post('social-login',[ API\UserController::class, 'socialLogin' ]);
 Route::get('user-list',[API\UserController::class, 'userList']);

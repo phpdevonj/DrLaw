@@ -985,4 +985,76 @@ public function sendOtp(Request $request, \App\Services\TwilioService $twilioSer
             'message' => 'OTP verified successfully.'
         ]);
     }
+
+    /**
+     * Check if an email address already exists for a given user_type.
+     *
+     * POST /api/check-email
+     * Body: { email: string, user_type?: string }
+     */
+    public function checkEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'     => 'required|email',
+            'user_type' => 'nullable|string|in:rider,driver',
+        ]);
+
+        if ($validator->fails()) {
+            return json_message_response($validator->errors()->first(), 422);
+        }
+
+        $query = User::where('email', $request->email);
+
+        if ($request->filled('user_type')) {
+            $query->where('user_type', $request->user_type);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'status'  => true,
+            'exists'  => $exists,
+            'message' => $exists
+                ? __('validation.unique', ['attribute' => 'email'])
+                : 'Email is available.',
+        ], 200);
+    }
+
+    /**
+     * Check if a phone number already exists for a given user_type.
+     *
+     * POST /api/check-phone
+     * Body: { contact_number: string, country_code?: string, user_type?: string }
+     */
+    public function checkPhone(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'contact_number' => 'required|string',
+            'country_code'   => 'nullable|string',
+            'user_type'      => 'nullable|string|in:rider,driver',
+        ]);
+
+        if ($validator->fails()) {
+            return json_message_response($validator->errors()->first(), 422);
+        }
+
+        // Build the full number the same way register() does
+        $fullNumber = trim($request->country_code ?? '') . trim($request->contact_number);
+
+        $query = User::where('contact_number', $fullNumber);
+
+        if ($request->filled('user_type')) {
+            $query->where('user_type', $request->user_type);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'status'  => true,
+            'exists'  => $exists,
+            'message' => $exists
+                ? 'This mobile number has already been taken.'
+                : 'Phone number is available.',
+        ], 200);
+    }
 }
