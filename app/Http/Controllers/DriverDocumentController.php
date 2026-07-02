@@ -294,72 +294,51 @@ class DriverDocumentController extends Controller
                 return;
             }
             
-            // Get all required documents for driver's country
-            $requiredDocuments = \App\Models\Document::where('country_id', $driver->country_id)
-                ->where('is_required', 1)
+            // Get all required documents
+            $requiredDocuments = \App\Models\Document::where('is_required', 1)
                 ->where('status', 1)
                 ->get();
-            
+
             $totalRequired = $requiredDocuments->count();
-            
-            if ($totalRequired == 0) {
-                \Illuminate\Support\Facades\Log::info("DOCUMENT CONTROLLER: No required documents configured for driver {$driverId}. Setting as verified.");
-                // $driver->is_verified_driver = 1;
-                $driver->identity_check_status = 'not_started';
 
-                // For India, automatically pass manual review
-                if ($driver->country_id == 5 || (isset($driver->country) && strtolower($driver->country->name) == 'india')) {
-                    $driver->manual_review_status = 'passed';
-                    // $driver->status = 'active';
-                }
-
-                $driver->save();
-
-                // sendVerificationNotification($driverId);
-
-                return;
-            }
-            
-            // Check each required document
+            // Check each required document is approved (is_verified = 1)
             $verifiedCount = 0;
             $missingDocuments = [];
-            
+
             foreach ($requiredDocuments as $doc) {
                 $driverDoc = DriverDocument::where('driver_id', $driverId)
                     ->where('document_id', $doc->id)
                     ->where('is_verified', 1)
                     ->first();
-                    
+
                 if ($driverDoc) {
                     $verifiedCount++;
                 } else {
                     $missingDocuments[] = $doc->name;
                 }
             }
-            
+
+            $documentsApproved = ($verifiedCount == $totalRequired);
+
             \Illuminate\Support\Facades\Log::info("DOCUMENT CONTROLLER: Driver {$driverId} has {$verifiedCount}/{$totalRequired} verified documents.", [
-                'missing' => $missingDocuments
+                'missing' => $missingDocuments,
             ]);
 
-            if ($verifiedCount == $totalRequired) {
-                // All documents verified - update driver status
-                // $driver->is_verified_driver = 1;
-                $driver->identity_check_status = 'not_started';
-
-                // For India, automatically pass manual review
-                if ($driver->country_id == 5 || (isset($driver->country) && strtolower($driver->country->name) == 'india')) {
-                    $driver->manual_review_status = 'passed';
-                    // $driver->status = 'active';
-                    // $driver->is_verified_driver = 1;
-                }
-
+            // Driver is verified once ALL required documents are approved.
+            // Ride eligibility additionally requires status == 'active', which is
+            // enforced separately at ride-accept / go-online time.
+            if ($documentsApproved) {
+                $driver->is_verified_driver = 1;
                 $driver->save();
-                
-                // sendVerificationNotification($driverId);
 
-                \Illuminate\Support\Facades\Log::info("DOCUMENT CONTROLLER: SUCCESS - Set is_verified_driver = 1 and identity_check_status = 'PASSED' for driver {$driverId}.");
+                \Illuminate\Support\Facades\Log::info("DOCUMENT CONTROLLER: SUCCESS - Set is_verified_driver = 1 for driver {$driverId}.");
             } else {
-                \Illuminate\Support\Facades\Log::info("DOCUMENT CONTROLLER: Driver {$driverId} still has " . count($missingDocuments) . " unverified documents: " . implode(', ', $missingDocuments));
+                $driver->is_verified_driver = 0;
+                $driver->save();
+
+                \Illuminate\Support\Facades\Log::info("DOCUMENT CONTROLLER: Driver {$driverId} not verified - " . count($missingDocuments) . " document(s) missing.", [
+                    'missing' => $missingDocuments,
+                ]);
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("DOCUMENT CONTROLLER: Failed to update driver verification for driver {$driverId}.", [

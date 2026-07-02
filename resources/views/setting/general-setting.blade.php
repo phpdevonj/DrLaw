@@ -116,6 +116,25 @@
                 {{ Form::text('contact_number', null, ['class'=>"form-control" ,'placeholder'=> __('message.contact_number') ]) }}
             </div>
         </div>
+
+        <div class="form-group">
+            {{ Form::label('driver_android_url', __('message.driver_android_url'), ['class' => 'col-sm-6  form-control-label']) }}
+            <div class="col-sm-12">
+                {{ Form::text('driver_android_url', null, ['class'=>"form-control", 'placeholder' => __('message.enter_name', [ 'name' => __('message.driver_android_url') ]) ]) }}
+            </div>
+        </div>
+        <div class="form-group">
+            {{ Form::label('driver_ios_url', __('message.driver_ios_url'), ['class' => 'col-sm-6  form-control-label']) }}
+            <div class="col-sm-12">
+                {{ Form::text('driver_ios_url', null, ['class'=>"form-control", 'placeholder' => __('message.enter_name', [ 'name' => __('message.driver_ios_url') ]) ]) }}
+            </div>
+        </div>
+         <div class="form-group">
+            {{ Form::label('about_us_url', __('message.about_us_url'), ['class' => 'col-sm-6  form-control-label']) }}
+            <div class="col-sm-12">
+                {{ Form::text('about_us_url', null, ['class'=>"form-control", 'placeholder' => __('message.enter_name', [ 'name' => __('message.about_us_url') ]) ]) }}
+            </div>
+        </div>
     </div>
     <div class="col-lg-6">
         <div class="form-group">
@@ -194,6 +213,20 @@
                 {{ Form::text('help_support_url', null, ['class'=>"form-control", 'placeholder' => __('message.enter_name', [ 'name' => __('message.help_support_url') ]) ]) }}
             </div>
         </div>
+
+        <div class="form-group">
+            {{ Form::label('android_url', __('message.android_url'), ['class' => 'col-sm-6  form-control-label']) }}
+            <div class="col-sm-12">
+                {{ Form::text('android_url', null, ['class'=>"form-control", 'placeholder' => __('message.enter_name', [ 'name' => __('message.android_url') ]) ]) }}
+            </div>
+        </div>
+        <div class="form-group">
+            {{ Form::label('ios_url', __('message.ios_url'), ['class' => 'col-sm-6  form-control-label']) }}
+            <div class="col-sm-12">
+                {{ Form::text('ios_url', null, ['class'=>"form-control", 'placeholder' => __('message.enter_name', [ 'name' => __('message.ios_url') ]) ]) }}
+            </div>
+        </div>
+       
     </div>
     <hr>
      <div class="col-lg-12"> 

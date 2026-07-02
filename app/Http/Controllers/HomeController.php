@@ -305,6 +305,11 @@ class HomeController extends Controller
                 $document = \App\Models\DriverDocument::find($request->id);
                 $document->is_verified = $request->status;
                 $document->save();
+                // Recompute the driver's overall verification status so it stays
+                // in sync when a document is approved/rejected from this toggle.
+                if ($document->driver) {
+                    $document->driver->checkVerified();
+                }
                 break;
             case 'pages':
                 $user = Pages::find($request->id);

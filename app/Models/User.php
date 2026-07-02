@@ -258,30 +258,10 @@ class User extends Authenticatable implements HasMedia
             return false;
         }
 
-        // 1. Check Documents
-        $documentVerified = \App\Models\DriverDocument::verifyDriverDocument($this->id);
-
-        // 2. Check Identity Status
-        $personaEnabled = \App\Models\Setting::where('key', 'Persona_GlobalStatus')->value('value') == 1;
-        if ($personaEnabled) {
-            $identityPassed = $this->identity_check_status === 'PASSED';
-        } else {
-            $identityPassed = true; // Bypassed
-        }
-
-        // 3. Check Checkr Status AND Assessment
-        // Checkr is only triggered if Identity Status is PASSED
-        $passingStatuses = ['clear', 'passed', 'complete', 'consider'];
-        $passingAssessments = ['cleared', 'eligible'];
-
-        $checkrStatusPassed = in_array(strtolower($this->checkr_status ?? ''), $passingStatuses);
-        $checkrAssessmentPassed = empty($this->checkr_assessment) || in_array(strtolower($this->checkr_assessment), $passingAssessments);
-
-        // Pass if status is good AND (assessment is empty OR assessment is cleared/eligible)
-        $checkrClear = $checkrStatusPassed && $checkrAssessmentPassed;
-
-        // Driver is verified only if all checks pass
-        $isVerified = $documentVerified && $identityPassed && $checkrClear;
+        // Driver is verified once all required documents are approved.
+        // Ride eligibility additionally requires status == 'active', which is
+        // enforced separately at ride-accept / go-online time.
+        $isVerified = \App\Models\DriverDocument::verifyDriverDocument($this->id);
 
         $this->is_verified_driver = $isVerified ? 1 : 0;
         $this->save();
