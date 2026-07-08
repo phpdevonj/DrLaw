@@ -2378,13 +2378,34 @@ function syncSharedFieldsToSiblings(User $user, array $fields): void
  */
 function cloneUserForNewRole(User $existingUser, string $newRole)
 {
-    $cloneData = $existingUser->only([
-        'first_name', 'last_name', 'display_name', 'email', 'contact_number',
-        'password', 'country_code', 'gender', 'stripe_customer_id', 'uid', 'status'
-    ]);
-    
+    /*
+     * Clone EVERY shared attribute across roles (single-account experience) and only
+     * skip the fields that must NOT carry from one app to the other. This blacklist
+     * approach guarantees new columns (e.g. address, stripe_customer_id) are cloned
+     * automatically instead of being silently dropped by a hardcoded whitelist.
+     */
+    $excludedFields = [
+        // Primary key & unique identifiers — must be unique per account.
+        'id', 'username', 'referral_code', 'remember_token', 'created_at', 'updated_at',
+        // Set explicitly below for the new role.
+        'user_type',
+        // Per-device / per-session / transient values — belong to a single app install.
+        'player_id', 'fcm_token', 'device_id', 'device_type', 'app_version', 'login_type',
+        'latitude', 'longitude', 'last_location_update_at', 'last_actived_at',
+        'is_online', 'is_available', 'last_notification_seen', 'otp_verify_at',
+        // Driver-specific mandatory fields — not applicable to a rider and must be re-verified.
+        'license_number', 'license_expiration_date', 'social_security_number',
+        'is_verified_driver', 'fleet_id', 'service_id',
+    ];
+
+    $cloneData = collect($existingUser->getAttributes())
+        ->except($excludedFields)
+        ->toArray();
+
     $cloneData['user_type'] = $newRole;
     $cloneData['username'] = stristr($cloneData['email'] ?? $cloneData['contact_number'], "@", true) . rand(100,1000);
+    // Each account (rider & driver) must have its own unique referral code.
+    $cloneData['referral_code'] = generateUniqueReferralCode();
     
     // Generate Stripe Customer if cloning into Rider and one doesn't exist
     if ($newRole === 'rider' && empty($cloneData['stripe_customer_id']) && hasStripeKeys()) {

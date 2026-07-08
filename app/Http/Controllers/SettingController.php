@@ -49,7 +49,9 @@ class SettingController extends Controller
     {
         $page = $request->page;
         if( $page == 'payment-setting' ) {
-            $type = isset($request->type) ? $request->type : 'stripe';
+            // Default to the first configured payment gateway instead of a
+            // hardcoded 'stripe', which may no longer be enabled.
+            $type = isset($request->type) ? $request->type : array_key_first(config('constant.PAYMENT_GATEWAY_SETTING'));
         }
         $auth_user = auth()->user();
         $user_id = $auth_user->id;

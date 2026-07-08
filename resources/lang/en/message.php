@@ -871,4 +871,5 @@ return array(
     'expired_document_drivers' => 'Expired Document Drivers',
     'with_expired_document' => 'With expired Docs',
     'document_expiry_reminder' => 'Document Expiry Reminder',
+    'driver_doc_pending' => 'Your documents are pending verification. Please upload your documents and wait for admin approval.',
 );

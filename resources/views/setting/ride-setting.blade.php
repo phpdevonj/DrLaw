@@ -21,7 +21,7 @@
                                 <label class="custom-control-label ml-2" for="switch_{{ $key }}"></label>
                             </div>
                         </div>           
-                    @elseif( $key == 'is_bidding' )
+                    {{-- @elseif( $key == 'is_bidding' )
                         {{ Form::label($key, __('message.'.$key), ['class' => 'form-control-label']) }}
                         <div class="custom-switch custom-switch-text custom-switch-color custom-control-inline mt-2">
                             <div class="custom-switch-inner">
@@ -34,7 +34,7 @@
                                 ]) }} 
                                 <label class="custom-control-label ml-2" for="switch_{{ $key }}"></label>
                             </div>
-                        </div>  
+                        </div> --}}  
                     @elseif( $key == 'apply_additional_fee' )
                         {{ Form::label($key,__('message.'.$key),['class'=>'form-control-label'] ) }}
                         @php
