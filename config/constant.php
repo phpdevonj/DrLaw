@@ -22,9 +22,9 @@ return [
     ],
     'PAYMENT_GATEWAY_SETTING' => [
         // 'cash' => [],
-        // 'stripe' => [ 'url', 'secret_key', 'publishable_key' ],
+        'stripe' => [ 'url', 'secret_key', 'publishable_key' ],
         //'razorpay' => [ 'key_id', 'secret_id' ],
-        'paystack' => [ 'public_key', 'secret_key' ],
+        // 'paystack' => [ 'public_key', 'secret_key' ],
         // 'mobile_money' => [ 'url', 'secret_key', 'publishable_key' ],
         //'flutterwave' => [ 'public_key', 'secret_key', 'encryption_key' ],
         // 'paypal' => [  'client_id', 'client_secret' ],
