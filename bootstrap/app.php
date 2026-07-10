@@ -35,6 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('scheduleride:cancel-overdue-rides')->everyFiveMinutes();
         $schedule->command('rides:auto-cancel-arrived')->everyFiveMinutes();
         $schedule->command('drivers:mark-inactive-offline')->everyFiveMinutes();
+        $schedule->command('document:check-expiry')->everyDay();
+        $schedule->command('ride:find-nearby-driver')->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
