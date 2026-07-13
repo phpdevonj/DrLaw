@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use App\Rules\PhoneNumber;
 
 
 class RiderRequest extends FormRequest
@@ -48,6 +49,7 @@ class RiderRequest extends FormRequest
                     ],
                     'contact_number' => [
                         'max:20',
+                        new PhoneNumber,
                         Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type)),
                     ],
                 ];
@@ -65,6 +67,7 @@ class RiderRequest extends FormRequest
                     ],
                     'contact_number' => [
                         'max:20',
+                        new PhoneNumber,
                         Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
                     ],
                 ];

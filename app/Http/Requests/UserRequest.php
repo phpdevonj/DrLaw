@@ -71,12 +71,12 @@ class UserRequest extends FormRequest
     public function messages()
     {
         return [
-            'userProfile.dob.*'  =>'DOB is required.',
-            'profile_image.image' => 'The profile image must be a valid image file.',
-            'profile_image.mimes' => 'Allowed image types: jpeg, png, jpg, gif, webp.',
-            'profile_image.max' => 'The profile image must not be larger than 1MB.',
+            'userProfile.dob.*'  => __('message.dob_required'),
+            'profile_image.image' => __('message.profile_image_invalid'),
+            'profile_image.mimes' => __('message.profile_image_mimes'),
+            'profile_image.max' => __('message.profile_image_max'),
             //'contact_number.required' => 'Mobile number is required.',
-            'full_contact_number.unique' => 'This mobile number has already been taken.',
+            'full_contact_number.unique' => __('message.mobile_number_taken'),
         ];
     }
 

@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->api(append: [
+            \App\Http\Middleware\SetApiLocale::class,
             \App\Http\Middleware\LogApiRequests::class,
         ]);
 
@@ -37,6 +38,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('drivers:mark-inactive-offline')->everyFiveMinutes();
         $schedule->command('document:check-expiry')->daily();
         $schedule->command('ride:find-nearby-driver')->everyMinute();
+        // Fill in missing/untranslated language keys incrementally (can also be run manually).
+        $schedule->command('lang:translate-missing')->hourly()->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {

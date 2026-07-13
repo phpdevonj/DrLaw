@@ -29,7 +29,7 @@ class CashOutController extends Controller
             $transaction = $this->cashOutService->initiatePayment($request->user()->id, $request->all());
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Cash-out initiated. Payout is being processed.',
+                'message' => __('message.cash_out_initiated'),
                 'data'    => [
                     'transaction_id' => $transaction->reference_id,
                     'status'         => $transaction->status,

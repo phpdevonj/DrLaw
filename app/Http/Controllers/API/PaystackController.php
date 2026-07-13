@@ -47,7 +47,7 @@ class PaystackController extends Controller
         $secretKey = getPaystackSecretKey();
 
         if (!$secretKey) {
-            return json_message_response('Paystack is not configured.', 400);
+            return json_message_response(__('message.paystack_not_configured'), 400);
         }
 
         $response = Http::withToken($secretKey)->post('https://api.paystack.co/transaction/initialize', [
@@ -72,7 +72,7 @@ class PaystackController extends Controller
         $secretKey = getPaystackSecretKey();
 
         if (!$secretKey) {
-            return json_message_response('Paystack is not configured.', 400);
+            return json_message_response(__('message.paystack_not_configured'), 400);
         }
 
         $response = Http::withToken($secretKey)->get("https://api.paystack.co/transaction/verify/{$request->reference}");
@@ -106,19 +106,19 @@ class PaystackController extends Controller
                         'data'             => json_encode(['reference' => $request->reference]),
                     ]);
 
-                    return json_message_response('Wallet topped up successfully.', 200);
+                    return json_message_response(__('message.wallet_topped_up'), 200);
                 }
 
                 // Legacy flow / ride_payment flow
                 $rideRequestId = $metadata['ride_request_id'] ?? null;
                 if (!$rideRequestId) {
-                    return json_message_response('Ride request ID not found in metadata.', 400);
+                    return json_message_response(__('message.ride_request_id_not_found_metadata'), 400);
                 }
 
                 $rideRequest = RideRequest::find($rideRequestId);
 
                 if (!$rideRequest) {
-                    return json_message_response('Ride request not found.', 404);
+                    return json_message_response(__('message.ride_request_not_found'), 404);
                 }
 
                 $payment = Payment::where('ride_request_id', $rideRequestId)->first();
@@ -143,11 +143,11 @@ class PaystackController extends Controller
 
                 $this->walletTransaction($rideRequestId);
 
-                return json_message_response('Payment successful.', 200);
+                return json_message_response(__('message.payment_successful'), 200);
             }
         }
 
-        return json_message_response('Payment verification failed.', 400);
+        return json_message_response(__('message.payment_verification_failed'), 400);
     }
 
     public function initiateTransfer($withdrawRequest)
@@ -156,7 +156,7 @@ class PaystackController extends Controller
         $bankAccount = $user->userBankAccount;
 
         if (!$bankAccount || !$bankAccount->account_number || !$bankAccount->bank_code) {
-            return ['status' => false, 'message' => 'Bank account details missing.'];
+            return ['status' => false, 'message' => __('message.bank_account_details_missing')];
         }
 
         $secretKey = getPaystackSecretKey();

@@ -7,6 +7,7 @@ use App\Http\Requests\LanguageListRequest;
 use App\Models\DefaultKeyword;
 use App\Models\LanguageList;
 use App\Models\LanguageWithKeyword;
+use Illuminate\Support\Facades\Cache;
 
 class LanguageListController extends Controller
 {
@@ -78,8 +79,20 @@ class LanguageListController extends Controller
             }
         }
         updateLanguageVersion();
+
+        // Refresh the cached list of supported locales used by the API middleware.
+        Cache::forget('supported_locales');
+
+        if ($language->language_code && $language->language_code !== 'en') {
+            // Create the lang files immediately with the keys only (an instant copy of
+            // English — no translation, so there is no load on this request). The actual
+            // translations are filled in afterwards, either manually or by the
+            // `lang:translate-missing` cron (which can also be run on demand).
+            createLangFile($language->language_code);
+        }
+
         $message = __('message.save_form', ['form' => __('message.language')]);
-        
+
         if(request()->is('api/*')){
             return response()->json(['status' => true, 'message' => $message ]);
         }
@@ -146,7 +159,8 @@ class LanguageListController extends Controller
             $language->addMediaFromRequest('language_image')->toMediaCollection('language_image');
         }
 
-        updateLanguageVersion();     
+        updateLanguageVersion();
+        Cache::forget('supported_locales');
         $message = __('message.update_form',['form' => __('message.language')]);
         
         if(auth()->check()){
@@ -177,6 +191,7 @@ class LanguageListController extends Controller
             $message = __('message.delete_form', ['form' => __('message.language')]);
         }
         updateLanguageVersion();
+        Cache::forget('supported_locales');
         if(request()->ajax()) {
             return response()->json(['status' => true, 'message' => $message ]);
         }

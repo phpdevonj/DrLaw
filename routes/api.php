@@ -42,6 +42,8 @@ Route::get('language-table-list', [API\LanguageTableController::class, 'getList'
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
+    Route::post('update-language', [API\UserController::class, 'updateLanguage']);
+
     Route::get('driver-document-list', [ API\DriverDocumentController::class, 'getList' ] );
     Route::post('driver-document-save', [ App\Http\Controllers\DriverDocumentController::class, 'store' ] );
     Route::post('driver-document-update/{id}', [ App\Http\Controllers\DriverDocumentController::class, 'update' ] );

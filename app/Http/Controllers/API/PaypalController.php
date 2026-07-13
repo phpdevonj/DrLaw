@@ -39,7 +39,7 @@ class PaypalController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation error',
+                'message' => __('message.validation_error'),
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -57,7 +57,7 @@ class PaypalController extends Controller
                 if (!$card) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Saved card not found.'
+                        'message' => __('message.saved_card_not_found')
                     ], 404);
                 }
 
@@ -71,7 +71,7 @@ class PaypalController extends Controller
                     $credited = $this->processCaptureAndCredit($capture, $order['id']);
                     return response()->json([
                         'status' => true,
-                        'message' => 'Payment captured and wallet credited successfully.',
+                        'message' => __('message.payment_captured_wallet_credited'),
                         'data' => [
                             'order_id' => $order['id'],
                             'captured' => true,
@@ -83,7 +83,7 @@ class PaypalController extends Controller
                 // If immediate capture did not complete (e.g. requires 3D secure authentication)
                 return response()->json([
                     'status' => true,
-                    'message' => 'Action required to complete payment (e.g., 3D Secure).',
+                    'message' => __('message.payment_action_required'),
                     'data' => [
                         'order_id' => $order['id'],
                         'captured' => false,
@@ -98,7 +98,7 @@ class PaypalController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'PayPal payment initialized successfully.',
+                'message' => __('message.paypal_init_success'),
                 'data' => [
                     'order_id' => $order['id'],
                     'client_token' => $clientToken,
@@ -110,7 +110,7 @@ class PaypalController extends Controller
             Log::error('PayPal createPayment Error: ' . $e->getMessage());
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to initialize PayPal payment.',
+                'message' => __('message.paypal_init_failed'),
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -128,7 +128,7 @@ class PaypalController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation error',
+                'message' => __('message.validation_error'),
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -141,7 +141,7 @@ class PaypalController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Payment captured and wallet credited successfully.',
+                'message' => __('message.payment_captured_wallet_credited'),
                 'data' => [
                     'order_id' => $orderId,
                     'captured' => true,
@@ -153,7 +153,7 @@ class PaypalController extends Controller
             Log::error('PayPal capturePayment Error: ' . $e->getMessage());
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to capture PayPal payment.',
+                'message' => __('message.paypal_capture_failed'),
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -187,7 +187,7 @@ class PaypalController extends Controller
         if (!$card) {
             return response()->json([
                 'status' => false,
-                'message' => 'Card not found.'
+                'message' => __('message.card_not_found')
             ], 404);
         }
 
@@ -195,7 +195,7 @@ class PaypalController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Card deleted successfully.'
+            'message' => __('message.card_deleted')
         ], 200);
     }
 
@@ -413,7 +413,7 @@ class PaypalController extends Controller
                     'id' => $history->id,
                     'type' => 'wallet_recharge',
                     'subject' => 'Wallet Recharge Successful',
-                    'message' => "Your wallet has been credited with {$amount} {$currency} via PayPal.",
+                    'message' => __('message.wallet_credited_paypal', ['amount' => $amount, 'currency' => $currency]),
                 ];
                 $user->notify(new CommonNotification($notificationData['type'], $notificationData));
             } catch (\Exception $e) {

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use App\Rules\PhoneNumber;
 
 
 class DriverRequest extends FormRequest
@@ -82,6 +83,7 @@ class DriverRequest extends FormRequest
                         'contact_number' => [
                             'required',
                             'max:20',
+                            new PhoneNumber,
                             Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type)),
                         ],
                         'userDetail.car_model' => 'required|string|max:255',
@@ -105,6 +107,7 @@ class DriverRequest extends FormRequest
                         ],
                         'contact_number' => [
                             'max:20',
+                            new PhoneNumber,
                             Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
                         ],
                     ];
@@ -118,10 +121,10 @@ class DriverRequest extends FormRequest
     public function messages()
     {
         return [
-            'userDetail.car_model.*'  =>'Car Model is required.',
-            'userDetail.car_color.*'  =>'Car Color is required.',
-            'userDetail.car_plate_number.*'  =>'Car Plate number is required.',
-            'userDetail.car_production_year.*'  =>'Car production year is required.',
+            'userDetail.car_model.*'  => __('message.car_model_required'),
+            'userDetail.car_color.*'  => __('message.car_color_required'),
+            'userDetail.car_plate_number.*'  => __('message.car_plate_number_required'),
+            'userDetail.car_production_year.*'  => __('message.car_production_year_required'),
         ];
     }
 

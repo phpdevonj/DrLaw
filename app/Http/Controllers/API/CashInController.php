@@ -66,7 +66,7 @@ class CashInController extends Controller
             $transaction = $this->cashInService->initiatePayment($request->user()->id, $request->all());
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Cash-in initiated. Please confirm payment on your phone.',
+                'message' => __('message.cash_in_initiated'),
                 'data'    => [
                     'transaction_id' => $transaction->reference_id,
                     'status'         => $transaction->status,

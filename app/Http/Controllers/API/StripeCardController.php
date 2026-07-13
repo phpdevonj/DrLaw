@@ -27,7 +27,7 @@ class StripeCardController extends Controller
     protected function checkStripeConfigured()
     {
         if (empty($this->stripeSecret)) {
-            return response()->json(['message' => 'Stripe is not configured.'], 503);
+            return response()->json(['message' => __('message.stripe_not_configured')], 503);
         }
         return null;
     }
@@ -43,11 +43,11 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
-        
+
         $response = Http::withToken($this->stripeSecret)->asForm()->post('https://api.stripe.com/v1/setup_intents', [
             'customer' => $request->customer_id,
         ]);
@@ -66,11 +66,11 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
-    
+
         // Fetch customer details to get default payment method
         $customerResponse = Http::withToken($this->stripeSecret)
             ->get("https://api.stripe.com/v1/customers/{$request->customer_id}");
@@ -78,7 +78,7 @@ class StripeCardController extends Controller
         if ($customerResponse->failed()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Unable to fetch customer details',
+                'message' => __('message.unable_fetch_customer_details'),
                 'error' => $customerResponse->json(),
             ], $customerResponse->status());
         }
@@ -95,7 +95,7 @@ class StripeCardController extends Controller
         if ($paymentMethodsResponse->failed()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Unable to fetch payment methods',
+                'message' => __('message.unable_fetch_payment_methods'),
                 'error' => $paymentMethodsResponse->json(),
             ], $paymentMethodsResponse->status());
         }
@@ -109,7 +109,7 @@ class StripeCardController extends Controller
     
         return response()->json([
             'status' => true,
-            'message' => 'Payment methods fetched successfully',
+            'message' => __('message.payment_methods_fetched'),
             'data' => $cards,
         ]);
     }
@@ -125,7 +125,7 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
@@ -147,7 +147,7 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
@@ -172,7 +172,7 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
@@ -182,14 +182,14 @@ class StripeCardController extends Controller
             ->get("https://api.stripe.com/v1/customers/{$request->customer_id}");
 
         if (!$customerResponse->successful()) {
-            return response()->json(['error' => 'Unable to retrieve customer.'], 500);
+            return response()->json(['error' => __('message.unable_retrieve_customer')], 500);
         }
 
         $customer = $customerResponse->json();
         $defaultPaymentMethod = $customer['invoice_settings']['default_payment_method'] ?? null;
 
         if (!$defaultPaymentMethod) {
-            return response()->json(['error' => 'No default payment method set.'], 422);
+            return response()->json(['error' => __('message.no_default_payment_method')], 422);
         }
 
         // Create PaymentIntent
@@ -219,7 +219,7 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
@@ -239,7 +239,7 @@ class StripeCardController extends Controller
             }
         
             return json_message_response([
-                'message' => 'Payment intent was not successful',
+                'message' => __('message.payment_intent_not_successful'),
                 'status' => $result['status'] ?? 'unknown',
             ], 400);
         } else {
@@ -247,14 +247,14 @@ class StripeCardController extends Controller
 
             if (isset($error['error']['payment_intent']['status']) && $error['error']['payment_intent']['status'] === 'succeeded') {
                 $error_response['error'] = [
-                    'message' => $error['error']['message'] ?? 'Stripe capture failed',
+                    'message' => $error['error']['message'] ?? __('message.stripe_capture_failed'),
                     'code' => $error['error']['code'] ?? 'unknown',
                     'payment_intent' => $error['error']['payment_intent'],
                 ];
                 return response()->json($error_response, 200);
             }else{
                 $error_response['error'] = [
-                    'message' => $error['error']['message'] ?? 'Stripe capture failed',
+                    'message' => $error['error']['message'] ?? __('message.stripe_capture_failed'),
                     'type' => $error['error']['type'] ?? 'unknown',
                     'payment_intent' => $error['error']['payment_intent'],
                 ];
@@ -274,7 +274,7 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
              return response()->json([
-                 'message' => 'Validation failed',
+                 'message' => __('message.validation_failed'),
                  'errors' => $validator->errors()
              ], 422);
         }
@@ -290,7 +290,7 @@ class StripeCardController extends Controller
             }
         
             return json_message_response([
-                'message' => 'Payment intent was not successful',
+                'message' => __('message.payment_intent_not_successful'),
                 'status' => $result['status'] ?? 'unknown',
             ], 400);
         } else {
@@ -298,14 +298,14 @@ class StripeCardController extends Controller
 
             if (isset($error['error']['payment_intent']['status']) && $error['error']['payment_intent']['status'] === 'canceled') {
                 $error_response['error'] = [
-                    'message' => $error['error']['message'] ?? 'Stripe cancellation failed',
+                    'message' => $error['error']['message'] ?? __('message.stripe_cancellation_failed'),
                     'code' => $error['error']['code'] ?? 'unknown',
                     'payment_intent' => $error['error']['payment_intent'],
                 ];
                 return response()->json($error_response, 200);
             }else{
                 $error_response['error'] = [
-                    'message' => $error['error']['message'] ?? 'Stripe cancellation failed',
+                    'message' => $error['error']['message'] ?? __('message.stripe_cancellation_failed'),
                     'type' => $error['error']['type'] ?? 'unknown',
                     'payment_intent' => $error['error']['payment_intent'],
                 ];
@@ -325,7 +325,7 @@ class StripeCardController extends Controller
     
         if ($validator->fails()) {
             return json_custom_response([
-                'message' => 'Validation failed',
+                'message' => __('message.validation_failed'),
                 'errors'  => $validator->errors()
             ], 422);
         }
@@ -422,12 +422,12 @@ class StripeCardController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return json_message_response('User not found.', 400);
+            return json_message_response(__('message.user_not_found'), 400);
         }
 
         if (!empty($user->stripe_customer_id)) {
             $response_data = [
-                'message' => 'Customer already created on stripe.',                
+                'message' => __('message.stripe_customer_already_created'),
                 'stripe_customer_id' => $user->stripe_customer_id,                
             ];
             return json_custom_response($response_data, 200);
@@ -441,14 +441,14 @@ class StripeCardController extends Controller
         );
 
         if (!isset($stripeCustomer['id'])) {
-            return json_message_response('Failed to create Stripe customer.', 400);
+            return json_message_response(__('message.stripe_customer_create_failed'), 400);
         }
 
         $user->stripe_customer_id = $stripeCustomer['id'];
         $user->save();
 
         return json_custom_response([
-            'message' => 'Customer created on stripe',
+            'message' => __('message.stripe_customer_created'),
             'stripe_customer_id' => $stripeCustomer['id'],                
         ]);
     }

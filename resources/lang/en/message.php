@@ -872,4 +872,84 @@ return array(
     'with_expired_document' => 'With expired Docs',
     'document_expiry_reminder' => 'Document Expiry Reminder',
     'driver_doc_pending' => 'Your documents are pending verification. Please upload your documents and wait for admin approval.',
+
+    // ---- API response messages ----
+    'language_updated' => 'Language updated successfully.',
+
+    // Notifications
+    'notification_not_found' => 'Notification not found',
+    'notification_marked_read' => 'Notification marked as read.',
+    'all_notifications_marked_read' => 'All notifications marked as read.',
+    'no_unread_notifications' => 'No unread notifications found',
+    'notification_sent' => 'Notification sent successfully',
+
+    // Stripe
+    'stripe_not_configured' => 'Stripe is not configured.',
+    'validation_failed' => 'Validation failed',
+    'unable_fetch_customer_details' => 'Unable to fetch customer details',
+    'unable_fetch_payment_methods' => 'Unable to fetch payment methods',
+    'payment_methods_fetched' => 'Payment methods fetched successfully',
+    'unable_retrieve_customer' => 'Unable to retrieve customer.',
+    'no_default_payment_method' => 'No default payment method set.',
+    'payment_intent_not_successful' => 'Payment intent was not successful',
+    'stripe_capture_failed' => 'Stripe capture failed',
+    'stripe_cancellation_failed' => 'Stripe cancellation failed',
+    'user_not_found' => 'User not found.',
+    'stripe_customer_already_created' => 'Customer already created on stripe.',
+    'stripe_customer_create_failed' => 'Failed to create Stripe customer.',
+    'stripe_customer_created' => 'Customer created on stripe',
+    'stripe_customer_update_failed' => 'Failed to update Stripe customer.',
+    'stripe_customer_delete_failed' => 'Failed to delete Stripe customer.',
+
+    // PayPal
+    'validation_error' => 'Validation error',
+    'saved_card_not_found' => 'Saved card not found.',
+    'payment_captured_wallet_credited' => 'Payment captured and wallet credited successfully.',
+    'payment_action_required' => 'Action required to complete payment (e.g., 3D Secure).',
+    'paypal_init_success' => 'PayPal payment initialized successfully.',
+    'paypal_init_failed' => 'Failed to initialize PayPal payment.',
+    'paypal_capture_failed' => 'Failed to capture PayPal payment.',
+    'card_not_found' => 'Card not found.',
+    'card_deleted' => 'Card deleted successfully.',
+    'wallet_credited_paypal' => 'Your wallet has been credited with :amount :currency via PayPal.',
+
+    // Paystack
+    'paystack_not_configured' => 'Paystack is not configured.',
+    'wallet_topped_up' => 'Wallet topped up successfully.',
+    'ride_request_id_not_found_metadata' => 'Ride request ID not found in metadata.',
+    'ride_request_not_found' => 'Ride request not found.',
+    'payment_successful' => 'Payment successful.',
+    'payment_verification_failed' => 'Payment verification failed.',
+    'bank_account_details_missing' => 'Bank account details missing.',
+
+    // Mobile money (cash in / cash out)
+    'cash_in_initiated' => 'Cash-in initiated. Please confirm payment on your phone.',
+    'cash_out_initiated' => 'Cash-out initiated. Payout is being processed.',
+
+    // User / auth / OTP
+    'welcome_coupon_message' => 'Congratulations! You have received a welcome coupon as a sign-up benefit.',
+    'welcome_coupon_subject' => 'Welcome Bonus - Coupon for You',
+    'logout_success' => 'Logout successfully',
+    'no_recent_rides' => 'No recent rides found',
+    'otp_sms_body' => 'Your OTP for verification is: :otp. It is valid for 10 minutes.',
+    'otp_sms_failed' => 'Failed to send OTP via SMS. Please try again.',
+    'otp_email_failed' => 'Failed to send OTP email. Please try again.',
+    'otp_sent' => 'OTP sent successfully via :channel.',
+    'invalid_otp' => 'Invalid OTP.',
+    'otp_expired' => 'OTP has expired. Please retry again',
+    'otp_verified' => 'OTP verified successfully.',
+
+    // FormRequest validation messages (register / profile)
+    'dob_required' => 'DOB is required.',
+    'profile_image_invalid' => 'The profile image must be a valid image file.',
+    'profile_image_mimes' => 'Allowed image types: jpeg, png, jpg, gif, webp.',
+    'profile_image_max' => 'The profile image must not be larger than 1MB.',
+    'mobile_number_taken' => 'This mobile number has already been taken.',
+    'invalid_contact_number' => 'Please enter a valid mobile number.',
+    'invalid_country_code' => 'The mobile number has an invalid country code.',
+    'contact_number_missing_country_code' => 'Please enter the mobile number with its country code (e.g. +91...).',
+    'car_model_required' => 'Car Model is required.',
+    'car_color_required' => 'Car Color is required.',
+    'car_plate_number_required' => 'Car Plate number is required.',
+    'car_production_year_required' => 'Car production year is required.',
 );

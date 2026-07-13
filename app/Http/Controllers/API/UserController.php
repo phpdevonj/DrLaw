@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Password;
 use App\Models\AppSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\DriverRequest;
@@ -62,6 +63,7 @@ class UserController extends Controller
         $input['referred_by'] = $referrer?->id;
         $input['device_id'] = $request->device_id ?? null;
         $input['device_type'] = $request->device_type ?? null;
+        $input['current_lang'] = resolveSupportedLocale(apiRequestLanguage());
 
         if( in_array($input['user_type'],['driver']))
         {
@@ -86,7 +88,7 @@ class UserController extends Controller
                 if (isset($stripeCustomer['id'])) {
                     $input['stripe_customer_id'] = $stripeCustomer['id'];
                 } else {
-                    return json_message_response('Failed to create Stripe customer.', 400);
+                    return json_message_response(__('message.stripe_customer_create_failed'), 400);
                 }
             }
         }
@@ -123,8 +125,8 @@ class UserController extends Controller
                 'id' => $user->id,
                 'type' => 'new_user_benefits',
                 'data' => $coupon->code,
-                'message' => 'Congratulations! You have received a welcome coupon as a sign-up benefit.',
-                'subject' => 'Welcome Bonus - Coupon for You',
+                'message' => __('message.welcome_coupon_message'),
+                'subject' => __('message.welcome_coupon_subject'),
             ];
             $user->notify(new CommonNotification($user_notification_data['type'], $user_notification_data));
         }
@@ -148,6 +150,7 @@ class UserController extends Controller
         $input['is_available'] = 1;
         $input['username'] = generateUniqueUsername($input['first_name'], $input['last_name']);
         $input['last_actived_at'] = now();
+        $input['current_lang'] = resolveSupportedLocale(apiRequestLanguage());
         if(isset($input['login_type']) && $input['login_type'] === 'mobile'){
             $input['contact_number'] =  trim($input['contact_number']);
         }else{
@@ -257,6 +260,11 @@ class UserController extends Controller
 
             if($user->user_type === 'driver' && request('fcm_token') != null){
                 $user->fcm_token = request('fcm_token');
+            }
+            // Re-sync the user's language if the app sent one on login (via header/param).
+            // (The SetApiLocale middleware has already applied it as the response locale.)
+            if(apiRequestLanguage() != null){
+                $user->current_lang = resolveSupportedLocale(apiRequestLanguage());
             }
             $user->last_actived_at = now();
             $user->save();
@@ -418,7 +426,7 @@ class UserController extends Controller
             if (hasStripeKeys() && $user->stripe_customer_id) {
                 $stripeResponse = updateStripeCustomer($user->stripe_customer_id, $request->email, $request->first_name . ' ' . $request->last_name, $request->contact_number);
                 if (isset($stripeResponse['error'])) {
-                    return json_message_response('Failed to update Stripe customer.', 400);
+                    return json_message_response(__('message.stripe_customer_update_failed'), 400);
                 }
             }
         }
@@ -515,7 +523,7 @@ class UserController extends Controller
             // Revoke the current access token
             $request->user()->currentAccessToken()->delete();
             $user->save();
-            return json_message_response('Logout successfully');
+            return json_message_response(__('message.logout_success'));
         }
     }
 
@@ -780,6 +788,35 @@ protected function syncSocialIdentityAcrossRoles($user, $login_type, $uid)
         return json_custom_response($data);
     }
 
+    /**
+     * Update the authenticated user's preferred language so that all
+     * subsequent API responses are returned in that language.
+     */
+    public function updateLanguage(Request $request)
+    {
+        $supported = \App\Models\LanguageList::where('status', 1)->pluck('language_code')->all();
+
+        $validator = Validator::make($request->all(), [
+            'language' => ['required', Rule::in($supported)],
+        ]);
+
+        if ($validator->fails()) {
+            return json_message_response($validator->errors()->first(), 422);
+        }
+
+        $user = auth()->user();
+        $user->current_lang = $request->input('language');
+        $user->save();
+
+        // Localize the confirmation message to the newly selected language.
+        app()->setLocale($user->current_lang);
+
+        return json_custom_response([
+            'data' => ['current_lang' => $user->current_lang],
+            'message' => __('message.language_updated'),
+        ]);
+    }
+
     public function deleteUserAccount(Request $request)
     {
         $id = auth()->id();
@@ -793,7 +830,7 @@ protected function syncSocialIdentityAcrossRoles($user, $login_type, $uid)
             if ($siblings->isEmpty() && hasStripeKeys() && $user->stripe_customer_id) {
                 $stripeResponse = deleteStripeCustomer($user->stripe_customer_id);
                 if (isset($stripeResponse['error'])) {
-                    return json_message_response('Failed to delete Stripe customer.', 400);
+                    return json_message_response(__('message.stripe_customer_delete_failed'), 400);
                 }
             }
             $user->delete();
@@ -820,7 +857,7 @@ protected function syncSocialIdentityAcrossRoles($user, $login_type, $uid)
 
         if ($recent_rides->isEmpty()) {
             return json_custom_response([
-                'message' => 'No recent rides found',
+                'message' => __('message.no_recent_rides'),
                 'data' => null
             ]);
         }
@@ -898,11 +935,11 @@ public function sendOtp(Request $request, \App\Services\TwilioService $twilioSer
 
             // Send SMS
             try {
-                $twilioService->sendSMS($request->contact_number, "Your OTP for verification is: {$otp}. It is valid for 10 minutes.");
+                $twilioService->sendSMS($request->contact_number, __('message.otp_sms_body', ['otp' => $otp]));
                 $sentVia[] = 'phone';
             } catch (\Exception $e) {
                 Log::error('OTP SMS Sending Failed: ' . $e->getMessage());
-                return json_message_response('Failed to send OTP via SMS. Please try again.', 500);
+                return json_message_response(__('message.otp_sms_failed'), 500);
             }
 
             // Also send email if provided
@@ -926,7 +963,7 @@ public function sendOtp(Request $request, \App\Services\TwilioService $twilioSer
                 $sentVia[] = 'email';
             } catch (\Exception $e) {
                 Log::error('OTP Email Sending Failed: ' . $e->getMessage());
-                return json_message_response('Failed to send OTP email. Please try again.', 500);
+                return json_message_response(__('message.otp_email_failed'), 500);
             }
         }
 
@@ -934,7 +971,7 @@ public function sendOtp(Request $request, \App\Services\TwilioService $twilioSer
 
         return json_custom_response([
             'status' => true,
-            'message' => "OTP sent successfully via {$channelText}.",
+            'message' => __('message.otp_sent', ['channel' => $channelText]),
             'sent_via' => $sentVia,
         ]);
     }
@@ -970,11 +1007,11 @@ public function sendOtp(Request $request, \App\Services\TwilioService $twilioSer
         $otpVerification = $query->first();
 
         if (!$otpVerification) {
-            return json_message_response('Invalid OTP.', 400);
+            return json_message_response(__('message.invalid_otp'), 400);
         }
 
         if (Carbon::now()->gt($otpVerification->expired_at)) {
-            return json_message_response('OTP has expired.Please retry again', 400);
+            return json_message_response(__('message.otp_expired'), 400);
         }
 
         // Optional: Delete the OTP record after successful verification
@@ -982,7 +1019,7 @@ public function sendOtp(Request $request, \App\Services\TwilioService $twilioSer
 
         return json_custom_response([
             'status' => true,
-            'message' => 'OTP verified successfully.'
+            'message' => __('message.otp_verified')
         ]);
     }
 

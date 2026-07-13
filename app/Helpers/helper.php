@@ -1071,6 +1071,74 @@ function createLangFile($lang=''){
     }
 }
 
+/**
+ * Return the list of language codes that are active in the admin panel.
+ * Cached to avoid a DB hit on every API request. Bust the cache with
+ * Cache::forget('supported_locales') whenever languages change.
+ */
+function supportedLocales()
+{
+    return \Illuminate\Support\Facades\Cache::remember('supported_locales', 3600, function () {
+        return \App\Models\LanguageList::where('status', 1)
+            ->pluck('language_code')
+            ->filter()
+            ->values()
+            ->all();
+    });
+}
+
+/**
+ * The language the client EXPLICITLY asked for on the current request:
+ * the custom `language` header, else the `language` request param.
+ * Returns null when neither was sent, so callers fall back to the user's
+ * stored preference instead of clobbering it.
+ *
+ * NOTE: `Accept-Language` is deliberately NOT read here — browsers/HTTP
+ * clients send it automatically (device default), so it is an ambient signal,
+ * not an explicit choice, and must rank below the user's saved current_lang.
+ * The middleware applies it as a lower-priority fallback via acceptLanguageLocale().
+ */
+function apiRequestLanguage()
+{
+    $request = request();
+
+    if ($request->header('language')) {
+        return $request->header('language');
+    }
+
+    return $request->input('language') ?: null;
+}
+
+/**
+ * Primary language subtag from the Accept-Language header, or null.
+ * "en-US,en;q=0.9" -> "en";  "gsw-CH" -> "gsw"
+ */
+function acceptLanguageLocale()
+{
+    $accept = request()->header('Accept-Language');
+    if (! $accept) {
+        return null;
+    }
+    $primary = trim(explode(';', trim(explode(',', $accept)[0]))[0]);
+    return explode('-', $primary)[0] ?: null;
+}
+
+/**
+ * Resolve a requested language code to a locale we actually support.
+ * Falls back to the application default when the code is empty or unknown,
+ * so we never call App::setLocale() with a code that has no lang folder.
+ */
+function resolveSupportedLocale($code = null)
+{
+    $default = config('app.locale', 'en');
+
+    if (empty($code)) {
+        return $default;
+    }
+
+    return in_array($code, supportedLocales(), true) ? $code : $default;
+}
+
 function dateAgoFormate($date,$type2='')
 {
     if($date == null || $date == '0000-00-00 00:00:00') {

@@ -70,14 +70,14 @@ class NotificationController extends Controller
         $notification = Notification::where('id', $id)->where('notifiable_id', auth()->id())->first();
 
         if (!$notification) {
-            return json_message_response('Notification not found',400);
+            return json_message_response(__('message.notification_not_found'),400);
         }
 
         $notification->update(['read_at' => now()]);
 
         $response = [
             'status'  => true,
-            'message' => 'Notification marked as read.'
+            'message' => __('message.notification_marked_read')
         ];
 
         return json_custom_response($response);
@@ -92,13 +92,13 @@ class NotificationController extends Controller
 
             $response = [
                 'status'  => true,
-                'message' => 'All notifications marked as read.'
+                'message' => __('message.all_notifications_marked_read')
             ];
-    
+
             return json_custom_response($response);
         }else{
-            return json_message_response('No unread notifications found',400);
-        }        
+            return json_message_response(__('message.no_unread_notifications'),400);
+        }
     }
 
     public function sendNotification(Request $request){
@@ -107,7 +107,7 @@ class NotificationController extends Controller
         $driver = User::find($driver_id);
 
         if (!$driver) {
-            return json_message_response('Driver not found',404);
+            return json_message_response(__('message.driver_not_found'),404);
         }
 
         $notification_data = [
@@ -123,7 +123,7 @@ class NotificationController extends Controller
 
         $response = [
             'status'  => true,
-            'message' => 'Notification sent successfully'
+            'message' => __('message.notification_sent')
         ];
 
         return json_custom_response($response);
