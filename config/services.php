@@ -46,4 +46,11 @@ return [
         'auth_token' => env('TWILIO_AUTH_TOKEN'),
         'from_number' => env('TWILIO_FROM_NUMBER'),
     ],
+
+    // Fallback credentials used only until the "PayHub" tab in Payment Settings is configured by the admin.
+    'payhub' => [
+        'api_key' => env('PAYHUB_API_KEY'),
+        'api_secret' => env('PAYHUB_API_SECRET'),
+        'base_url' => env('PAYHUB_BASE_URL', 'https://epayuat.etransactx.online'),
+    ],
 ];

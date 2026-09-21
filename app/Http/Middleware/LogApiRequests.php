@@ -69,8 +69,12 @@ class LogApiRequests
         return $response;
     }
 
-    private function filterSensitiveData(array $data)
+    private function filterSensitiveData($data)
     {
+        if (!is_array($data)) {
+            return $data;
+        }
+
         foreach ($data as $key => &$value) {
             if (in_array($key, $this->sensitiveKeys)) {
                 $value = '*****'; // Mask value

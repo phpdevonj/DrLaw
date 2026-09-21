@@ -147,6 +147,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('/create-stripe-customer', [API\StripeCardController::class, 'createStripeCustomer']);
 
+    // PayHub Routes
+    Route::post('/wallet/payhub/create', [API\PayHubController::class, 'createPayment']);
+    
     // surge price
     Route::get('surge-price-list', [ API\SurgePriceController::class, 'getList'] );
 
