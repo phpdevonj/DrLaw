@@ -48,4 +48,11 @@ return [
         'passphrase' => env('PAYFAST_PASSPHRASE'),
         'env' => env('PAYFAST_ENV', 'sandbox'),
     ],
+
+    // Fallback credentials used only until the "PayHub" tab in Payment Settings is configured by the admin.
+    'payhub' => [
+        'api_key' => env('PAYHUB_API_KEY'),
+        'api_secret' => env('PAYHUB_API_SECRET'),
+        'base_url' => env('PAYHUB_BASE_URL', 'https://epayuat.etransactx.online'),
+    ],
 ];

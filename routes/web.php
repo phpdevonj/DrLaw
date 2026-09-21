@@ -224,3 +224,7 @@ Route::get('page/{slug}', [FrontendController::class, 'page'])->name('pages');
 Route::post('payfast/itn', [App\Http\Controllers\API\PayFastController::class, 'itnCallback']);
 Route::get('payfast/success', [App\Http\Controllers\API\PayFastController::class, 'paymentSuccess'])->name('payfast.success');
 Route::get('payfast/cancel', [App\Http\Controllers\API\PayFastController::class, 'paymentCancel'])->name('payfast.cancel');
+
+// PayHub Callback Webhook
+Route::post('payhub/callback', [App\Http\Controllers\API\PayHubController::class, 'callback']);
+Route::get('payhub/redirect', [App\Http\Controllers\API\PayHubController::class, 'paymentRedirect'])->name('payhub.redirect');

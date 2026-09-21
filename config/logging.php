@@ -141,6 +141,13 @@ return [
             'days' => 14,
         ],
 
+        'payhub_callback' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payhub_callback.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),

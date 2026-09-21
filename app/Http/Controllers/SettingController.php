@@ -48,7 +48,7 @@ class SettingController extends Controller
     {
         $page = $request->page;
         if( $page == 'payment-setting' ) {
-            $type = isset($request->type) ? $request->type : 'stripe';
+            $type = isset($request->type) ? $request->type : 'payhub';
         }
         $auth_user = auth()->user();
         $user_id = $auth_user->id;

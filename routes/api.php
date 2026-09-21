@@ -134,6 +134,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // PayFast Routes
     Route::post('/wallet/payfast/create', [API\PayFastController::class, 'createPayment']);
 
+    // PayHub Routes
+    Route::post('/wallet/payhub/create', [API\PayHubController::class, 'createPayment']);
+    
     // surge price
     Route::get('surge-price-list', [ API\SurgePriceController::class, 'getList'] );
 });

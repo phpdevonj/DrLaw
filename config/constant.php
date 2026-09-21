@@ -23,6 +23,7 @@ return [
     'PAYMENT_GATEWAY_SETTING' => [
         // 'cash' => [],
         'stripe' => [ 'url', 'secret_key', 'publishable_key' ],
+        'payhub' => [ 'url', 'api_key', 'api_secret' ],
         // 'razorpay' => [ 'key_id', 'secret_id' ],
         'paystack' => [ 'public_key','secret_key' ],
         // 'flutterwave' => [ 'public_key', 'secret_key', 'encryption_key' ],
