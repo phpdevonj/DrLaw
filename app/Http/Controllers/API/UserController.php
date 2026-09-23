@@ -75,7 +75,7 @@ class UserController extends Controller
         $input['contact_number'] = trim($input['country_code']) . trim($input['contact_number']);
         
         if(isset($input['player_id'])) {
-            $input['player_id'] = $input['player_id'];
+            $input['player_id'] = sanitizePlayerId($input['player_id']);
         }
 
         // Create a customer in Stripe using the helper function (only if Stripe is configured in DB & user is rider)
@@ -248,13 +248,14 @@ class UserController extends Controller
                 return json_message_response($message,400);
             }
 
-            if(request('player_id') != null){
-                $user->player_id = request('player_id');
+            $sanitized_player_id = sanitizePlayerId(request('player_id'));
+            if($sanitized_player_id !== null){
+                $user->player_id = $sanitized_player_id;
                 // store player_id in firestore
                 $firestore = app('firebase.firestore');
                 if($user->uid != null){
                     $collection = $firestore->database()->collection('users')->document($user->uid);
-                    $collection = $collection->update([['path' => 'player_id', 'value' => request('player_id')]]);
+                    $collection = $collection->update([['path' => 'player_id', 'value' => $sanitized_player_id]]);
                 }
             }
 
@@ -731,7 +732,7 @@ protected function syncSocialIdentityAcrossRoles($user, $login_type, $uid)
             $user->last_location_update_at = date('Y-m-d H:i:s');            
         }
         if($request->has('player_id')) {
-            $user->player_id = $request->player_id;
+            $user->player_id = sanitizePlayerId($request->player_id);
         }
         if($request->has('app_version')) {
             $user->app_version = $request->app_version;

@@ -2543,3 +2543,39 @@ if (!function_exists('generateUniqueUsername')) {
         return $base . $counter;
     }
 }
+
+if (!function_exists('sanitizePlayerId')) {
+    /**
+     * Normalize a OneSignal player_id value coming from the client.
+     *
+     * The mobile app can send an empty string, or the literal string "null"
+     * (e.g. when the OneSignal SDK hasn't finished registering the device
+     * yet and its id gets stringified before the check runs). Both slip past
+     * a loose `!= null` check and get stored as-is, so a later push send
+     * fails with "Incorrect player_id format in include_player_ids (not a
+     * valid UUID): null" instead of just skipping that user. This returns a
+     * real null for any such value so it never reaches the database or a
+     * push provider, and is only kept when it looks like a real UUID.
+     *
+     * @param  mixed $value
+     * @return string|null
+     */
+    function sanitizePlayerId($value)
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '' || strtolower($value) === 'null') {
+            return null;
+        }
+
+        if (!preg_match('/^[0-9a-fA-F-]{8,}$/', $value)) {
+            return null;
+        }
+
+        return $value;
+    }
+}

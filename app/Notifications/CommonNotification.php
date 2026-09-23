@@ -46,7 +46,12 @@ class CommonNotification extends Notification
 
         $notifications = []; 
 
-        if( $notifiable->player_id != null && $notifiable->user_type == 'rider') {
+        // A loose `!= null` check lets through an empty string or the literal
+        // string "null" (bad legacy data, or a client that hasn't registered
+        // a real OneSignal id yet), which OneSignal then rejects with a 400
+        // ("Incorrect player_id format ... not a valid UUID: null"). Use the
+        // sanitizer so only a real-looking id queues the OneSignal channel.
+        if( sanitizePlayerId($notifiable->player_id) !== null && $notifiable->user_type == 'rider') {
             // if( $notifiable->user_type == 'driver' && env('ONESIGNAL_DRIVER_APP_ID') && env('ONESIGNAL_DRIVER_REST_API_KEY')) 
             // {
             //         $heading = [
