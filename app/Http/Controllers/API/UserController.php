@@ -373,11 +373,20 @@ class UserController extends Controller
 
         try {
             if($input['login_type'] === 'mobile'){
-                // Accounts created outside this mobile OTP flow (e.g. added by an admin/fleet
-                // from the dashboard) never get `login_type` stamped, so it's stored as NULL/''.
-                // Matching only login_type = 'mobile' here made those existing users invisible
-                // to this lookup and sent them into registration instead of logging them in.
-                $user_data = User::where('username', $input['username'])
+                // The app sends the phone number as `username`, but accounts created from the
+                // admin/fleet dashboard can have a free-text username (e.g. "vishaldriver") with
+                // the real phone number stored only in `contact_number`. Matching on username
+                // alone misses those accounts, so also match on contact_number.
+                //
+                // Accounts created outside this mobile OTP flow also never get `login_type`
+                // stamped, so it's stored as NULL/''. Matching only login_type = 'mobile' made
+                // those existing users invisible to this lookup too.
+                $user_data = User::where(function ($query) use ($input) {
+                        $query->where('username', $input['username']);
+                        if (!empty($input['contact_number'])) {
+                            $query->orWhere('contact_number', $input['contact_number']);
+                        }
+                    })
                     ->where(function ($query) {
                         $query->whereNull('login_type')
                             ->orWhere('login_type', '')
