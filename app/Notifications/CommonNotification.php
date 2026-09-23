@@ -105,8 +105,21 @@ class CommonNotification extends Notification
         }
 
         try {
+            // env() returns null here once config is cached (php artisan config:cache),
+            // since Laravel only evaluates env() while building config/*.php. Read the
+            // credentials path via config('firebase...') instead, which stays correct
+            // whether or not config is cached, and matches config/firebase.php's own
+            // resolution of FIREBASE_CREDENTIALS.
+            $credentialsFile = config('firebase.projects.app.credentials.file');
+            $credentialsPath = $credentialsFile ? base_path($credentialsFile) : null;
+
+            if (!$credentialsPath || !is_file($credentialsPath)) {
+                Log::channel('firebase_notification')->error("Firebase credentials file not found at " . ($credentialsPath ?? '(not configured)'));
+                return;
+            }
+
             $factory = (new Factory)
-                ->withServiceAccount(base_path(env('FIREBASE_CREDENTIALS')));
+                ->withServiceAccount($credentialsPath);
             $messaging = $factory->createMessaging();
 
             // Common title & message
