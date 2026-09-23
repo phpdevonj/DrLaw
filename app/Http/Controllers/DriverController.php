@@ -63,6 +63,10 @@ class DriverController extends Controller
         $request['username'] = $request->username ?? stristr($request->email, "@", true) . rand(100,1000);
         $request['display_name'] = $request->first_name.' '. $request->last_name;
         $request['user_type'] = 'driver';
+        // Drivers added from the admin/fleet dashboard log in on mobile via the OTP/social-login
+        // flow, which matches on login_type = 'mobile'. Without stamping it here it stays NULL
+        // and the app can't find the account, sending an existing driver back to registration.
+        $request['login_type'] = $request->login_type ?? 'mobile';
 
         if(auth()->user()->hasRole('fleet')) {
             $request['fleet_id'] = auth()->user()->id;

@@ -56,6 +56,10 @@ class RiderController extends Controller
         $request['username'] = $request->username ?? stristr($request->email, "@", true) . rand(100,1000);
         $request['display_name'] = $request->first_name.' '. $request->last_name;
         $request['user_type'] = 'rider';
+        // Riders added from the admin dashboard log in on mobile via the OTP/social-login flow,
+        // which matches on login_type = 'mobile'. Without stamping it here it stays NULL and the
+        // app can't find the account, sending an existing rider back to registration.
+        $request['login_type'] = $request->login_type ?? 'mobile';
         $user = User::create($request->all());
 
         uploadMediaFile($user,$request->profile_image, 'profile_image');

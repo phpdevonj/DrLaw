@@ -297,6 +297,16 @@ class UserController extends Controller
             $user_addresses = json_decode($request->user_address, true);
             if (is_array($user_addresses)) {
                 foreach ($user_addresses as $addressData) {
+                    // label and address_line1 are required (NOT NULL) columns on user_addresses;
+                    // skip malformed entries instead of letting the DB insert/update crash the whole request.
+                    if (empty($addressData['label']) || empty($addressData['address_line1'])) {
+                        Log::warning('Skipped invalid user_address entry: missing label or address_line1', [
+                            'user_id' => $user->id,
+                            'address_data' => $addressData,
+                        ]);
+                        continue;
+                    }
+
                     if (isset($addressData['id'])) {
                         // Update existing address
                         $user->userAddresses()->where('id', $addressData['id'])->update($addressData);
@@ -363,11 +373,26 @@ class UserController extends Controller
 
         try {
             if($input['login_type'] === 'mobile'){
-                $user_data = User::where('username', $input['username'])->where('login_type','mobile')->first();
+                // Accounts created outside this mobile OTP flow (e.g. added by an admin/fleet
+                // from the dashboard) never get `login_type` stamped, so it's stored as NULL/''.
+                // Matching only login_type = 'mobile' here made those existing users invisible
+                // to this lookup and sent them into registration instead of logging them in.
+                $user_data = User::where('username', $input['username'])
+                    ->where(function ($query) {
+                        $query->whereNull('login_type')
+                            ->orWhere('login_type', '')
+                            ->orWhere('login_type', 'mobile');
+                    })
+                    ->first();
+
+                if ($user_data !== null && empty($user_data->login_type)) {
+                    $user_data->login_type = 'mobile';
+                    $user_data->save();
+                }
             } else {
                 $user_data = User::where('email',$input['email'])->first();
             }
-            
+
             if( $user_data != null ) {
                 if( !in_array($user_data->user_type, ['admin',request('user_type')] )) {
                     $message = __('auth.failed');
