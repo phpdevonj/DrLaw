@@ -183,7 +183,7 @@ class AdminReportExport implements FromCollection, WithHeadings, WithMapping, Sh
                     __('message.pickup_date_time'),
                     __('message.drop_date_time'),
                     __('message.total_amount'),
-                    // __('message.admin_commission'),
+                   // __('message.admin_commission'),
                     __('message.company_fee'),
                     __('message.expenses'),
                     __('message.driver_commission'),

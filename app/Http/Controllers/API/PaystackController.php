@@ -4,142 +4,193 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PaystackTransaction;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
-use App\Models\PaymentGateway;
-use Illuminate\Support\Facades\Log;
+use App\Models\Payment;
+use App\Models\RideRequest;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
+use App\Traits\PaymentTrait;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaystackController extends Controller
 {
-    public function storeTransaction(Request $request){
-        $validator = Validator::make($request->all(), [
-            'reference_id' => 'required|string|unique:paystack_transactions,reference_id',
-            'email' => 'required|email',
-            'amount' => 'required|numeric|min:1',
+    use PaymentTrait;
+
+    public function initializePayment(Request $request)
+    {
+        $request->validate([
+            'ride_request_id' => 'nullable|exists:ride_requests,id',
+            'type'            => 'nullable|string|in:wallet_topup',
+            'amount'          => 'required_if:type,wallet_topup|numeric|min:1',
         ]);
 
-        if ($validator->fails()) {
-            return json_message_response($validator->errors(), 422);
+        $user = auth()->user();
+        $email = $user->email;
+        $amount = 0;
+        $metadata = [
+            'user_id' => $user->id,
+            'type'    => $request->type ?? 'ride_payment',
+        ];
+
+        if ($request->type === 'wallet_topup') {
+            $amount = (float) $request->amount;
+        } else {
+            $request->validate([
+                'ride_request_id' => 'required|exists:ride_requests,id',
+            ]);
+            $rideRequest = RideRequest::with('rider')->find($request->ride_request_id);
+            $amount = (float) $rideRequest->total_amount;
+            $email = $rideRequest->rider->email;
+            $metadata['ride_request_id'] = $rideRequest->id;
         }
 
-        $transaction = PaystackTransaction::create([
-            'user_id' => $request->user_id,
-            'reference_id' => $request->reference_id,
-            'email' => $request->email,
-            'amount' => $request->amount,
-            'status' => 'pending',
+        $secretKey = getPaystackSecretKey();
+
+        if (!$secretKey) {
+            return json_message_response(__('message.paystack_not_configured'), 400);
+        }
+
+        $response = Http::withToken($secretKey)->post('https://api.paystack.co/transaction/initialize', [
+            'email' => $email,
+            'amount' => $amount * 100, // Paystack amount is in kobo (base unit)
+            'metadata' => $metadata,
         ]);
 
-        $response = [
-            'message' => 'Transaction created successfully',
-        ];
-        return json_custom_response($response);
+        if ($response->successful()) {
+            return json_custom_response($response->json());
+        }
+
+        return json_message_response($response->json()['message'] ?? 'Failed to initialize Paystack payment.', 400);
     }
 
-    public function updateTransactionStatus(Request $request){
-        $validator = Validator::make($request->all(), [
-            'reference_id' => 'required|string|exists:paystack_transactions,reference_id',
+    public function verifyPayment(Request $request)
+    {
+        $request->validate([
+            'reference' => 'required',
         ]);
 
-        if ($validator->fails()) {
-            return json_message_response($validator->errors(), 422);
+        $secretKey = getPaystackSecretKey();
+
+        if (!$secretKey) {
+            return json_message_response(__('message.paystack_not_configured'), 400);
         }
 
-        $transaction = PaystackTransaction::where(['reference_id'=> $request->reference_id, 'user_id' => $request->user_id, 'status' => 'pending'])->first();
-        if (!$transaction) {
-            return json_message_response('Transaction not found', 404);
-        }
+        $response = Http::withToken($secretKey)->get("https://api.paystack.co/transaction/verify/{$request->reference}");
 
-        $transaction->status = $request->status;
-        $transaction->response_data = $request->response_data ?? $transaction->response_data;
-        $transaction->last_checked_at = now();
-        $transaction->save();
+        if ($response->successful()) {
+            $data = $response->json()['data'];
+            if ($data['status'] === 'success') {
+                $metadata = $data['metadata'];
+                $type = $metadata['type'] ?? 'ride_payment';
 
-        $response = [
-            'message' => 'Transaction status updated successfully',
-        ];
-        return json_custom_response($response);
-    }
+                if ($type === 'wallet_topup') {
+                    $userId = $metadata['user_id'];
+                    $amount = $data['amount'] / 100; // Convert from kobo back to base unit
 
-    public function handleWebhook(Request $request){
-        $paystackSignature = $request->header('x-paystack-signature');
-        Log::channel('paystack_webhook')->info('Paystack Webhook Received', ['signature' => $paystackSignature, 'line' => __LINE__]);
-
-        $paystackCredentials = PaymentGateway::where(['type'=>'paystack'])->first();
-
-        $credentialsData = $paystackCredentials->is_test == 1 ? $paystackCredentials->test_value : $paystackCredentials->live_value;
-
-        $secretKey = $credentialsData['secret_key'] ?? null;
-
-        $payload = $request->getContent();
-        $calculatedHash = hash_hmac('sha512', $payload, $secretKey);
-
-        // Verify signature
-        if ($calculatedHash !== $paystackSignature) {
-            Log::channel('paystack_webhook')->warning('Paystack webhook signature mismatch');
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $data = $request->all();
-        Log::channel('paystack_webhook')->info('Webhook Payload', $data);
-
-        $event = $data['event'] ?? null;
-        $eventData = $data['data'] ?? [];
-
-        $reference = $eventData['reference'] ?? null;
-
-        if (!$reference) {
-            Log::channel('paystack_webhook')->warning('Webhook missing reference', ['reference' => $reference, 'line' => __LINE__]);
-            return response()->json(['message' => 'Missing reference'], 400);
-        }
-
-        if ($event === 'charge.success') {
-            $transaction = PaystackTransaction::where(['reference_id' => $reference])->first();
-    
-            if ($transaction && $transaction->status === 'pending') {
-                DB::beginTransaction();
-                try {
-                    $transaction->status = 'success';
-                    $transaction->response_data = $eventData;
-                    $transaction->save();
-    
-                    $wallet = Wallet::firstOrCreate(['user_id' => $transaction->user_id]);
-    
-                    $wallet->total_amount += $transaction->amount;
+                    $wallet = Wallet::firstOrCreate(['user_id' => $userId]);
+                    $wallet->total_amount += $amount;
                     $wallet->save();
-    
+
+                    $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+                    $currency_data = currencyArray($currency_code);
+                    $currency = strtolower($currency_data['code']);
+
                     WalletHistory::create([
-                        'user_id' => $transaction->user_id,
-                        'datetime' => now(),
-                        'type' => 'credit',
+                        'user_id'          => $userId,
+                        'type'             => 'credit',
                         'transaction_type' => 'topup',
-                        'balance' => $wallet->total_amount,
-                        'amount' => $transaction->amount,
+                        'currency'         => $currency,
+                        'amount'           => $amount,
+                        'balance'          => $wallet->total_amount,
+                        'datetime'         => now(),
+                        'data'             => json_encode(['reference' => $request->reference]),
                     ]);
-    
-                    DB::commit();
-                    Log::channel('paystack_webhook')->error('Webhook charge.success', ['reference_id' => $reference, 'line' => __LINE__]);
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    Log::channel('paystack_webhook')->error('Webhook charge.success error', ['error' => $e->getMessage(), 'line' => __LINE__]);
+
+                    return json_message_response(__('message.wallet_topped_up'), 200);
                 }
+
+                // Legacy flow / ride_payment flow
+                $rideRequestId = $metadata['ride_request_id'] ?? null;
+                if (!$rideRequestId) {
+                    return json_message_response(__('message.ride_request_id_not_found_metadata'), 400);
+                }
+
+                $rideRequest = RideRequest::find($rideRequestId);
+
+                if (!$rideRequest) {
+                    return json_message_response(__('message.ride_request_not_found'), 404);
+                }
+
+                $payment = Payment::where('ride_request_id', $rideRequestId)->first();
+                if (!$payment) {
+                     // Create payment if not exists
+                     $payment = Payment::create([
+                        'rider_id' => $rideRequest->rider_id,
+                        'ride_request_id' => $rideRequestId,
+                        'datetime' => now(),
+                        'total_amount' => $rideRequest->total_amount,
+                        'payment_type' => 'paystack',
+                        'txn_id' => $request->reference,
+                        'payment_status' => 'paid',
+                     ]);
+                } else {
+                    $payment->update([
+                        'payment_status' => 'paid',
+                        'txn_id' => $request->reference,
+                        'payment_type' => 'paystack',
+                    ]);
+                }
+
+                $this->walletTransaction($rideRequestId);
+
+                return json_message_response(__('message.payment_successful'), 200);
             }
-            Log::channel('paystack_webhook')->error('Webhook charge.success transaction not found', ['reference_id' => $reference, 'line' => __LINE__]);
         }
-    
-        if ($event === 'charge.failed') {
-            $transaction = PaystackTransaction::where(['reference_id' => $reference])->first();
-    
-            if ($transaction && $transaction->status === 'pending') {
-                $transaction->status = 'failed';
-                $transaction->response_data = $eventData;
-                $transaction->save();
-            }
+
+        return json_message_response(__('message.payment_verification_failed'), 400);
+    }
+
+    public function initiateTransfer($withdrawRequest)
+    {
+        $user = $withdrawRequest->user;
+        $bankAccount = $user->userBankAccount;
+
+        if (!$bankAccount || !$bankAccount->account_number || !$bankAccount->bank_code) {
+            return ['status' => false, 'message' => __('message.bank_account_details_missing')];
         }
-    
-        return response()->json(['status' => 'success'], 200);
+
+        $secretKey = getPaystackSecretKey();
+
+        // 1. Create Transfer Recipient
+        $recipientResponse = Http::withToken($secretKey)->post('https://api.paystack.co/transferrecipient', [
+            'type' => 'nuban',
+            'name' => $bankAccount->account_holder_name ?? $user->display_name,
+            'account_number' => $bankAccount->account_number,
+            'bank_code' => $bankAccount->bank_code,
+            'currency' => strtoupper($withdrawRequest->currency ?? 'NGN'),
+        ]);
+
+        if (!$recipientResponse->successful()) {
+            return ['status' => false, 'message' => $recipientResponse->json()['message'] ?? 'Failed to create transfer recipient.'];
+        }
+
+        $recipientCode = $recipientResponse->json()['data']['recipient_code'];
+
+        // 2. Initiate Transfer
+        $transferResponse = Http::withToken($secretKey)->post('https://api.paystack.co/transfer', [
+            'source' => 'balance',
+            'amount' => $withdrawRequest->amount * 100, // Amount in kobo
+            'recipient' => $recipientCode,
+            'reason' => 'Wallet Withdrawal',
+            'metadata' => [
+                'withdraw_request_id' => $withdrawRequest->id,
+            ],
+        ]);
+
+        if ($transferResponse->successful()) {
+            return ['status' => true, 'data' => $transferResponse->json()['data']];
+        }
+
+        return ['status' => false, 'message' => $transferResponse->json()['message'] ?? 'Transfer failed.'];
     }
 }

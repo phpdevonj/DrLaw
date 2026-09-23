@@ -115,7 +115,7 @@ class DriverEarningDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'DriverEarning_' . date('YmdHis');
     }

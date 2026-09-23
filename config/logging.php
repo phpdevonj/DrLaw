@@ -108,13 +108,6 @@ return [
             'level' => 'info',
             'days' => 14,
         ],
-
-        'paystack_webhook' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/paystack_webhook.log'),
-            'level' => 'info',
-            'days' => 14,
-        ],
         'driver_assignment_regular' => [
             'driver' => 'daily',
             'path' => storage_path('logs/api/driver_assignment_regular.log'),
@@ -133,21 +126,30 @@ return [
             'level' => 'info',
             'days' => 14,
         ],
-
-        'payfast_itn' => [
+        'firebase_notification' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/payfast_itn.log'),
+            'path' => storage_path('logs/firebase_notification.log'),
             'level' => 'info',
             'days' => 14,
         ],
-
-        'payhub_callback' => [
+        'cancel_arrived_rides' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/payhub_callback.log'),
+            'path' => storage_path('logs/cancel_arrived_rides.log'),
             'level' => 'info',
             'days' => 14,
         ],
-
+        'mark_inactive_driver_offline' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/mark_inactive_driver_offline.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+        'surge' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/surge.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),

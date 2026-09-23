@@ -114,7 +114,7 @@ class DocumentDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'Documents_' . date('YmdHis');
     }

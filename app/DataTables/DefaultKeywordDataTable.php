@@ -112,7 +112,7 @@ class DefaultKeywordDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'DefaultKeyword_' . date('YmdHis');
     }

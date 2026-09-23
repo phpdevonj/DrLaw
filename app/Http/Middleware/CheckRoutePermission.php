@@ -157,6 +157,9 @@ class CheckRoutePermission
             'languagewithkeyword.destroy' => 'languagewithkeyword-delete',
             'languagewithkeyword.show'    => 'languagewithkeyword-show',
             'permission.save'             => 'permission add',
+            'referralSettingsUpdate'      => 'setting edit',
+            'getLanguageDriverMessage'    => 'setting list',
+            'saveLanguageDriverMessage'   => 'setting edit',
         ];
         
     

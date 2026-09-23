@@ -97,7 +97,7 @@ class AdminUserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(AdminUserRequest $request, $id)
+    public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 

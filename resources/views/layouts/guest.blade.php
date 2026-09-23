@@ -18,6 +18,7 @@
         @if(isset($assets) && in_array('phone', $assets))
             <link rel="stylesheet" href="{{ asset('vendor/intlTelInput/css/intlTelInput.css') }}">
         @endif
+        <link rel="stylesheet" href="{{ asset('vendor/@fortawesome/fontawesome-free/css/all.min.css') }}"/>
     </head>
     <body class=" " >
 

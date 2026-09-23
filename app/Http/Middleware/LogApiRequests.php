@@ -19,19 +19,37 @@ class LogApiRequests
     protected $sensitiveKeys = ['password', 'password_confirmation', 'token', 'access_token', 'api_token'];
 
     public function handle(Request $request, Closure $next)
-    {        
+    {
         $response = $next($request);
 
         $status = $response->getStatusCode();
 
-        // Log all API requests and responses
-        $filteredRequestData = $this->filterSensitiveData($request->all());
+        $filteredRequestData = $this->filterSensitiveData(
+            $request->isJson()
+                ? $request->json()->all()
+                : $request->all()
+        );
+        
+        $contentType = $response->headers->get('Content-Type');
 
-        $content = method_exists($response, 'getContent') ? $response->getContent() : 'Streamed response';
+        // Skip logging for file/binary responses
+        if (
+            str_contains($contentType, 'application/pdf') ||
+            str_contains($contentType, 'application/octet-stream') ||
+            str_contains($contentType, 'image/') ||
+            str_contains($contentType, 'zip')
+        ) {
+            $decodedContent = 'Binary/File response not logged';
+        } else {
+            $content = method_exists($response, 'getContent')
+                ? $response->getContent()
+                : 'Streamed response';
 
-        $decodedContent = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $decodedContent = $content;
+            $decodedContent = json_decode($content, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $decodedContent = $content;
+            }
         }
 
         $logLevel = $status >= 400 ? 'warning' : 'info';
@@ -43,18 +61,16 @@ class LogApiRequests
             'method' => $request->method(),
             'body' => $filteredRequestData,
             'status' => $status,
-            'response' => $this->filterSensitiveData($decodedContent),
+            'response' => is_array($decodedContent)
+                ? $this->filterSensitiveData($decodedContent)
+                : $decodedContent,
         ]);
 
         return $response;
     }
 
-    private function filterSensitiveData($data)
+    private function filterSensitiveData(array $data)
     {
-        if (!is_array($data)) {
-            return $data;
-        }
-
         foreach ($data as $key => &$value) {
             if (in_array($key, $this->sensitiveKeys)) {
                 $value = '*****'; // Mask value

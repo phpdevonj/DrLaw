@@ -50,7 +50,7 @@ class LanguageWithKeywordListController extends Controller
 
         $button = '';
         $reset_file_button = '<a href="' . route('languagewithkeyword.index') . '" class=" mr-1 mt-0 btn btn-sm btn-outline-danger border-radius-10 mt-4 p-2"><i class="ri-repeat-line" style="font-size:12px"></i> ' . __('message.reset_filter') . '</a>';
-        $pdfbutton = '<a href="'.route('download.language.with,keyword.list',$filter_array).'" class="float-right mr-1 border-radius-10 btn btn-md btn-outline-dark"><i class="fas fa-file-csv"></i> '.__('message.download_csv').'</a>';
+        $pdfbutton = '<a id="download-csv-btn" href="'.route('download.language.with,keyword.list',$filter_array).'" class="float-right mr-1 border-radius-10 btn btn-md btn-outline-dark"><i class="fas fa-file-csv"></i> '.__('message.download_csv').'</a>';
         return $dataTable->render('global.languagewithkeyword-datatable', compact('pageTitle','button','auth_user','language','keyword','screen','pdfbutton','reset_file_button'));
     }
 

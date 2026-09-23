@@ -17,7 +17,7 @@ class CreateRegionsTable extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('distance_unit')->nullable()->default('km')->comment('km,mile'); 
-            $table->polygon('coordinates')->nullable();
+            $table->geometry('coordinates')->nullable();
             $table->tinyInteger('status')->nullable()->default('1');
             $table->string('timezone')->nullable()->default('UTC');
             $table->timestamps();

@@ -108,7 +108,7 @@ class UserAddressDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'UserAddress_' . date('YmdHis');
     }

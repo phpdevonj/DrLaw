@@ -44,7 +44,7 @@ class AdminUserDataTable extends DataTable
                 return $query->user_type;
             })
             ->editColumn('display_name', function ($query) {
-                return '<a href="'.route('rider.show',$query->id).'">'.$query->display_name.'</span></a>';
+                return $query->display_name;
 
             })
             ->editColumn('created_at', function($query) {
@@ -62,6 +62,15 @@ class AdminUserDataTable extends DataTable
             // })
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
+            })
+            ->editColumn('contact_number' , function ( $query ) {
+                if (!$query->contact_number) {
+                    return 'Not Available';
+                }
+
+                $number = formatPhoneNumber($query->contact_number);
+
+                return maskSensitiveInfo('contact_number', $number, 'Not Available');
             })
             ->addIndexColumn()
             ->addColumn('action', 'admin_user.action')
@@ -168,7 +177,7 @@ class AdminUserDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'AdminUser_' . date('YmdHis');
     }

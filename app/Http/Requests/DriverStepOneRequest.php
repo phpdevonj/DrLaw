@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class DriverStepOneRequest extends FormRequest
 {
@@ -18,13 +19,6 @@ class DriverStepOneRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'full_contact_number' => $this->country_code . $this->contact_number,
-        ]);
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -32,27 +26,29 @@ class DriverStepOneRequest extends FormRequest
      */
     public function rules()
     {
-        $rules = [];
+        $user_type = 'driver';
 
         $rules = [
             'first_name' => 'required|string|max:255',
             'last_name'  => 'required|string|max:255',
-            'username'   => 'required|unique:users,username',
+            'username'   => [
+                'required',
+                Rule::unique('users', 'username')->where(fn ($q) => $q->where('user_type', $user_type)),
+            ],
             'password' => 'required|min:8',
-            'email'      => 'required|email|unique:users,email',
-            'contact_number' => 'required|max:20',
-            'full_contact_number' => 'required|unique:users,contact_number',
+            'email'      => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->where(fn ($q) => $q->where('user_type', $user_type)),
+            ],
+            'contact_number' => [
+                'required',
+                'max:20',
+                Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type)),
+            ],
         ];
 
         return $rules;
-    }
-
-    public function messages()
-    {
-        return [
-            'contact_number.required' => 'Mobile number is required.',
-            'full_contact_number.unique' => 'This mobile number has already been taken.',
-        ];
     }
 
     /**

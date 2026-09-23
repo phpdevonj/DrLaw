@@ -550,32 +550,26 @@ h6 .notification_count { font-weight: 400; }
 }
 
 /* Light badges with color variations */
-.badge-light-primary {
-    background-color: #7ab9fd5e; /* Light shade of primary */
+.badge-light-primary,
+.badge-light-secondary,
+.badge-light-success,
+.badge-light-danger,
+.badge-light-warning,
+.badge-light-info,
+.badge-light-dark{
+    background-color: #0095ff1a;
+
 }
 
-.badge-light-secondary {
-    background-color: #e2e3e5;
-}
-
-.badge-light-success {
-    background-color: #70fa904c;
-}
-
-.badge-light-danger {
-    background-color: #f7415038;
-}
-
-.badge-light-warning {
-    background-color: #f6d3618b;
-}
-
-.badge-light-info {
-    background-color: #d1ecf1;
-}
-
-.badge-light-dark {
-    background-color: #d6d8d9;
+.dark .badge-light-primary,
+.dark .badge-light-secondary,
+.dark .badge-light-success,
+.dark .badge-light-danger,
+.dark .badge-light-warning,
+.dark .badge-light-info,
+.dark .badge-light-dark,
+.dark .badge-light-dark {
+    background-color: #ffffff0d;
 }
 
 /* Slide from Right to Left */

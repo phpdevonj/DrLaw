@@ -72,7 +72,7 @@ class Coupon extends Model
         
         switch ($coupon_data->coupon_type) {
             case 'first_ride':
-                $total = RideRequest::where('rider_id',request('rider_id'))->count();
+                $total = RideRequest::where('rider_id',request('rider_id'))->where('status', 'completed')->count();
                 return $total < $coupon_data->usage_limit_per_rider ? 200 : 406 ;
                 break;
             case 'region_wise':
@@ -85,15 +85,42 @@ class Coupon extends Model
                 break;
             case 'service_wise':
                 if(isset($coupon_data->service_ids)) {
-                    return !in_array($service_id, $coupon_data->service_ids) ? 200 : 400 ;
+                    return in_array($service_id, $coupon_data->service_ids) ? 200 : 400 ;
                 }
+                break;
+            case 'new_user':
+                $riderId = request('rider_id');
+
+                // Check rider account age
+                $rider = User::find($riderId);                
+                if (!$rider) {
+                    return 404;
+                }
+
+                // Rider must be registered after coupon start date
+                if ($rider->created_at->lt($coupon_data->start_date)) {
+                    return 400; // Old user (even if no rides)
+                }
+
+                // Total completed rides by rider
+                $completedRides = RideRequest::where('rider_id', $riderId)->where('status', 'completed')->count();
+
+                // Not a new user anymore
+                if ($completedRides >= $coupon_data->usage_limit_per_rider) {
+                    return 406; // Not eligible
+                }
+
+                // Coupon usage count by rider
+                $couponUsage = RideRequest::where('rider_id', $riderId)->where('coupon_code', $coupon_data->code)->where('status', 'completed')->count();
+
+                return $couponUsage < $coupon_data->usage_limit_per_rider ? 200 : 406 ;
                 break;
             default:
                 # code...
                 break;
         }
 
-        $total = RideRequest::where('rider_id', request('rider_id'))->where('coupon_code',$coupon_data->code)->count();
+        $total = RideRequest::where('rider_id', request('rider_id'))->where('coupon_code',$coupon_data->code)->where('status', 'completed')->count();
         if ($total < $coupon_data->usage_limit_per_rider) {
             return 200;
         } else {

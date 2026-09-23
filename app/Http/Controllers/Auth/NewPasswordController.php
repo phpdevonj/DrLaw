@@ -55,8 +55,8 @@ class NewPasswordController extends Controller
                 // Sync password to Firebase
                 try {
                     $auth = app('firebase.auth');
-                    $firebaseUser = $auth->getUserByEmail($user->email);
 
+                    $firebaseUser = $auth->getUserByEmail($user->email);
                      // Update password in Firebase
                     $auth->changeUserPassword($firebaseUser->uid, $request->password);
                 } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {

@@ -33,7 +33,7 @@
                                 </div>
                                 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('timezone', __('message.timezone'), ['class' => 'form-control-label']) }}
+                                    {{ Form::label('timezone', __('message.timezone').' <span class="text-danger">*</span>', ['class' => 'form-control-label'],false) }}
                                     {{ Form::select('timezone', [], old('timezone') , [
                                         'data-ajax--url' => route('ajax-list', [ 'type' => 'timezone' ]),
                                         'data-placeholder' => __('message.select_field', [ 'name' => __('message.timezone') ]),

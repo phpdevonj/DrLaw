@@ -9,7 +9,7 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = [ 'rider_id', 'ride_request_id', 'datetime', 'total_amount', 'admin_commission', 'driver_commission', 'received_by', 'driver_fee', 'driver_tips', 'fleet_commission', 'payment_type', 'txn_id', 'payment_status', 'transaction_detail' ];
+    protected $fillable = [ 'rider_id', 'ride_request_id', 'datetime', 'total_amount', 'admin_commission', 'driver_commission', 'received_by', 'driver_fee', 'driver_tips', 'fleet_commission', 'payment_type', 'txn_id', 'payment_status', 'transaction_detail', 'credit_used', 'held_payment_intent_id', 'held_payment_amount', 'captured_payment_intent_id' ];
 
     protected $casts = [
         'rider_id'          => 'integer',

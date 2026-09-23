@@ -35,7 +35,7 @@ class SurgePriceRequest extends FormRequest
                     'day'  => 'required|unique:surge_prices,day',
                     'value'     => 'required|numeric',
                     'from_time.*' => 'required|date_format:H:i',
-                    'to_time.*' => 'required|date_format:H:i|after:from_time.*',
+                    'to_time.*' => 'required|date_format:H:i|after:from_time.*',                    
                 ];
                 break;
             case 'patch':

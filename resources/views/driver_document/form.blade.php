@@ -21,7 +21,6 @@
                     <div class="card-body">
                         <div class="new-user-info">
                             <div class="row">
-                                
                                     <div class="form-group col-md-4">
                                         {{ Form::label('driver_id', __('message.select_name',[ 'select' => __('message.driver') ]).' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
                                         {{ Form::select('driver_id', isset($id) ? [ optional($data->driver)->id => optional($data->driver)->display_name] : [], old('driver_id'), [
@@ -66,10 +65,9 @@
                                     {{ Form::text('expire_date', old('expire_date'),[ 'class' =>'form-control min-datepicker', 'placeholder' => __('message.expire_date'), 'required' => $has_expiry_date == 1 ? 'required' : null ]) }}
                                 </div>
                                 
-                                
                                     <div class="form-group col-md-4">
                                         {{ Form::label('is_verified', __('message.is_verify').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                        {{ Form::select('is_verified',[ '0' => __('message.pending'), '1' => __('message.approved'), '2' => __('message.rejected') ], old('is_verified'), [ 'id' => 'is_verified', 'class' => 'form-control select2js', 'required']) }}
+                                        {{ Form::select('is_verified',[ '0' => __('message.pending'), '1' => __('message.approved'), '2' => __('message.rejected'), '3' => __('message.expired') ], old('is_verified'), [ 'id' => 'is_verified', 'class' => 'form-control select2js', 'required']) }}
                                     </div>
 
                                 <div class="form-group col-md-4">
@@ -102,7 +100,26 @@
                                                 data-message='{{ __("message.remove_file_msg") }}'>
                                                 <i class="ri-close-circle-line"></i>
                                             </a>
-                                            <a href="{{ $image }}" class="d-block mt-2" download target="_blank"><i class="fas fa-download "></i> {{ __('message.download') }}</a>
+                                            <div class="d-flex mt-2">
+                                                <a href="javascript:void(0)" data-toggle="modal" data-target="#documentModal" class="mr-3"><i class="fas fa-eye "></i> {{ __('message.view') }}</a>
+                                                <a href="{{ $image }}" download target="_blank"><i class="fas fa-download "></i> {{ __('message.download') }}</a>
+                                            </div>
+
+                                            <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-xl">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="documentModalLabel">{{ __('message.document') }}</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body text-center">
+                                                            <img src="{{ $image }}" alt="Document" class="img-fluid">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                     </div>
                                 @endif
                             </div>

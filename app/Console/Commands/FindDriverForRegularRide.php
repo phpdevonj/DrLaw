@@ -13,6 +13,8 @@ use App\Jobs\NotifyViaMqtt;
 use App\Http\Resources\RideRequestResource;
 use App\Models\RideRequestHistory;
 use Illuminate\Support\Facades\Log;
+use App\Models\Service;
+use App\Http\Resources\EstimateServiceResource;
 
 class FindDriverForRegularRide extends Command
 {
@@ -140,12 +142,29 @@ class FindDriverForRegularRide extends Command
 
         $minumum_amount_get_ride = SettingData('wallet', 'min_amount_to_get_ride') ?? null;
 
-        $nearby_driver = User::selectRaw("id, user_type, player_id, latitude, longitude, ( $unit_value * acos( cos( radians($latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians($longitude) ) + sin( radians($latitude) ) * sin( radians( latitude ) ) ) ) AS distance")
-                        ->where('user_type', 'driver')->where('status', 'active')->where('is_online',1)->where('is_available',1)
+        $limitTime = now()->subMinutes(30);
+
+        // Get duration for driver acceptance (default 15s)
+        $driver_accept_time = SettingData('ride', 'ride_accept_decline_duration_for_driver_in_second') ?? 15;
+
+        // Find drivers who are currently assigned to another active request
+        $busy_driver_ids = RideRequest::where('status', 'new_ride_requested')
+            ->whereNotNull('riderequest_in_driver_id')
+            ->where('riderequest_in_datetime', '>', now()->subSeconds($driver_accept_time))
+            ->pluck('riderequest_in_driver_id')
+            ->toArray();
+
+        $nearby_driver = User::selectRaw("id, user_type, player_id, fcm_token, latitude, longitude, ( $unit_value * acos( cos( radians($latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians($longitude) ) + sin( radians($latitude) ) * sin( radians( latitude ) ) ) ) AS distance")
+                        ->where('user_type', 'driver')
+                        ->where('status', 'active')
+                        ->where('is_online',1)
+                        ->where('is_available',1)
                         ->where('service_id', $ride_request->service_id )
                         ->whereNotIn('id', $cancelled_driver_ids)
-                        ->having('distance', '<=', $radius)
-                        ->orderBy('distance','asc');
+                        ->whereNotIn('id', $busy_driver_ids) // Exclude busy drivers
+                        ->where('last_actived_at', '>=', $limitTime) // NEW CONDITION
+                        ->having('distance', '<=', $radius);
+
         if( $minumum_amount_get_ride != null ) {
             $nearby_driver = $nearby_driver->whereHas('userWallet', function($q) use($minumum_amount_get_ride) {
                 $q->where('total_amount', '>=', $minumum_amount_get_ride);
@@ -190,17 +209,75 @@ class FindDriverForRegularRide extends Command
                 $firebaseData->set($rideData);
                 Log::channel('driver_assignment_regular')->info("Firebase updated for Ride ID: {$ride_request->id} [Line: " . __LINE__ . "]");
 
+                // get distance and time using google map api
+                $multi_drop_enabled = (int) SettingData('RIDE', 'RIDE_MULTIPLE_DROP_LOCATION') === 1;
+                if ($multi_drop_enabled && !empty($ride_request->multi_drop_location)) {
+                    $place_details = og_get_distance_matrix_multiple_destination(
+                        $ride_request->start_latitude, 
+                        $ride_request->start_longitude, 
+                        $ride_request->end_latitude, 
+                        $ride_request->end_longitude, 
+                        $ride_request->multi_drop_location
+                    );
+                    $dropoff_distance_in_meters = $place_details['distance'];
+                    $dropoff_time_in_seconds = $place_details['duration'];
+                } else {
+                    $place_details = og_get_distance_matrix(
+                        $ride_request->start_latitude, 
+                        $ride_request->start_longitude, 
+                        $ride_request->end_latitude, 
+                        $ride_request->end_longitude
+                    );
+                    $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
+                    $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);
+                }
+
+                $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
+
+                $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+                $currecy = currencyArray($currency_code);
+                $code = $currecy['symbol'] ?? '$';
+
+                // Prepare parameters required by resource
+                request()->merge([
+                    'distance_in_unit'          => $distance_in_unit ?? 0,
+                    'dropoff_distance_in_meters'=> $dropoff_distance_in_meters ?? 0,
+                    'dropoff_time_in_seconds'   => $dropoff_time_in_seconds ?? 0,
+                    'pick_lat'                  => $ride_request->start_latitude ?? null,
+                    'pick_lng'                  => $ride_request->start_longitude ?? null,
+                    'drop_lat'                  => $ride_request->end_latitude ?? null,
+                    'drop_lng'                  => $ride_request->end_longitude ?? null,
+                    'multi_location'            => $ride_request->multi_drop_location ?? [],
+                    'datetime'                  => $ride_request->datetime ?? null,
+                    'coupon'                    => null,
+                    'is_credit_used'            => false,
+                    'rider_id'                  => $ride_request->rider_id,
+                ]);
+
+                // get estimate time and distance and fare
+                $service = Service::find($ride_request->service_id);
+
+                $item = (new EstimateServiceResource($service))->toArray(request());
+
+                $estimate_time = $item['estimate_time'] ?? 0;
+                $dropoff_distance_in_miles = $item['dropoff_distance_in_miles'] ?? 0;
+                $driver_earning = $item['driver_earning'] ?? 0;
+
+                // Updated new ride requested notification
+                $notification_data = [
+                    'id' => $ride_request->id,
+                    'type' => 'new_ride_requested',
+                    'subject' => __('message.ride.new_ride_requested'),
+                    'message' => __('message.new_ride_requested'),
+                    'rider_id' => $ride_request->rider_id ?? 0,
+                    'driver_id' => $ride_request->driver_id ?? 0,
+                    'amount'        => $code.$driver_earning,
+                    'distance_time'=> "{$estimate_time} ({$dropoff_distance_in_miles}m)",
+                    'estimate' => $estimate_time,
+                ];
+
                 if ($nearby_driver) {
-                    $nearby_driver->notify(new CommonNotification('new_ride_requested', [
-                        'id' => $ride_request->id,
-                        'type' => 'new_ride_requested',
-                        'data' => [
-                            'rider_id' => $ride_request->rider_id,
-                            'rider_name' => optional($ride_request->rider)->display_name ?? '',
-                        ],
-                        'message' => __('message.new_ride_requested'),
-                        'subject' => __('message.ride.new_ride_requested'),
-                    ]));
+                    $nearby_driver->notify(new CommonNotification($notification_data['type'], $notification_data));
                     Log::channel('driver_assignment_regular')->info("Driver (ID: {$nearby_driver->id}) notified for Ride ID: {$ride_request->id} [Line: " . __LINE__ . "]");
                 }
             } else {

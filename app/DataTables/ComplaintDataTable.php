@@ -152,7 +152,7 @@ class ComplaintDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'Complaints_' . date('YmdHis');
     }

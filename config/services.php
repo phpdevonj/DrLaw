@@ -41,18 +41,9 @@ return [
     'fcm' => [
         'key' => env('FIREBASE_SERVER_KEY')
     ],
-
-    'payfast' => [
-        'merchant_id' => env('PAYFAST_MERCHANT_ID'),
-        'merchant_key' => env('PAYFAST_MERCHANT_KEY'),
-        'passphrase' => env('PAYFAST_PASSPHRASE'),
-        'env' => env('PAYFAST_ENV', 'sandbox'),
-    ],
-
-    // Fallback credentials used only until the "PayHub" tab in Payment Settings is configured by the admin.
-    'payhub' => [
-        'api_key' => env('PAYHUB_API_KEY'),
-        'api_secret' => env('PAYHUB_API_SECRET'),
-        'base_url' => env('PAYHUB_BASE_URL', 'https://epayuat.etransactx.online'),
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+        'from_number' => env('TWILIO_FROM_NUMBER'),
     ],
 ];

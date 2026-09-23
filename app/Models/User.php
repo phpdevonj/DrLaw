@@ -22,7 +22,7 @@ class User extends Authenticatable implements HasMedia
      * @var array<int, string>
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'username','country_code', 'contact_number', 'gender', 'email_verified_at', 'address', 'user_type', 'player_id', 'fcm_token', 'fleet_id', 'latitude', 'longitude', 'last_notification_seen', 'status', 'is_online', 'is_available', 'uid', 'login_type', 'display_name', 'timezone', 'service_id', 'is_verified_driver', 'last_location_update_at', 'otp_verify_at','last_actived_at','app_version'
+        'first_name', 'last_name', 'email', 'password', 'username','country_code', 'contact_number', 'gender', 'email_verified_at', 'address', 'user_type', 'player_id', 'fcm_token', 'fleet_id', 'latitude', 'longitude', 'last_notification_seen', 'status', 'is_online', 'is_available', 'uid', 'login_type', 'display_name', 'timezone', 'service_id', 'is_verified_driver', 'last_location_update_at', 'otp_verify_at','last_actived_at','app_version', 'referral_code', 'referred_by', 'device_id', 'device_type', 'date_of_birth', 'license_number', 'license_expiration_date', 'social_security_number','stripe_customer_id', 'current_lang'
     ];
 
     /**
@@ -169,6 +169,25 @@ class User extends Authenticatable implements HasMedia
         )->where('payment_status','paid');
     }
 
+    public function referredBy()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+    
+    public function getReferralCount($status = 'complete')
+    {
+        return $this->referrals()
+            ->when($status, function ($query) use ($status) {
+                return $query->where('status', $status);
+            })
+            ->count();
+    }
+
     public function getDriverScoreAttribute()
     {
         $driverId = $this->id;
@@ -213,4 +232,41 @@ class User extends Authenticatable implements HasMedia
                         ->where('status', 'completed')
                         ->count();
     }
+
+    public static function scopeDriverBaseQuery($query)
+    {
+        $query = $query->where('user_type', 'driver');
+        return $query;
+    }
+    
+    public function hasExpiredDocuments()
+    {
+        return $this->driverDocument()
+            ->where('is_verified', 3)
+            ->exists();
+    }
+
+    public function scopeWithExpiredDocument($query)
+    {
+        return $query->whereHas('driverDocument', function ($q) {
+            $q->where('is_verified', 3);
+        });
+    }
+        public function checkVerified()
+    {
+        if ($this->user_type != 'driver') {
+            return false;
+        }
+
+        // Driver is verified once all required documents are approved.
+        // Ride eligibility additionally requires status == 'active', which is
+        // enforced separately at ride-accept / go-online time.
+        $isVerified = \App\Models\DriverDocument::verifyDriverDocument($this->id);
+
+        $this->is_verified_driver = $isVerified ? 1 : 0;
+        $this->save();
+
+        return $isVerified;
+    }
+
 }

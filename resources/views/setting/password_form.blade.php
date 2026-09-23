@@ -5,20 +5,42 @@
             <div class="form-group has-feedback">
                 {{ Form::label('old_password',__('message.old_password').' <span class="text-danger">*</span>',['class'=>'form-control-label col-md-12'], false ) }}
                 <div class="col-md-12">
-                    {{ Form::password('old', ['class'=>"form-control", "id" => 'old_password' , "placeholder" => __('message.old_password') ,'required']) }}
+                    
+                    <div class="input-group">
+                        {{ Form::password('old', ['class'=>"form-control", "id" => 'old_password' , "placeholder" => __('message.old_password') ,'required']) }}
+                        <div class="input-group-append">
+                            <span class="input-group-text toggle-password" data-toggle="#old_password" style="cursor: pointer;">
+                                <i class="fas fa-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group has-feedback">
                 
                 {{ Form::label('password',__('message.new_password').' <span class="text-danger">*</span>',['class'=>'form-control-label col-md-12'], false ) }}
                 <div class="col-md-12">
-                    {{ Form::password('password', ['class'=>"form-control" , 'id'=>"password", "placeholder" => __('message.new_password') ,'required']) }}
+                    <div class="input-group">
+                        {{ Form::password('password', ['class'=>"form-control" , 'id'=>"password", "placeholder" => __('message.new_password') ,'required']) }}
+                        <div class="input-group-append">
+                            <span class="input-group-text toggle-password" data-toggle="#password" style="cursor: pointer;">
+                                <i class="fas fa-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group has-feedback">
                 {{ Form::label('password-confirm',__('message.confirm_new_password').' <span class="text-danger">*</span>',['class'=>'form-control-label col-md-12'], false ) }}
                 <div class="col-md-12">
-                    {{ Form::password('password_confirmation', ['class'=>"form-control" , 'id'=>"password-confirm", "placeholder" => __('message.confirm_new_password') ,'required']) }}
+                    <div class="input-group">
+                        {{ Form::password('password_confirmation', ['class'=>"form-control" , 'id'=>"password-confirm", "placeholder" => __('message.confirm_new_password') ,'required']) }}
+                        <div class="input-group-append">
+                            <span class="input-group-text toggle-password" data-toggle="#password-confirm" style="cursor: pointer;">
+                                <i class="fas fa-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group ">

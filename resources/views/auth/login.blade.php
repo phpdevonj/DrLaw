@@ -28,7 +28,14 @@
                                 <div class="col-lg-12">
                                     <div class="form-group">
                                         <label >{{ __('message.password') }}</label>
-                                        <input class="form-control" type="password" placeholder="********"  name="password"  required autocomplete="current-password">
+                                        <div class="input-group">
+                                            <input id="password" class="form-control" type="password" placeholder="********" name="password" required autocomplete="current-password">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text toggle-password" data-toggle="#password"  style="cursor: pointer;">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">

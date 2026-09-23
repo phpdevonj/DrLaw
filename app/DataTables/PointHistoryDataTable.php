@@ -134,7 +134,7 @@ class PointHistoryDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'PointHistory_' . date('YmdHis');
     }

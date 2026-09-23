@@ -82,7 +82,7 @@ class Permission extends Model implements PermissionContract
      *
      * @return \Spatie\Permission\Contracts\Permission
      */
-    public static function findByName(string $name, $guardName = null): PermissionContract
+    public static function findByName(string $name, ?string $guardName = null): PermissionContract
     {
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
         $permission = static::getPermissions(['name' => $name, 'guard_name' => $guardName])->first();
@@ -103,7 +103,7 @@ class Permission extends Model implements PermissionContract
      *
      * @return \Spatie\Permission\Contracts\Permission
      */
-    public static function findById(int $id, $guardName = null): PermissionContract
+    public static function findById(string|int $id, ?string $guardName = null): PermissionContract
     {
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
         $permission = static::getPermissions(['id' => $id, 'guard_name' => $guardName])->first();
@@ -123,7 +123,7 @@ class Permission extends Model implements PermissionContract
      *
      * @return \Spatie\Permission\Contracts\Permission
      */
-    public static function findOrCreate(string $name, $guardName = null): PermissionContract
+    public static function findOrCreate(string $name, ?string $guardName = null): PermissionContract
     {
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
         $permission = static::getPermissions(['name' => $name, 'guard_name' => $guardName])->first();

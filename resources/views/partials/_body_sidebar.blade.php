@@ -87,6 +87,14 @@
                 ->prepend('<i class="fas fa-list"></i>')
                 ->link->attr(['class' => '']);
 
+            $with_expired_docuemtts = (clone App\Models\User::driverBaseQuery())
+                ->withExpiredDocument()
+                ->count();
+            $menu->driver->add('<span>' . __('message.with_expired_document') . '</span>' . ($with_expired_docuemtts > 0 ? '<span class="badge badge-dark ride-badge">' . $with_expired_docuemtts . '</span>' : ''), ['class' => 'sidebar-layout', 'route' => ['driver.pending', 'status' => 'pending', 'is_document_expired' => 1]])
+                ->data('permission', 'driver list')
+                ->prepend('<i class="fas fa-id-card"></i>')
+                ->link->attr(['class' => '']);
+
             $menu->driver->add('<span>'.__('message.add_form_title',['form' => __('message.driver')]).'</span>', ['class' => request()->is('driver/*/edit') ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'driver.create'])
                 ->data('permission', [ 'driver add', 'driver edit'])
                 ->prepend('<i class="fas fa-plus-square"></i>')
@@ -167,7 +175,6 @@
             ->data('permission', 'riderequest list')
             ->prepend('<i class="fas fa-list"></i>')
             ->link->attr(['class' => '']);
-            
             $menu->riderequest->add('<span>'.__('message.list_form_title',['form' => __('message.scheduled_upcoming')]).'</span>', ['class' => 'sidebar-layout' ,'route' => ['riderequest.index', 'riderequest_type' => 'scheduled_upcoming']])
             ->data('permission', 'riderequest list')
             ->prepend('<i class="fas fa-list"></i>')
@@ -312,6 +319,23 @@
                 ->prepend('<i class="fas fa-plus-square"></i>')
                 ->link->attr(['class' => '']);
 
+            $menu->add('<span>'.__('message.car_model').'</span>', [ 'class' => ''])
+                ->prepend('<i class="fas fa-car"></i>')
+                ->nickname('car_model')
+                ->data('permission', '')
+                ->link->attr(['class' => ''])
+                ->href('#car_model');
+
+                $menu->car_model->add('<span>'.__('message.list_form_title',['form' => __('message.car_model')]).'</span>', ['class' => 'sidebar-layout' ,'route' => 'car-models.index'])
+                    ->data('permission', '')
+                    ->prepend('<i class="fas fa-list"></i>')
+                    ->link->attr(['class' => '']);
+
+                $menu->car_model->add('<span>'.__('message.add_form_title',['form' => __('message.car_model')]).'</span>', ['class' => request()->is('car-models/*/edit') ? 'sidebar-layout active' : 'sidebar-layout','route' => 'car-models.create'])
+                    ->data('permission', [''])
+                    ->prepend('<i class="fas fa-plus-square"></i>')
+                    ->link->attr(['class' => '']);
+
         $menu->add('<span>'.__('message.pushnotification').'</span>', [ 'class' => '' ])
             ->prepend('<i class="fas fa-bullhorn"></i>')
             ->nickname('pushnotification')
@@ -353,6 +377,11 @@
                 ->prepend('<i class="fas fa-money-bill"></i>')
                 ->link->attr(['class' => '']);
 
+            $menu->report->add('<span>'.__('message.referrals').'</span>', ['class' => ( request()->is('referrals') || request()->is('referrals/*') ) ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'referralsReport'])
+            ->data('permission', ['referrals-report'])
+            ->prepend('<i class="fas fa-file-contract"></i>')
+            ->link->attr(['class' => '']);
+
             //$menu->report->add('<span>'.__('message.report',['name' => __('message.driver')]).'</span>', ['class' => ( request()->is('driver-report-list') || request()->is('driver-report-list/*') ) ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'driver.report.list'])
             //    ->data('permission', ['driverearning list'])
             //    ->prepend('<i class="fas fa-file-contract"></i>')
@@ -366,11 +395,16 @@
                 ->href('#pages');
                 
                 //$menu->pages->add('<span>'.__('message.list').'</span>', ['class' => 'sidebar-layout' ,'route' => 'pages.index'])
-                  //  ->data('permission', 'page List')
-                    //->prepend('<i class="fas fa-file-contract"></i>')
-                    //->link->attr(['class' => '']);
+                //    ->data('permission', 'page List')
+                //    ->prepend('<i class="fas fa-file-contract"></i>')
+                //    ->link->attr(['class' => '']);
 
-                $menu->pages->add('<span>'.__('message.terms_condition').'</span>', ['class' => 'sidebar-layout' ,'route' => 'term-condition'])
+                $menu->pages->add('<span>'.__('message.rider_terms_condition').'</span>', ['class' => 'sidebar-layout' ,'route' => 'term-condition'])
+                    ->data('permission', 'terms condition')
+                    ->prepend('<i class="fas fa-file-contract"></i>')
+                    ->link->attr(['class' => '']);
+
+                $menu->pages->add('<span>'.__('message.driver_terms_condition').'</span>', ['class' => 'sidebar-layout' ,'route' => 'driver-term-condition'])
                     ->data('permission', 'terms condition')
                     ->prepend('<i class="fas fa-file-contract"></i>')
                     ->link->attr(['class' => '']);
@@ -378,13 +412,18 @@
                 $menu->pages->add('<span>'.__('message.privacy_policy').'</span>', ['class' => 'sidebar-layout' ,'route' => 'privacy-policy'])
                     ->data('permission', 'privacy policy')
                     ->prepend('<i class="fas fa-user-shield"></i>')
-                    ->link->attr(['class' => '']);       
+                    ->link->attr(['class' => '']);      
+                    
+                $menu->pages->add('<span>'.__('message.about_us').'</span>', ['class' => 'sidebar-layout' ,'route' => 'about-us'])
+                    ->data('permission', 'terms condition')
+                    ->prepend('<i class="fas fa-file-contract"></i>')
+                    ->link->attr(['class' => '']);
         
         $menu->add('<span>'.__('message.driver_location').'</span>', ['route' => 'map'])
                 ->prepend('<i class="fas fa-map"></i>')
                 ->nickname('map')
                 ->data('permission', 'driver location');
-        
+
         $menu->add('<span>'.__('message.heatmap').'</span>', ['route' => 'heatmap'])
             ->prepend('<i class="fas fa-map"></i>')
             ->nickname('heatmap')
@@ -395,42 +434,42 @@
                 ->nickname('setting')
                 ->data('permission', 'setting list');
 
-         //$menu->add('<span>'.__('message.website_section').'</span>', ['class' => ''])
-           // ->prepend('<i class="fas fa-globe-asia"></i>')
-            //->nickname('website_section')
-            //->data('permission', 'website_section list')
-            //->link->attr(['class' => ''])
-            //->href('#website_section');
+        // $menu->add('<span>'.__('message.website_section').'</span>', ['class' => ''])
+        //    ->prepend('<i class="fas fa-globe-asia"></i>')
+        //    ->nickname('website_section')
+        //    ->data('permission', 'website_section list')
+        //    ->link->attr(['class' => ''])
+        //    ->href('#website_section');
 
-            //$menu->website_section->add('<span>'. __('message.information').'</span>', ['class' => 'sidebar-layout' ,'route' => [ 'frontend.website.form', 'app_info'] ])
-            //    ->data('permission', 'information list')
-              //  ->prepend('<i class="fas fa-file-alt"></i>')
-                //->link->attr(['class' => '']);
+        //   $menu->website_section->add('<span>'. __('message.information').'</span>', ['class' => 'sidebar-layout' ,'route' => [ 'frontend.website.form', 'app_info'] ])
+        //        ->data('permission', 'information list')
+        //        ->prepend('<i class="fas fa-file-alt"></i>')
+        //        ->link->attr(['class' => '']);
 
-            //$menu->website_section->add('<span>'. __('message.our_mission').'</span>', ['class' => 'sidebar-layout' ,'route' => 'our-mission.index'])
-              //  ->data('permission', 'our_mission list')
-               // ->prepend('<i class="fa fa-star"></i>')
-               // ->link->attr(['class' => '']);
+        //    $menu->website_section->add('<span>'. __('message.our_mission').'</span>', ['class' => 'sidebar-layout' ,'route' => 'our-mission.index'])
+        //        ->data('permission', 'our_mission list')
+        //        ->prepend('<i class="fa fa-star"></i>')
+        //        ->link->attr(['class' => '']);
 
-            //$menu->website_section->add('<span>'. __('message.why_choose').'</span>', ['class' => 'sidebar-layout' ,'route' => 'why-choose.index'])
-              //  ->data('permission', 'why_choose list')
-                //->prepend('<i class="fa fa-handshake"></i>')
-                //->link->attr(['class' => '']);
+        //    $menu->website_section->add('<span>'. __('message.why_choose').'</span>', ['class' => 'sidebar-layout' ,'route' => 'why-choose.index'])
+        //        ->data('permission', 'why_choose list')
+        //        ->prepend('<i class="fa fa-handshake"></i>')
+        //        ->link->attr(['class' => '']);
 
-            //$menu->website_section->add('<span>'. __('message.client_testimonials').'</span>', ['class' => 'sidebar-layout' ,'route' => 'client-testimonials.index'])
-              //  ->data('permission', 'client_testimonials list')
-               // ->prepend('<i class="fas fa-thumbs-up"></i>')
-               // ->link->attr(['class' => '']);
+        //    $menu->website_section->add('<span>'. __('message.client_testimonials').'</span>', ['class' => 'sidebar-layout' ,'route' => 'client-testimonials.index'])
+        //        ->data('permission', 'client_testimonials list')
+        //        ->prepend('<i class="fas fa-thumbs-up"></i>')
+        //        ->link->attr(['class' => '']);
 
-            //$menu->website_section->add('<span>'. __('message.downloandapp').'</span>', ['class' => 'sidebar-layout', 'route' => [ 'frontend.website.form', 'download_app'] ])
-               // ->data('permission', 'downloandapp list')
-               // ->prepend('<i class="fas fa-download"></i>')
-               // ->link->attr(['class' => '']);
+        //    $menu->website_section->add('<span>'. __('message.downloandapp').'</span>', ['class' => 'sidebar-layout', 'route' => [ 'frontend.website.form', 'download_app'] ])
+        //        ->data('permission', 'downloandapp list')
+        //        ->prepend('<i class="fas fa-download"></i>')
+        //        ->link->attr(['class' => '']);
 
-            //$menu->website_section->add('<span>'. __('message.contactinfo').'</span>', ['class' => 'sidebar-layout', 'route' => [ 'frontend.website.form', 'contactus_info'] ])
-              //  ->data('permission', 'contactinfo list')
-              //  ->prepend('<i class="fas fa-id-badge"></i>')
-              //  ->link->attr(['class' => '']);
+        //    $menu->website_section->add('<span>'. __('message.contactinfo').'</span>', ['class' => 'sidebar-layout', 'route' => [ 'frontend.website.form', 'contactus_info'] ])
+        //        ->data('permission', 'contactinfo list')
+        //        ->prepend('<i class="fas fa-id-badge"></i>')
+        //        ->link->attr(['class' => '']);
 
         })->filter(function ($item) {
             return checkMenuRoleAndPermission($item);

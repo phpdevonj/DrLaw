@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Service;
 use App\Models\Region;
-use Grimzy\LaravelMysqlSpatial\Types\Point;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 use App\Http\Resources\ServiceResource;
 use App\Http\Resources\EstimateServiceResource;
 use App\Http\Requests\ETARequest;
@@ -31,7 +31,7 @@ class ServiceController extends Controller
             $point = new Point($request->latitude, $request->longitude);
             
             $service->whereHas('region',function ($q) use($point) {
-                $q->where('status', 1)->contains('coordinates', $point);
+                $q->where('status', 1)->whereContains('coordinates', $point);
             });
         }
 
@@ -74,7 +74,7 @@ class ServiceController extends Controller
             $point = new Point($request->pick_lat, $request->pick_lng);
             
             $service->whereHas('region',function ($q) use($point) {
-                $q->where('status', 1)->contains('coordinates', $point);
+                $q->where('status', 1)->whereContains('coordinates', $point);
             });
         }
         

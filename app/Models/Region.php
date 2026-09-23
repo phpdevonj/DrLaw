@@ -4,19 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use MatanYadaev\EloquentSpatial\Objects\Polygon;
+
 class Region extends Model
 {
-    use HasFactory, SpatialTrait;
+    use HasFactory, HasSpatial;
     
     protected $fillable = [ 'name', 'distance_unit', 'status', 'timezone' ];
 
-    protected $spatialFields = [
-        'coordinates'
-    ];
-
     protected $casts = [
         'status' => 'integer',
+        'coordinates' => Polygon::class,
     ];
 
     public function regionSos(){

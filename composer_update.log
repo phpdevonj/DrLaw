@@ -1,0 +1,447 @@
+Loading composer repositories with package information
+Updating dependencies
+Lock file operations: 36 installs, 138 updates, 33 removals
+  - Removing asm89/stack-cors (v2.1.1)
+  - Removing benwilkins/laravel-fcm-notification (v4.0.3)
+  - Removing doctrine/instantiator (1.4.1)
+  - Removing ezyang/htmlpurifier (v4.14.0)
+  - Removing facade/flare-client-php (1.9.1)
+  - Removing facade/ignition (2.17.5)
+  - Removing facade/ignition-contracts (1.0.2)
+  - Removing fruitcake/laravel-cors (v2.2.0)
+  - Removing geo-io/interface (v1.0.1)
+  - Removing geo-io/wkb-parser (v1.0.2)
+  - Removing grimzy/laravel-mysql-spatial (5.0.0)
+  - Removing intervention/image (2.7.1)
+  - Removing jmikola/geojson (1.1.1)
+  - Removing laravelcollective/html (v6.3.0)
+  - Removing lcobucci/clock (3.0.0)
+  - Removing league/glide (1.7.1)
+  - Removing maatwebsite/excel (3.1.39)
+  - Removing opis/closure (3.6.3)
+  - Removing phenx/php-font-lib (0.5.6)
+  - Removing phenx/php-svg-lib (0.5.4)
+  - Removing phpdocumentor/reflection-common (2.2.0)
+  - Removing phpdocumentor/reflection-docblock (5.3.0)
+  - Removing phpdocumentor/type-resolver (1.6.1)
+  - Removing phpspec/prophecy (v1.15.0)
+  - Removing riverline/multipart-parser (2.1.2)
+  - Removing sebastian/resource-operations (3.0.3)
+  - Removing stella-maris/clock (0.1.7)
+  - Removing swiftmailer/swiftmailer (v6.3.0)
+  - Removing symfony/polyfill-iconv (v1.25.0)
+  - Removing symfony/polyfill-php72 (v1.25.0)
+  - Removing symfony/polyfill-php73 (v1.25.0)
+  - Removing symfony/polyfill-php81 (v1.29.0)
+  - Removing webmozart/assert (1.10.0)
+  - Upgrading barryvdh/laravel-dompdf (v2.2.0 => v3.1.2)
+  - Upgrading berkayk/onesignal-laravel (v1.0.10 => v2.5.0)
+  - Upgrading beste/clock (2.3.1 => 3.0.0)
+  - Locking beste/in-memory-cache (1.5.0)
+  - Upgrading beste/json (1.4.0 => 1.7.0)
+  - Locking brick/geo (0.13.1)
+  - Upgrading brick/math (0.12.1 => 0.14.8)
+  - Locking carbonphp/carbon-doctrine-types (3.2.0)
+  - Locking composer/pcre (3.3.2)
+  - Locking composer/semver (3.4.4)
+  - Locking cuyz/valinor (2.4.0)
+  - Upgrading dflydev/dot-access-data (v3.0.1 => v3.0.3)
+  - Upgrading doctrine/inflector (2.0.4 => 2.1.0)
+  - Upgrading doctrine/lexer (1.2.3 => 3.0.1)
+  - Upgrading dompdf/dompdf (v2.0.8 => v3.1.5)
+  - Locking dompdf/php-font-lib (1.0.2)
+  - Locking dompdf/php-svg-lib (1.0.2)
+  - Upgrading dragonmantank/cron-expression (v3.3.1 => v3.6.0)
+  - Upgrading egulias/email-validator (2.1.25 => 4.0.4)
+  - Upgrading fakerphp/faker (v1.19.0 => v1.24.1)
+  - Upgrading filp/whoops (2.14.5 => 2.18.4)
+  - Upgrading firebase/php-jwt (v6.10.1 => v7.0.5)
+  - Locking fruitcake/php-cors (v1.4.0)
+  - Upgrading google/auth (v1.40.0 => v1.50.1)
+  - Upgrading google/cloud-core (v1.59.0 => v1.72.1)
+  - Upgrading google/cloud-firestore (v1.43.3 => v1.55.0)
+  - Upgrading google/cloud-storage (v1.42.0 => v1.51.0)
+  - Upgrading google/common-protos (v4.6.0 => 4.14.0)
+  - Upgrading google/gax (v1.34.0 => v1.42.4)
+  - Upgrading google/grpc-gcp (v0.4.0 => 0.4.2)
+  - Upgrading google/longrunning (0.4.3 => 0.7.1)
+  - Upgrading google/protobuf (v4.27.1 => v5.35.0)
+  - Upgrading graham-campbell/result-type (v1.0.4 => v1.1.4)
+  - Upgrading grpc/grpc (1.57.0 => 1.80.0)
+  - Upgrading guzzlehttp/guzzle (7.8.1 => 7.10.3)
+  - Upgrading guzzlehttp/promises (2.0.2 => 2.4.1)
+  - Upgrading guzzlehttp/psr7 (2.6.2 => 2.10.1)
+  - Locking guzzlehttp/uri-template (v1.0.5)
+  - Upgrading hamcrest/hamcrest-php (v2.0.1 => v2.1.1)
+  - Upgrading kreait/firebase-php (6.9.6 => 8.2.0)
+  - Upgrading kreait/firebase-tokens (3.0.3 => 5.3.0)
+  - Upgrading kreait/laravel-firebase (4.2.0 => 7.2.1)
+  - Upgrading laravel-notification-channels/onesignal (v2.3.0 => 2.8.1)
+  - Upgrading laravel/breeze (v1.9.0 => v2.4.2)
+  - Upgrading laravel/framework (v8.83.10 => v13.11.2)
+  - Locking laravel/prompts (v0.3.18)
+  - Upgrading laravel/sail (v1.14.0 => v1.60.0)
+  - Upgrading laravel/sanctum (v2.15.1 => v4.3.2)
+  - Upgrading laravel/serializable-closure (v1.1.1 => v2.0.13)
+  - Upgrading laravel/tinker (v2.7.2 => v3.0.2)
+  - Upgrading lavary/laravel-menu (v1.8.3 => v1.8.4)
+  - Upgrading lcobucci/jwt (4.3.0 => 5.6.0)
+  - Upgrading league/commonmark (2.3.0 => 2.8.2)
+  - Upgrading league/config (v1.1.1 => v1.2.0)
+  - Upgrading league/flysystem (1.1.9 => 3.34.0)
+  - Locking league/flysystem-local (3.31.0)
+  - Upgrading league/fractal (0.19.2 => 0.20.2)
+  - Upgrading league/mime-type-detection (1.11.0 => 1.16.0)
+  - Locking league/uri (7.8.1)
+  - Locking league/uri-interfaces (7.8.1)
+  - Locking livewire/livewire (v4.3.0)
+  - Upgrading maennchen/zipstream-php (2.1.0 => 3.2.2)
+  - Upgrading markbaker/complex (3.0.1 => 3.0.2)
+  - Upgrading markbaker/matrix (3.0.0 => 3.0.1)
+  - Upgrading masterminds/html5 (2.9.0 => 2.10.0)
+  - Locking matanyadaev/laravel-eloquent-spatial (4.7.0)
+  - Upgrading mockery/mockery (1.5.0 => 1.6.12)
+  - Upgrading monolog/monolog (2.9.3 => 3.10.0)
+  - Upgrading mtdowling/jmespath.php (2.7.0 => 2.8.0)
+  - Upgrading myclabs/deep-copy (1.11.0 => 1.13.4)
+  - Upgrading myclabs/php-enum (1.8.3 => 1.8.5)
+  - Upgrading nesbot/carbon (2.57.0 => 3.11.4)
+  - Upgrading nette/schema (v1.2.2 => v1.3.5)
+  - Upgrading nette/utils (v3.2.7 => v4.1.4)
+  - Upgrading nikic/php-parser (v4.13.2 => v5.7.0)
+  - Upgrading nunomaduro/collision (v5.11.0 => v8.9.4)
+  - Locking nunomaduro/termwind (v2.4.0)
+  - Locking openspout/openspout (v5.7.0)
+  - Upgrading phar-io/manifest (2.0.3 => 2.0.4)
+  - Upgrading php-mqtt/client (v1.4.0 => v2.3.2)
+  - Upgrading php-mqtt/laravel-client (v1.0.2 => v1.8.0)
+  - Upgrading phpoffice/phpspreadsheet (1.23.0 => 5.7.0)
+  - Upgrading phpoption/phpoption (1.8.1 => 1.9.5)
+  - Upgrading phpunit/php-code-coverage (9.2.15 => 11.0.12)
+  - Upgrading phpunit/php-file-iterator (3.0.6 => 5.1.1)
+  - Upgrading phpunit/php-invoker (3.1.1 => 5.0.1)
+  - Upgrading phpunit/php-text-template (2.0.4 => 4.0.1)
+  - Upgrading phpunit/php-timer (5.0.3 => 7.0.1)
+  - Upgrading phpunit/phpunit (9.5.20 => 11.5.55)
+  - Locking prabowosd/laravel-collective-html (13.0.1)
+  - Upgrading psr/container (1.1.2 => 2.0.2)
+  - Upgrading psr/http-message (1.1 => 2.0)
+  - Upgrading psr/log (2.0.0 => 3.0.2)
+  - Upgrading psr/simple-cache (1.0.1 => 3.0.0)
+  - Upgrading psy/psysh (v0.11.2 => v0.12.22)
+  - Upgrading ramsey/collection (2.0.0 => 2.1.1)
+  - Upgrading ramsey/uuid (4.7.6 => 4.9.2)
+  - Upgrading rize/uri-template (0.3.6 => 0.4.1)
+  - Upgrading sabberworm/php-css-parser (v8.6.0 => v9.3.0)
+  - Upgrading sebastian/cli-parser (1.0.1 => 3.0.2)
+  - Upgrading sebastian/code-unit (1.0.8 => 3.0.3)
+  - Upgrading sebastian/code-unit-reverse-lookup (2.0.3 => 4.0.1)
+  - Upgrading sebastian/comparator (4.0.6 => 6.3.3)
+  - Upgrading sebastian/complexity (2.0.2 => 4.0.1)
+  - Upgrading sebastian/diff (4.0.4 => 6.0.2)
+  - Upgrading sebastian/environment (5.1.4 => 7.2.1)
+  - Upgrading sebastian/exporter (4.0.4 => 6.3.2)
+  - Upgrading sebastian/global-state (5.0.5 => 7.0.2)
+  - Upgrading sebastian/lines-of-code (1.0.3 => 3.0.1)
+  - Upgrading sebastian/object-enumerator (4.0.4 => 6.0.1)
+  - Upgrading sebastian/object-reflector (2.0.4 => 4.0.1)
+  - Upgrading sebastian/recursion-context (4.0.4 => 6.0.3)
+  - Upgrading sebastian/type (3.0.0 => 5.1.3)
+  - Upgrading sebastian/version (3.0.2 => 5.0.2)
+  - Locking spatie/backtrace (1.8.2)
+  - Locking spatie/error-solutions (1.1.3)
+  - Locking spatie/flare-client-php (1.11.1)
+  - Locking spatie/ignition (1.16.0)
+  - Upgrading spatie/image (1.10.6 => 3.9.4)
+  - Upgrading spatie/image-optimizer (1.6.2 => 1.8.1)
+  - Locking spatie/laravel-ignition (2.12.0)
+  - Upgrading spatie/laravel-medialibrary (9.12.3 => 11.22.1)
+  - Locking spatie/laravel-package-tools (1.93.1)
+  - Upgrading spatie/laravel-permission (5.5.2 => 7.4.1)
+  - Upgrading spatie/laravel-sluggable (3.6.0 => 3.8.1)
+  - Upgrading spatie/temporary-directory (1.3.0 => 2.3.1)
+  - Locking staabm/side-effects-detector (1.0.5)
+  - Upgrading symfony/cache (v6.4.8 => v8.0.12)
+  - Upgrading symfony/cache-contracts (v3.5.0 => v3.7.0)
+  - Locking symfony/clock (v8.0.8)
+  - Upgrading symfony/console (v5.4.8 => v8.0.11)
+  - Upgrading symfony/css-selector (v5.4.3 => v8.0.9)
+  - Upgrading symfony/deprecation-contracts (v3.5.0 => v3.7.0)
+  - Upgrading symfony/error-handler (v5.4.8 => v8.0.8)
+  - Upgrading symfony/event-dispatcher (v5.4.3 => v8.0.9)
+  - Upgrading symfony/event-dispatcher-contracts (v2.5.1 => v3.7.0)
+  - Upgrading symfony/finder (v5.4.8 => v8.0.8)
+  - Upgrading symfony/http-foundation (v5.4.8 => v8.0.8)
+  - Upgrading symfony/http-kernel (v5.4.8 => v8.0.12)
+  - Locking symfony/mailer (v8.0.12)
+  - Upgrading symfony/mime (v5.4.8 => v8.0.12)
+  - Upgrading symfony/polyfill-ctype (v1.29.0 => v1.37.0)
+  - Upgrading symfony/polyfill-intl-grapheme (v1.25.0 => v1.37.0)
+  - Upgrading symfony/polyfill-intl-idn (v1.25.0 => v1.37.0)
+  - Upgrading symfony/polyfill-intl-normalizer (v1.25.0 => v1.37.0)
+  - Upgrading symfony/polyfill-mbstring (v1.25.0 => v1.37.0)
+  - Upgrading symfony/polyfill-php80 (v1.29.0 => v1.37.0)
+  - Locking symfony/polyfill-php84 (v1.37.0)
+  - Locking symfony/polyfill-php85 (v1.37.0)
+  - Locking symfony/polyfill-php86 (v1.37.0)
+  - Locking symfony/polyfill-uuid (v1.37.0)
+  - Upgrading symfony/process (v5.4.8 => v8.0.11)
+  - Upgrading symfony/psr-http-message-bridge (v2.1.2 => v8.0.8)
+  - Upgrading symfony/routing (v5.4.8 => v8.0.12)
+  - Upgrading symfony/service-contracts (v2.5.1 => v3.7.0)
+  - Upgrading symfony/string (v5.4.8 => v8.0.11)
+  - Upgrading symfony/translation (v5.4.8 => v8.0.10)
+  - Upgrading symfony/translation-contracts (v2.5.1 => v3.7.0)
+  - Locking symfony/uid (v8.0.9)
+  - Upgrading symfony/var-dumper (v5.4.8 => v8.0.8)
+  - Upgrading symfony/var-exporter (v6.4.8 => v8.0.9)
+  - Locking symfony/yaml (v8.0.12)
+  - Locking thecodingmachine/safe (v3.4.0)
+  - Upgrading theseer/tokenizer (1.2.1 => 1.3.1)
+  - Upgrading tijsverkoyen/css-to-inline-styles (2.2.4 => v2.4.0)
+  - Upgrading vlucas/phpdotenv (v5.4.1 => v5.6.3)
+  - Upgrading voku/portable-ascii (1.6.1 => 2.1.1)
+  - Upgrading yajra/laravel-datatables (v1.5.0 => dev-master 0017af1)
+  - Upgrading yajra/laravel-datatables-buttons (v4.13.3 => v13.2.0)
+  - Upgrading yajra/laravel-datatables-editor (v1.25.1 => v13.0.0)
+  - Locking yajra/laravel-datatables-export (v13.1.1)
+  - Upgrading yajra/laravel-datatables-fractal (v1.6.0 => v13.0.0)
+  - Upgrading yajra/laravel-datatables-html (v4.41.1 => v13.0.0)
+  - Upgrading yajra/laravel-datatables-oracle (v9.19.2 => dev-master ded9345)
+Writing lock file
+Installing dependencies from lock file (including require-dev)
+Package operations: 5 installs, 137 updates, 4 removals
+  - Downloading symfony/routing (v8.0.12)
+  - Downloading symfony/process (v8.0.11)
+  - Downloading symfony/mime (v8.0.12)
+  - Downloading symfony/mailer (v8.0.12)
+  - Downloading symfony/http-kernel (v8.0.12)
+  - Downloading symfony/string (v8.0.11)
+  - Downloading symfony/console (v8.0.11)
+  - Downloading league/flysystem (3.34.0)
+  - Downloading nette/utils (v4.1.4)
+  - Downloading laravel/prompts (v0.3.18)
+  - Downloading guzzlehttp/promises (2.4.1)
+  - Downloading guzzlehttp/psr7 (2.10.1)
+  - Downloading guzzlehttp/guzzle (7.10.3)
+  - Downloading laravel/framework (v13.11.2)
+  - Downloading google/protobuf (v5.35.0)
+  - Downloading google/gax (v1.42.4)
+  - Downloading google/cloud-core (v1.72.1)
+  - Downloading symfony/cache (v8.0.12)
+  - Downloading laravel/breeze (v2.4.2)
+  - Downloading symfony/yaml (v8.0.12)
+  - Downloading laravel/sail (v1.60.0)
+  - Downloading spatie/flare-client-php (1.11.1)
+  - Downloading spatie/laravel-package-tools (1.93.1)
+  - Downloading yajra/laravel-datatables-oracle (dev-master ded9345)
+  0/24 [>---------------------------]   0%
+  1/24 [=>--------------------------]   4%
+  3/24 [===>------------------------]  12%
+  6/24 [=======>--------------------]  25%
+  8/24 [=========>------------------]  33%
+ 12/24 [==============>-------------]  50%
+ 15/24 [=================>----------]  62%
+ 17/24 [===================>--------]  70%
+ 21/24 [========================>---]  87%
+ 22/24 [=========================>--]  91%
+ 24/24 [============================] 100%
+  - Removing symfony/polyfill-php83 (1.x-dev 3600c2c)
+  - Removing symfony/polyfill-deepclone (1.x-dev 6e90fdb)
+  - Removing phenx/php-svg-lib (0.5.4)
+  - Removing phenx/php-font-lib (0.5.6)
+  - Upgrading voku/portable-ascii (2.1.0 => 2.1.1): Extracting archive
+  - Downgrading symfony/polyfill-php80 (1.x-dev dfb5572 => v1.37.0): Extracting archive
+  - Downgrading symfony/polyfill-mbstring (1.x-dev 6a21eb9 => v1.37.0): Extracting archive
+  - Downgrading symfony/polyfill-ctype (1.x-dev 141046a => v1.37.0): Extracting archive
+  - Downgrading phpoption/phpoption (dev-master c7c576f => 1.9.5): Extracting archive
+  - Downgrading graham-campbell/result-type (1.1.x-dev 806fe84 => v1.1.4): Extracting archive
+  - Downgrading vlucas/phpdotenv (dev-master 2af2719 => v5.6.3): Extracting archive
+  - Downgrading symfony/css-selector (8.1.x-dev 1a8743f => v8.0.9): Extracting archive
+  - Downgrading tijsverkoyen/css-to-inline-styles (dev-master a0aef60 => v2.4.0): Extracting archive
+  - Upgrading symfony/var-dumper (7.4.x-dev 1aa10bc => v8.0.8): Extracting archive
+  - Downgrading symfony/polyfill-uuid (1.x-dev 26dfec2 => v1.37.0): Extracting archive
+  - Upgrading symfony/uid (7.4.x-dev 2efc109 => v8.0.9): Extracting archive
+  - Upgrading symfony/deprecation-contracts (dev-main 50f59d1 => v3.7.0): Extracting archive
+  - Upgrading symfony/routing (7.4.x-dev 453501c => v8.0.12): Extracting archive
+  - Upgrading symfony/process (7.4.x-dev 89c0b22 => v8.0.11): Extracting archive
+  - Installing symfony/polyfill-php86 (v1.37.0): Extracting archive
+  - Downgrading symfony/polyfill-php85 (1.x-dev 2c408a6 => v1.37.0): Extracting archive
+  - Installing symfony/polyfill-php84 (v1.37.0): Extracting archive
+  - Downgrading symfony/polyfill-intl-normalizer (1.x-dev 3833d72 => v1.37.0): Extracting archive
+  - Downgrading symfony/polyfill-intl-idn (1.x-dev 9614ac4 => v1.37.0): Extracting archive
+  - Upgrading symfony/mime (7.4.x-dev bcb284b => v8.0.12): Extracting archive
+  - Downgrading psr/container (dev-master 7079847 => 2.0.2): Extracting archive
+  - Upgrading symfony/service-contracts (dev-main d25d824 => v3.7.0): Extracting archive
+  - Downgrading psr/event-dispatcher (dev-master bbd9eac => 1.0.0): Extracting archive
+  - Upgrading symfony/event-dispatcher-contracts (dev-main ccba706 => v3.7.0): Extracting archive
+  - Downgrading symfony/event-dispatcher (8.1.x-dev 8e96672 => v8.0.9): Extracting archive
+  - Downgrading psr/log (dev-master f16e1d5 => 3.0.2): Extracting archive
+  - Downgrading doctrine/lexer (3.1.x-dev 200aa4f => 3.0.1): Extracting archive
+  - Downgrading egulias/email-validator (4.x-dev d42c873 => 4.0.4): Extracting archive
+  - Upgrading symfony/mailer (7.4.x-dev e8faa33 => v8.0.12): Extracting archive
+  - Upgrading symfony/http-foundation (7.4.x-dev a762b60 => v8.0.8): Extracting archive
+  - Upgrading symfony/error-handler (7.4.x-dev 4e9a728 => v8.0.8): Extracting archive
+  - Upgrading symfony/http-kernel (7.4.x-dev 4288310 => v8.0.12): Extracting archive
+  - Upgrading symfony/finder (7.4.x-dev cd62ddd => v8.0.8): Extracting archive
+  - Downgrading symfony/polyfill-intl-grapheme (1.x-dev ad1b7b9 => v1.37.0): Extracting archive
+  - Downgrading symfony/string (8.1.x-dev 0d4a029 => v8.0.11): Extracting archive
+  - Upgrading symfony/console (7.4.x-dev 9142754 => v8.0.11): Extracting archive
+  - Downgrading ramsey/uuid (4.x-dev 3d1c6d9 => 4.9.2): Extracting archive
+  - Downgrading psr/simple-cache (dev-master 2d280c2 => 3.0.0): Extracting archive
+  - Downgrading nunomaduro/termwind (2.x-dev 783dafb => v2.4.0): Extracting archive
+  - Upgrading symfony/translation-contracts (dev-main 0ab3029 => v3.7.0): Extracting archive
+  - Downgrading symfony/translation (8.1.x-dev c560e85 => v8.0.10): Extracting archive
+  - Downgrading symfony/clock (8.1.x-dev 6682f8c => v8.0.8): Extracting archive
+  - Upgrading carbonphp/carbon-doctrine-types (dev-main bdb3329 => 3.2.0): Extracting archive
+  - Downgrading nesbot/carbon (dev-master 7a34212 => 3.11.4): Extracting archive
+  - Upgrading monolog/monolog (dev-main 68b9748 => 3.10.0): Extracting archive
+  - Downgrading psr/http-message (dev-master 402d35b => 2.0): Extracting archive
+  - Downgrading league/uri-interfaces (dev-master b5fcab2 => 7.8.1): Extracting archive
+  - Downgrading league/uri (dev-master cf23cfb => 7.8.1): Extracting archive
+  - Downgrading league/flysystem-local (3.x-dev 2f669db => 3.31.0): Extracting archive
+  - Downgrading league/flysystem (3.x-dev 570b887 => 3.34.0): Extracting archive
+  - Downgrading nette/utils (dev-master dd57257 => v4.1.4): Extracting archive
+  - Downgrading nette/schema (v1.3.x-dev 0a0768c => v1.3.5): Extracting archive
+  - Upgrading dflydev/dot-access-data (dev-main a23a2bf => v3.0.3): Extracting archive
+  - Upgrading league/config (dev-main af46987 => v1.2.0): Extracting archive
+  - Upgrading league/commonmark (dev-main 17df023 => 2.8.2): Extracting archive
+  - Downgrading laravel/serializable-closure (2.x-dev b566ee0 => v2.0.13): Extracting archive
+  - Upgrading laravel/prompts (dev-main c9483c8 => v0.3.18): Extracting archive
+  - Downgrading guzzlehttp/uri-template (1.0.x-dev fbc6172 => v1.0.5): Extracting archive
+  - Upgrading guzzlehttp/promises (2.3.x-dev 74c1b71 => 2.4.1): Extracting archive
+  - Downgrading psr/http-client (dev-master bb5906e => 1.0.3): Extracting archive
+  - Upgrading guzzlehttp/psr7 (2.9.x-dev 7d0ed42 => 2.10.1): Extracting archive
+  - Downgrading guzzlehttp/guzzle (7.10.x-dev fb92d95 => 7.10.3): Extracting archive
+  - Downgrading dragonmantank/cron-expression (dev-master d425a24 => v3.6.0): Extracting archive
+  - Downgrading doctrine/inflector (2.2.x-dev 65c8fca => 2.1.0): Extracting archive
+  - Upgrading laravel/framework (11.x-dev f4d44f4 => v13.11.2): Extracting archive
+  - Installing thecodingmachine/safe (v3.4.0): Extracting archive
+  - Upgrading sabberworm/php-css-parser (v8.x-dev d8e9165 => v9.3.0): Extracting archive
+  - Installing dompdf/php-svg-lib (1.0.2): Extracting archive
+  - Installing dompdf/php-font-lib (1.0.2): Extracting archive
+  - Upgrading dompdf/dompdf (v2.0.8 => v3.1.5): Extracting archive
+  - Upgrading barryvdh/laravel-dompdf (2.2.x-dev c96f90c => v3.1.2): Extracting archive
+  - Downgrading psr/cache (dev-master 588d5ff => 3.0.0): Extracting archive
+  - Upgrading beste/in-memory-cache (1.4.0 => 1.5.0): Extracting archive
+  - Upgrading composer/pcre (dev-main f664792 => 3.3.2): Extracting archive
+  - Downgrading fakerphp/faker (1.24.x-dev 33d986d => v1.24.1): Extracting archive
+  - Upgrading google/protobuf (v5.35.0RC1 => v5.35.0): Extracting archive
+  - Upgrading google/gax (v1.42.2 => v1.42.4): Extracting archive
+  - Upgrading google/cloud-core (v1.72.0 => v1.72.1): Extracting archive
+  - Downgrading lcobucci/jwt (5.6.x-dev bb3e9f2 => 5.6.0): Extracting archive
+  - Downgrading fig/http-message-util (dev-master 9d94dc0 => 1.1.5): Extracting archive
+  - Downgrading beste/clock (3.x-dev 8f0a5a5 => 3.0.0): Extracting archive
+  - Downgrading kreait/firebase-tokens (5.x-dev 21fd026 => 5.3.0): Extracting archive
+  - Downgrading symfony/var-exporter (8.1.x-dev 2f6f809 => v8.0.9): Extracting archive
+  - Upgrading symfony/cache-contracts (dev-main e89f84c => v3.7.0): Extracting archive
+  - Upgrading symfony/cache (7.4.x-dev c80d999 => v8.0.12): Extracting archive
+  - Downgrading mtdowling/jmespath.php (dev-master a2a865e => 2.8.0): Extracting archive
+  - Downgrading kreait/firebase-php (8.x-dev a189444 => 8.2.0): Extracting archive
+  - Upgrading kreait/laravel-firebase (7.1.0 => 7.2.1): Extracting archive
+  - Downgrading symfony/psr-http-message-bridge (8.1.x-dev 4b1158b => v8.0.8): Extracting archive
+  - Downgrading laravel/breeze (2.x-dev ae010ff => v2.4.2): Extracting archive
+  - Downgrading symfony/yaml (8.1.x-dev eb2f123 => v8.0.12): Extracting archive
+  - Downgrading laravel/sail (1.x-dev be52b43 => v1.60.0): Extracting archive
+  - Downgrading laravel/sanctum (4.x-dev 70546ce => v4.3.2): Extracting archive
+  - Downgrading nikic/php-parser (dev-master 50f0d9c => v5.7.0): Extracting archive
+  - Upgrading psy/psysh (dev-main d3b6366 => v0.12.22): Extracting archive
+  - Downgrading laravel/tinker (dev-master cc74081 => v3.0.2): Extracting archive
+  - Downgrading markbaker/complex (3.0.x-dev 95c56ca => 3.0.2): Extracting archive
+  - Downgrading markbaker/matrix (3.0.x-dev 7284342 => 3.0.1): Extracting archive
+  - Downgrading brick/geo (v0.13.x-dev 9c5d80e => 0.13.1): Extracting archive
+  - Downgrading matanyadaev/laravel-eloquent-spatial (dev-master 57894fd => 4.7.0): Extracting archive
+  - Downgrading mockery/mockery (1.7.x-dev 3f8d3ff => 1.6.12): Extracting archive
+  - Downgrading nunomaduro/collision (v8.x-dev 9377b6c => v8.9.4): Extracting archive
+  - Downgrading sebastian/version (5.0.x-dev 0e6075a => 5.0.2): Extracting archive
+  - Downgrading sebastian/type (5.1.x-dev 6abfe42 => 5.1.3): Extracting archive
+  - Downgrading sebastian/recursion-context (6.0.x-dev 5d8d13f => 6.0.3): Extracting archive
+  - Downgrading sebastian/object-reflector (4.0.x-dev 89dc41f => 4.0.1): Extracting archive
+  - Downgrading sebastian/object-enumerator (6.0.x-dev 1748f19 => 6.0.1): Extracting archive
+  - Downgrading sebastian/global-state (7.0.x-dev 88b1eb0 => 7.0.2): Extracting archive
+  - Downgrading sebastian/diff (6.0.x-dev a42039c => 6.0.2): Extracting archive
+  - Upgrading sebastian/code-unit (dev-main 23caa57 => 3.0.3): Extracting archive
+  - Downgrading sebastian/cli-parser (3.0.x-dev 249c25b => 3.0.2): Extracting archive
+  - Downgrading phpunit/php-timer (7.0.x-dev 297d0ed => 7.0.1): Extracting archive
+  - Downgrading phpunit/php-text-template (4.0.x-dev 51c2900 => 4.0.1): Extracting archive
+  - Downgrading phpunit/php-invoker (5.0.x-dev cdf4688 => 5.0.1): Extracting archive
+  - Downgrading phpunit/php-file-iterator (5.1.x-dev 2f3a648 => 5.1.1): Extracting archive
+  - Downgrading sebastian/lines-of-code (3.0.x-dev 8426f4e => 3.0.1): Extracting archive
+  - Downgrading sebastian/complexity (4.0.x-dev 66dc7be => 4.0.1): Extracting archive
+  - Upgrading sebastian/code-unit-reverse-lookup (dev-main 5cf245e => 4.0.1): Extracting archive
+  - Downgrading phar-io/manifest (dev-master c581d49 => 2.0.4): Extracting archive
+  - Downgrading myclabs/deep-copy (1.x-dev 5ee4e97 => 1.13.4): Extracting archive
+  - Downgrading phpunit/phpunit (11.5.x-dev aa07a08 => 11.5.55): Extracting archive
+  - Upgrading prabowosd/laravel-collective-html (dev-main fdd6828 => 13.0.1): Extracting archive
+  - Downgrading spatie/error-solutions (v1.x-dev 42098eb => 1.1.3): Extracting archive
+  - Downgrading spatie/flare-client-php (v1.x-dev fb3ffb9 => 1.11.1): Extracting archive
+  - Upgrading spatie/laravel-package-tools (1.93.0 => 1.93.1): Extracting archive
+  - Downgrading spatie/image (v3.x-dev 121a894 => 3.9.4): Extracting archive
+  - Upgrading composer/semver (dev-main 09af5e8 => 3.4.4): Extracting archive
+  - Upgrading spatie/laravel-medialibrary (dev-main debb1fd => 11.22.1): Extracting archive
+  - Upgrading spatie/laravel-permission (v6.x-dev d7d4cb0 => 7.4.1): Extracting archive
+  - Downgrading spatie/laravel-sluggable (v3.x-dev 0226629 => 3.8.1): Extracting archive
+  - Upgrading yajra/laravel-datatables-oracle (11.x-dev b48eb61 => dev-master ded9345): Extracting archive
+  - Upgrading yajra/laravel-datatables-html (11.x-dev 76cb7a4 => v13.0.0): Extracting archive
+  - Downgrading league/fractal (dev-master 9e81735 => 0.20.2): Extracting archive
+  - Upgrading yajra/laravel-datatables-fractal (11.x-dev 94141d0 => v13.0.0): Extracting archive
+  - Upgrading yajra/laravel-datatables-buttons (11.x-dev 78c8463 => v13.2.0): Extracting archive
+  - Upgrading phpoffice/phpspreadsheet (2.4.x-dev ec7815b => 5.7.0): Extracting archive
+  - Upgrading openspout/openspout (4.x-dev c8e82aa => v5.7.0): Extracting archive
+  - Upgrading livewire/livewire (3.x-dev 04ebd32 => v4.3.0): Extracting archive
+  - Upgrading yajra/laravel-datatables-export (11.x-dev a978a42 => v13.1.1): Extracting archive
+  - Upgrading yajra/laravel-datatables-editor (11.x-dev f49f2bc => v13.0.0): Extracting archive
+  - Upgrading yajra/laravel-datatables (11.x-dev 5ab0fcc => dev-master 0017af1): Extracting archive
+   0/142 [>---------------------------]   0%
+  20/142 [===>------------------------]  14%
+  30/142 [=====>----------------------]  21%
+  50/142 [=========>------------------]  35%
+  65/142 [============>---------------]  45%
+  73/142 [==============>-------------]  51%
+  97/142 [===================>--------]  68%
+ 107/142 [=====================>------]  75%
+ 117/142 [=======================>----]  82%
+ 136/142 [==========================>-]  95%
+ 142/142 [============================] 100%
+13 package suggestions were added by new dependencies, use `composer suggest` to see details.
+Generating optimized autoload files
+Class App\Http\Resources\NotificationResource located in ./app/Http/Resources/NotificationResource copy.php does not comply with psr-4 autoloading standard (rule: App\ => ./app). Skipping.
+Class App\Http\Controllers\API\ServiceController located in ./app/Http/Controllers/API/ServiceController copy.php does not comply with psr-4 autoloading standard (rule: App\ => ./app). Skipping.
+> Illuminate\Foundation\ComposerScripts::postAutoloadDump
+Deprecation Notice: getSingleMediaSettingImage(): Optional parameter $model declared before required parameter $collection_name is implicitly treated as a required parameter in /var/www/html/STS-TAXI/app/Helpers/helper.php:49
+> @php artisan package:discover --ansi
+
+  [37;44m INFO [39;49m Discovering packages.  
+
+  barryvdh/laravel-dompdf [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  berkayk/onesignal-laravel [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  kreait/laravel-firebase [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  laravel-notification-channels/onesignal [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  laravel/breeze [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  laravel/sail [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  laravel/sanctum [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  laravel/tinker [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  lavary/laravel-menu [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  livewire/livewire [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  matanyadaev/laravel-eloquent-spatial [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  nesbot/carbon [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  nunomaduro/collision [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  nunomaduro/termwind [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  php-mqtt/laravel-client [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  prabowosd/laravel-collective-html [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  spatie/laravel-ignition [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  spatie/laravel-medialibrary [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  spatie/laravel-permission [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  yajra/laravel-datatables-buttons [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  yajra/laravel-datatables-editor [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  yajra/laravel-datatables-export [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  yajra/laravel-datatables-fractal [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  yajra/laravel-datatables-html [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+  yajra/laravel-datatables-oracle [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+
+119 packages you are using are looking for funding.
+Use the `composer fund` command to find out more!
+> @php artisan vendor:publish --tag=laravel-assets --ansi --force
+
+  [37;44m INFO [39;49m No publishable resources for tag [1m[laravel-assets][22m.  
+

@@ -25,7 +25,7 @@
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('timezone', __('message.timezone'), ['class' => 'form-control-label']) }}
+                                    {{ Form::label('timezone', __('message.timezone').' <span class="text-danger">*</span>', ['class' => 'form-control-label'],false) }}
                                     {{ Form::select('timezone', [ $data['timezone'] => timeZoneList()[$data['timezone']] ] , old('timezone') , [
                                         'data-ajax--url' => route('ajax-list', [ 'type' => 'timezone' ]),
                                         'data-placeholder' => __('message.select_field', [ 'name' => __('message.timezone') ]),
@@ -46,7 +46,7 @@
                                     <p><i class="far fa-hand-paper"></i> {{ __('message.drag_map_area') }} </p>
                                     <p>{{ __('message.connect_dot_draw_area') }} </p>
                                 </div>
-                                <textarea type="text" name="coordinates" id="coordinates" class="form-control d-none" >@foreach($data->coordinates[0] as $key=>$coords)<?php if(count($data->coordinates[0]) != $key+1) {if($key != 0) echo(','); ?>({{$coords->getLat()}}, {{$coords->getLng()}})<?php } ?>@endforeach</textarea>
+                                <textarea type="text" name="coordinates" id="coordinates" class="form-control d-none" >@foreach($data->coordinates->getGeometries()[0]->getGeometries() as $key=>$coords)<?php if(count($data->coordinates->getGeometries()[0]->getGeometries()) != $key+1) {if($key != 0) echo(','); ?>({{$coords->latitude}}, {{$coords->longitude}})<?php } ?>@endforeach</textarea>
                                 <div class="form-group col-md-8" style="height:500px;">
                                     <div id="map-canvas"></div>
                                 </div>
@@ -80,8 +80,8 @@
                     map = new google.maps.Map(document.getElementById('map-canvas'), myOptions);
 
                     const polygonCoords = [
-                        @foreach($data->coordinates[0] as $coords)
-                            { lat: {{$coords->getLat()}}, lng: {{$coords->getLng()}} },
+                        @foreach($data->coordinates->getGeometries()[0]->getGeometries() as $coords)
+                            { lat: {{$coords->latitude}}, lng: {{$coords->longitude}} },
                         @endforeach
                     ];
 

@@ -101,7 +101,17 @@
                                 @if(!isset($id))
                                     <div class="form-group col-md-6">
                                         {{ Form::label('password',__('message.password').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
-                                        {{ Form::password('password', ['class' => 'form-control', 'placeholder' =>  __('message.password') ]) }}
+                                        <div class="input-group">
+                                            {{ Form::password('password', ['class' => 'form-control', 'placeholder' =>  __('message.password'),'autocomplete' => 'new-password' ]) }}
+                                            <div class="input-group-append">
+                                                <span class="input-group-text toggle-password" data-toggle="#password" style="cursor: pointer;">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Password must be at least 8 characters, include one uppercase letter, one number and one special character.
+                                        </small>
                                     </div>
                                 @endif
 

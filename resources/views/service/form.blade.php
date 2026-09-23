@@ -57,36 +57,56 @@
                                 <div class="flex-grow-1 border-top"></div>
                             </div>
 
+                           
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('base_fare', __('message.base_fare').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::label('base_fare', __('message.base_fare').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_base_fare')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('base_fare', old('base_fare'), ['class' => 'form-control', 'min' => 0, 'step' => 'any', 'required', 'placeholder' => __('message.base_fare'),'required' ]) }}
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     {{ Form::label('minimum_fare', __('message.minimum_fare').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_minimum_fare')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('minimum_fare', old('minimum_fare'), ['class' => 'form-control',  'min' => 0, 'step' => 'any', 'required', 'placeholder' => __('message.minimum_fare'),'required' ]) }}
                                 </div>
                                 
-                                <div class="form-group col-md-4">
-                                    {{ Form::label('minimum_distance',__('message.minimum_distance').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                               <div class="form-group col-md-4">
+                                    {{ Form::label('minimum_distance',__('message.minimum_distance').(isset($data) && optional($data->region)->distance_unit 
+                                    ? ' ('.__('message.'.optional($data->region)->distance_unit).'s)' 
+                                    : '').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_base_distance')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('minimum_distance', old('minimum_distance'),  ['class' => 'form-control', 'min' => 0, 'step' => 'any', 'placeholder' =>  __('message.minimum_distance'),'required' ]) }}
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('cancellation_fee', __('message.cancellation_fee').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::label('cancellation_fee', __('message.cancellation_fee').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_cancellation_charge')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('cancellation_fee', old('cancellation_fee'), ['class' => 'form-control',  'min' => 0, 'step' => 'any', 'required', 'placeholder' => __('message.cancellation_fee') ]) }}
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-center mb-3 mt-4">
-                                <h5 class="mb-0 me-2">Distance-Based Fare Setting</h5>
+                                <h5 class="mb-0 me-2">Distance-Based Fare Settings</h5>
                                 <div class="flex-grow-1 border-top"></div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('per_distance',__('message.per_distance').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::label('per_distance',__('message.per_distance').(isset($data) && optional($data->region)->distance_unit 
+                                    ? ' ('.__('message.'.optional($data->region)->distance_unit).')' 
+                                    : '').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_per_distance_charge')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('per_distance', old('per_distance'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.per_distance'), 'class' => 'form-control','required' ]) }}
                                 </div>
                             </div>
@@ -99,7 +119,7 @@
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
                                     {{ Form::label('time_fare_short_ride',__('message.time_fare_short_ride').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="When ride duration (in minutes) is less than or equal to ride distance (in miles). Typically quick and direct rides.">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_ride_type_short')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
                                     {{ Form::number('time_fare_short_ride', old('time_fare_short_ride'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.time_fare_short_ride'), 'class' => 'form-control','required' ]) }}
@@ -107,7 +127,7 @@
 
                                 <div class="form-group col-md-4">
                                     {{ Form::label('time_fare_moderate_ride',__('message.time_fare_moderate_ride').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="When ride duration is greater than the distance, but not more than twice the distance. Captures normal delays, mild traffic, or brief stops.">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_ride_type_medium')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
                                     {{ Form::number('time_fare_moderate_ride', old('time_fare_moderate_ride'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.time_fare_moderate_ride'), 'class' => 'form-control','required' ]) }}
@@ -115,7 +135,7 @@
 
                                 <div class="form-group col-md-4">
                                     {{ Form::label('time_fare_long_ride',__('message.time_fare_long_ride').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="When duration exceeds 2× the distance — often due to traffic, detours, or long stops.">
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_ride_type_long')}}">
                                         <i class="fas fa-info-circle text-muted ms-1"></i>
                                     </span>
                                     {{ Form::number('time_fare_long_ride', old('time_fare_long_ride'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.time_fare_long_ride'), 'class' => 'form-control','required' ]) }}
@@ -132,12 +152,18 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('waiting_time_limit',__('message.waiting_time_limit').'('.__('message.in_minutes').')<span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('waiting_time_limit',__('message.waiting_time_limit').' ('.__('message.minutes').')<span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_free_wait_time')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('waiting_time_limit', old('waiting_time_limit'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.waiting_time_limit'), 'class' => 'form-control','required' ]) }}
                                 </div>
                                 
                                 <div class="form-group col-md-4">
                                     {{ Form::label('per_minute_wait',__('message.per_minute_wait').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_waiting_charge_per_minute')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('per_minute_wait', old('per_minute_wait'),[  'min' => 0, 'step' => 'any', 'placeholder' => __('message.per_minute_wait'), 'class' => 'form-control','required' ]) }}
                                 </div>
                             </div>
@@ -149,17 +175,26 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('company_fee_threshold',__('message.company_fee_threshold').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('company_fee_threshold',__('message.company_fee_threshold').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_platform_fee_threshold')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('company_fee_threshold', old('company_fee_threshold'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.company_fee_threshold'), 'class' => 'form-control','required' ]) }}
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('company_fee_below_threshold',__('message.company_fee_below_threshold').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('company_fee_below_threshold',__('message.company_fee_below_threshold').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_platform_fee_below_threshold')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('company_fee_below_threshold', old('company_fee_below_threshold'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.company_fee_below_threshold'), 'class' => 'form-control','required' ]) }}
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    {{ Form::label('company_fee_above_threshold',__('message.company_fee_above_threshold').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    {{ Form::label('company_fee_above_threshold',__('message.company_fee_above_threshold').' ('.$current_currency_symbol.') <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_platform_fee_above_threshold')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('company_fee_above_threshold', old('company_fee_above_threshold'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.company_fee_above_threshold'), 'class' => 'form-control','required' ]) }}
                                 </div>
                             </div>                            
@@ -171,9 +206,13 @@
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
                                     {{ Form::label('expenses',__('message.expenses').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
+                                    <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{__('message.service_operational_expense')}}">
+                                        <i class="fas fa-info-circle text-muted ms-1"></i>
+                                    </span>
                                     {{ Form::number('expenses', old('expenses'),[ 'min' => 0, 'step' => 'any', 'placeholder' => __('message.expenses'), 'class' => 'form-control','required' ]) }}
                                 </div>
                             </div>
+                                                   
                             
                             <div class="d-flex align-items-center mb-3 mt-4">
                                 <h5 class="mb-0 me-2">Payment & Availability</h5>
@@ -182,7 +221,14 @@
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
                                     {{ Form::label('payment_method',__('message.payment_method').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                    {{ Form::select('payment_method',[ 'cash' => __('message.cash') ,'wallet' => __('message.wallet') , 'cash_wallet' => __('message.cash_wallet') ], old('payment_method') ,[ 'class' =>'form-control select2js','required']) }}
+                                    {{ Form::select('payment_method',[ 
+                                        'card' => __('message.card'), 
+                                        'wallet' => __('message.wallet'),
+                                        'card_wallet' => __('message.card_wallet'),
+                                        'cash' => __('message.cash'), 
+                                        'cash_wallet' => __('message.cash_wallet'),
+                                        'cash_card_wallet' => __('message.cash_card_wallet'),
+                                        ], old('payment_method') ,[ 'class' =>'form-control select2js','required']) }}
                                 </div>
 
                                 <!-- <div class="form-group col-md-4">

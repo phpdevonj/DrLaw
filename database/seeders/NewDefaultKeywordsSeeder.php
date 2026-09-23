@@ -522,7 +522,7 @@ class NewDefaultKeywordsSeeder extends Seeder
                         "screenId" => "40",
                         "keyword_id" => 397,
                         "keyword_name" => "trip_completed_by_you_trip_id_is",
-                        "keyword_value" => "trip completed by you. Trip id is"
+                        "keyword_value" => "Ride completed by you. Ride id is"
                     ],
                     [
                         "screenId" => "40",
@@ -570,6 +570,7 @@ class NewDefaultKeywordsSeeder extends Seeder
             ],
 
         ];
+        $languages = \App\Models\LanguageList::all();
 
         // INSERT SCREEN AND KEYWORDS
         foreach ($screen_data as $screen) {
@@ -582,7 +583,7 @@ class NewDefaultKeywordsSeeder extends Seeder
             if (!empty($screen['keyword_data'])) {
                 foreach ($screen['keyword_data'] as $keyword) {
 
-                    DefaultKeyword::firstOrCreate(
+                    $keywordData =DefaultKeyword::firstOrCreate(
                         ['keyword_id' => $keyword['keyword_id']],
                         [
                             'screen_id' => $screen_record->screenId,
@@ -590,6 +591,18 @@ class NewDefaultKeywordsSeeder extends Seeder
                             'keyword_value' => $keyword['keyword_value'],
                         ]
                     );
+                    foreach ($languages as $language) {
+                        \App\Models\LanguageWithKeyword::firstOrCreate(
+                            [
+                                'language_id' => $language->id,
+                                'keyword_id' => $keywordData->keyword_id,
+                            ],
+                            [
+                                'screen_id' => $keywordData->screen_id,
+                                'keyword_value' => $keywordData->keyword_value,
+                            ]
+                        );
+                    }
                 }
             }
         }

@@ -6,3 +6,5 @@
 .env
 .env.backup
 .phpunit.result.cache
+.vscode
+taxi-app-firebase-adminsdk-fbsvc.json

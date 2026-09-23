@@ -14,15 +14,28 @@ class ScheduleRideRequestResource extends JsonResource
      */
     public function toArray($request)
     {
-        $place_details = og_get_distance_matrix(
-            $this->start_latitude, 
-            $this->start_longitude, 
-            $this->end_latitude, 
-            $this->end_longitude
-        );
+       // get distance and time using google map api
+        if (!empty($this->multi_drop_location)) {
+            $place_details = og_get_distance_matrix_multiple_destination(
+                $this->start_latitude, 
+                $this->start_longitude, 
+                $this->end_latitude, 
+                $this->end_longitude, 
+                $this->multi_drop_location
+            );
+            $dropoff_distance_in_meters = $place_details['distance'];
+            $dropoff_time_in_seconds = $place_details['duration'];
+        } else {
+            $place_details = og_get_distance_matrix(
+                $this->start_latitude, 
+                $this->start_longitude, 
+                $this->end_latitude, 
+                $this->end_longitude
+            );
 
-        $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
-        $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);
+            $dropoff_distance_in_meters = distance_value_from_distance_matrix($place_details);
+            $dropoff_time_in_seconds = duration_value_from_distance_matrix($place_details);
+        }
         $dropoff_distance_in_km = round($dropoff_distance_in_meters/1000,2);
         $dropoff_distance_in_miles = round(km_to_mile($dropoff_distance_in_meters/1000), 2);
 
@@ -33,10 +46,7 @@ class ScheduleRideRequestResource extends JsonResource
         if($this->status == 'completed' ){
             $pdfUrl = route('ride-invoice', ['id' => $this->id]);
         }
-        $surge_price = getSurgePrice($this->datetime, optional($this->service)->region_id, $this->start_latitude, $this->start_longitude, $this->end_latitude, $this->end_longitude);
-
-        $getBidAmount = $this->approvedBids()->first();
-
+        $surge_price = getSurgePrice($this->datetime, $this->region_id, $this->start_latitude, $this->start_longitude, $this->end_latitude, $this->end_longitude);
         $driver_ratings = optional($this->driver)->driverRating ?? collect();
         $rider_ratings = optional($this->rider)->riderRating ?? collect();
 
@@ -106,7 +116,7 @@ class ScheduleRideRequestResource extends JsonResource
             'is_ride_for_other' => $this->is_ride_for_other,
             'other_rider_data'  => $this->other_rider_data ?? null,
             'drop_location'     => $this->drop_location,
-            'multi_drop_location'     => json_decode($this->multi_drop_location),
+            'multi_drop_location'     => $this->multi_drop_location,
             'invoice_url' => $pdfUrl,
             'invoice_name' => 'Ride_' . $this->id,
             'driver_rating' => $driver_ratings->count() > 0 ? (float) number_format(max($driver_ratings->avg('rating'), 0), 2) : 0,
@@ -126,6 +136,7 @@ class ScheduleRideRequestResource extends JsonResource
         $service_data = [
             'id'                      => $this->service_id,
             'service_id'              => $this->service_id,
+            'timezone'                => optional($this->service)->region->timezone ?? 'UTC',
             'name'                    => optional($this->service)->name,
             'region_id'               => optional($this->service)->region_id, 
             'distance_unit'           => $this->distance_unit, 

@@ -45,7 +45,7 @@
                             {{ Form::button('<span id="button-loader" style="display:none;"><div class="spinner-border spinner-border-sm text-light" role="status"></div></span> ' . __('message.save'), [
                                 'type' => 'submit',
                                 'class' => 'btn border-radius-10 btn-success float-right',
-                                'id' => 'submit-btn'
+                                //'id' => 'submit-btn'
                             ]) }}
                         </div>
                     </div>

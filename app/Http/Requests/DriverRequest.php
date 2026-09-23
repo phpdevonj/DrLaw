@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
+use App\Rules\PhoneNumber;
 
 
 class DriverRequest extends FormRequest
@@ -28,19 +30,36 @@ class DriverRequest extends FormRequest
     public function rules()
     {
         $rules = [];
+        $user_type = 'driver';
 
         if (request()->is('api*')) {
             $user_id = auth()->user()->id ?? request()->id;
 
             $rules = [
-                'username' => 'required|unique:users,username,' . $user_id,
-                'password' => 'required|min:8',
-                'email' => 'required|email|unique:users,email,' . $user_id,
-                'contact_number' => 'required|max:20|unique:users,contact_number,' . $user_id,
+                'username' => [
+                    'required',
+                    Rule::unique('users', 'username')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                ],
+                //'password' => 'required|min:8',
+                'first_name' => 'required',
+                'last_name' => 'required',
+                'date_of_birth' => 'required',
+                'license_expiration_date' => 'required',
+                'social_security_number' => 'required',
+                'email' => [
+                    'required',
+                    'email',
+                    Rule::unique('users', 'email')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                ],
+                'contact_number' => [
+                    'required',
+                    'max:20',
+                    Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                ],
             ];
 
             if (request()->isMethod('post')) {
-                $rules['password'] = 'required|min:8';
+                //$rules['password'] = 'required|min:8';
             } else {
                 $rules['password'] = 'nullable|min:8';
             }
@@ -51,10 +70,22 @@ class DriverRequest extends FormRequest
             switch ($method) {
                 case 'post':
                     $rules = [
-                        'username' => 'required|unique:users,username',
+                        'username' => [
+                            'required',
+                            Rule::unique('users', 'username')->where(fn ($q) => $q->where('user_type', $user_type)),
+                        ],
                         'password' => 'required|min:8',
-                        'email' => 'required|email|unique:users,email',
-                        'contact_number' => 'required|max:20|unique:users,contact_number',
+                        'email' => [
+                            'required',
+                            'email',
+                            Rule::unique('users', 'email')->where(fn ($q) => $q->where('user_type', $user_type)),
+                        ],
+                        'contact_number' => [
+                            'required',
+                            'max:20',
+                            new PhoneNumber,
+                            Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type)),
+                        ],
                         'userDetail.car_model' => 'required|string|max:255',
                         'userDetail.car_color' => 'required|string|max:255',
                         'userDetail.car_plate_number' => 'required|string|max:255|unique:user_details,car_plate_number',
@@ -64,9 +95,21 @@ class DriverRequest extends FormRequest
 
                 case 'patch':
                     $rules = [
-                        'username' => 'required|unique:users,username,' . $user_id,
-                        'email' => 'required|max:191|email|unique:users,email,' . $user_id,
-                        'contact_number' => 'max:20|unique:users,contact_number,' . $user_id,
+                        'username' => [
+                            'required',
+                            Rule::unique('users', 'username')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                        ],
+                        'email' => [
+                            'required',
+                            'max:191',
+                            'email',
+                            Rule::unique('users', 'email')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                        ],
+                        'contact_number' => [
+                            'max:20',
+                            new PhoneNumber,
+                            Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                        ],
                     ];
                     break;
             }
@@ -78,10 +121,10 @@ class DriverRequest extends FormRequest
     public function messages()
     {
         return [
-            'userDetail.car_model.*'  =>'Car Model is required.',
-            'userDetail.car_color.*'  =>'Car Color is required.',
-            'userDetail.car_plate_number.*'  =>'Car Plate number is required.',
-            'userDetail.car_production_year.*'  =>'Car production year is required.',
+            'userDetail.car_model.*'  => __('message.car_model_required'),
+            'userDetail.car_color.*'  => __('message.car_color_required'),
+            'userDetail.car_plate_number.*'  => __('message.car_plate_number_required'),
+            'userDetail.car_production_year.*'  => __('message.car_production_year_required'),
         ];
     }
 

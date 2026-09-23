@@ -28,7 +28,14 @@
                                 <div class="col-lg-12">
                                     <div class="form-group">
                                         {{ Form::label('password',__('message.password').' <span class="text-danger">*</span>', ['class' => 'form-control-label'],false) }}
+                                        <div class="input-group">
                                         {{ Form::password('password', ['class' => 'form-control', 'placeholder' => __('message.password'), 'required']) }}
+                                            <div class="input-group-append">
+                                                <span class="input-group-text toggle-password" data-toggle="#password"  style="cursor: pointer;">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

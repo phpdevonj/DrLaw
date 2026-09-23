@@ -11,21 +11,29 @@ class RiderDashboardResource extends JsonResource
     public function toArray($request)
     {
         $ride_request = $this->riderRideRequestDetail()->where('is_schedule', 0)->where('driver_id', null)->whereNotIn('status', ['canceled','completed'])->where('is_rider_rated', false)->first();
-
+        
         $ride_block_minutes = (int) SettingData('ride', 'normal_ride_restriction_buffer') ?? 30;
+        $on_ride_request = $this->riderRideRequestDetail()
+            ->whereNotIn('status', ['canceled'])
+            ->where('is_rider_rated', false)
+            ->where(function ($q) use ($ride_block_minutes) {
+                // Normal ride
+                $q->where('is_schedule', 0)
 
-        $on_ride_request = $this->riderRideRequestDetail()->where('driver_id', '!=', null)->whereNotIn('status', ['canceled'])->where('is_rider_rated',false)
-                        // ->whereHas('payment',function ($q) {
-                        //     $q->where('payment_status', 'pending');
-                        // })
-                        ->where(function ($q) use ($ride_block_minutes) {
-                            $q->where('is_schedule', 0) // Normal ride
-                              ->orWhere(function ($q2) use ($ride_block_minutes) {
-                                  $q2->where('is_schedule', 1)
-                                     ->where('scheduled_at', '<=', Carbon::now()->addMinutes($ride_block_minutes));
-                              });
-                        })
-                        ->first();
+                // Accepted scheduled ride - bypass ride block minutes
+                ->orWhere(function ($q2) {
+                    $q2->where('is_schedule', 1)
+                    ->whereIn('status', ['accepted', 'arriving', 'arrived', 'in_progress']);
+                })
+
+                // Other scheduled rides - apply ride block minutes
+                ->orWhere(function ($q2) use ($ride_block_minutes) {
+                    $q2->where('is_schedule', 1)
+                    ->where('status', '!=', 'accepted')
+                    ->where('scheduled_at', '<=', Carbon::now()->addMinutes($ride_block_minutes));
+                });
+            })
+            ->first();
          
         $pending_payment_ride_request = $this->riderRideRequestDetail()->where('status', 'completed')->where('is_rider_rated',true)
                         ->whereHas('payment',function ($q) {

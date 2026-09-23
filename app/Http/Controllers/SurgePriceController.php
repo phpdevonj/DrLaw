@@ -35,7 +35,7 @@ class SurgePriceController extends Controller
         $pageTitle = __('message.add_form_title',[ 'form' => __('message.surge_price')]);
         $regions = Region::pluck('name', 'id');
         $regionDetails = Region::get(['id', 'coordinates']);
-
+        
         return view('surge_price.form', compact('pageTitle', 'regions', 'regionDetails'));
     }
 
@@ -153,4 +153,53 @@ class SurgePriceController extends Controller
 
         return redirect()->back()->with($status,$message);
     }
+
+    /**
+     * Get region timezone information
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function getRegionTimezone(Request $request)
+    {
+        $regionId = $request->get('region_id');
+        
+        if (!$regionId) {
+            return response()->json(['success' => false, 'message' => 'Region ID is required']);
+        }
+        
+        $region = Region::find($regionId);
+        
+        if (!$region) {
+            return response()->json(['success' => false, 'message' => 'Region not found']);
+        }
+        
+        $timezone = $region->timezone ?? 'UTC';
+        
+        // Format timezone display (e.g., "GMT +5:30" for Asia/Kolkata)
+        try {
+            $tz = new \DateTimeZone($timezone);
+            $dt = new \DateTime('now', $tz);
+            $offset = $tz->getOffset($dt);
+            
+            $hours = intval($offset / 3600);
+            $minutes = abs(($offset % 3600) / 60);
+            
+            $sign = $offset >= 0 ? '+' : '-';
+            $formattedOffset = sprintf('GMT %s%d:%02d', $sign, abs($hours), $minutes);
+            
+            return response()->json([
+                'success' => true,
+                'timezone' => $formattedOffset,
+                'timezone_name' => $timezone
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => true,
+                'timezone' => 'GMT +0:00',
+                'timezone_name' => 'UTC'
+            ]);
+        }
+    }
+
 }

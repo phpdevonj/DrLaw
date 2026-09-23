@@ -12,6 +12,7 @@ use App\DataTables\WalletHistoryDataTable;
 use App\DataTables\WithdrawRequestDataTable;
 use App\DataTables\PointHistoryDataTable;
 use App\DataTables\UserAddressDataTable;
+use Carbon\Carbon;
 
 class RiderController extends Controller
 {
@@ -51,15 +52,70 @@ class RiderController extends Controller
      */
     public function store(RiderRequest $request)
     {
+        $plainPassword = $request->password;
         $request['password'] = bcrypt($request->password);
 
         $request['username'] = $request->username ?? stristr($request->email, "@", true) . rand(100,1000);
         $request['display_name'] = $request->first_name.' '. $request->last_name;
         $request['user_type'] = 'rider';
-        // Riders added from the admin dashboard log in on mobile via the OTP/social-login flow,
-        // which matches on login_type = 'mobile'. Without stamping it here it stays NULL and the
-        // app can't find the account, sending an existing rider back to registration.
-        $request['login_type'] = $request->login_type ?? 'mobile';
+
+        $sibling = User::where('email', $request->email ?? '')->first();
+        if ($sibling) {
+            $request['password'] = $sibling->password;
+        }
+
+        // Create a customer in Stripe using the helper function (only if Stripe is configured in DB)
+        if (hasStripeKeys()) {
+            if ($sibling && $sibling->stripe_customer_id) {
+                $request['stripe_customer_id'] = $sibling->stripe_customer_id;
+            } else {
+                $stripeCustomer = createStripeCustomer($request->email ?? '', $request->display_name, $request->contact_number, 'stripe');
+                if (isset($stripeCustomer['id'])) {
+                    $request['stripe_customer_id'] = $stripeCustomer['id'];
+                } else {
+                    return redirect()->back()->withErrors('Failed to create Stripe customer.');
+                }
+            }
+        }
+
+        // Create Firebase user
+        $auth = app('firebase.auth');
+        if ($sibling && $sibling->uid) {
+            $uid = $sibling->uid;
+        } else {
+            try {
+                $firebaseUser = $auth->createUser([
+                    'email' => $request->email,
+                    'password' => $plainPassword,
+                ]); 
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'EMAIL_EXISTS') !== false) {
+                    $firebaseUser = $auth->getUserByEmail($request->email);
+                } else {
+                    return redirect()->back()->withErrors('Firebase Error: ' . $e->getMessage());
+                }
+            }
+            $uid = $firebaseUser->uid;
+        }
+
+        // Store data in Firestore
+        $firestore = app('firebase.firestore');
+        $collection = $firestore->database()->collection('users');
+        $document = $collection->document($uid)->set([
+            "contact_number" => $request->contact_number,
+            "created_at" => Carbon::parse($request->created_at)->format('Y-m-d H:i:s.u'),
+            "display_name" => $request->display_name,
+            "email" => $request->email,
+            "first_name" => $request->first_name,
+            "last_name" => $request->last_name,
+            "player_id" => null,
+            "uid" => $uid,
+            "updated_at" => Carbon::parse($request->updated_at)->format('Y-m-d H:i:s.u'),
+            "user_type" => $request->user_type,
+            "username" => $request->username,
+        ]);
+        $request['uid'] = $uid;
+
         $user = User::create($request->all());
 
         uploadMediaFile($user,$request->profile_image, 'profile_image');
@@ -149,8 +205,25 @@ class RiderController extends Controller
         $request['password'] = $request->password != '' ? bcrypt($request->password) : $user->password;
 
         $request['display_name'] = $request->first_name.' '. $request->last_name;
+
+        // Check if email, name, or phone number has changed
+        $emailChanged = $user->email !== $request->email;
+        $nameChanged = $user->display_name !== $request->first_name . ' ' . $request->last_name;
+        $phoneChanged = $user->contact_number !== $request->contact_number;
+
+        if ($emailChanged || $nameChanged || $phoneChanged) {
+            // Update Stripe customer (only if Stripe keys are configured in DB)
+            if (hasStripeKeys() && $user->stripe_customer_id) {
+                $stripeResponse = updateStripeCustomer($user->stripe_customer_id, $request->email, $request->first_name . ' ' . $request->last_name, $request->contact_number);
+                if (isset($stripeResponse['error'])) {
+                    return redirect()->back()->withErrors('Failed to update Stripe customer.');
+                }
+            }
+        }
+
         // User user data...
         $user->fill($request->all())->update();
+        syncSharedFieldsToSiblings($user, ['first_name', 'last_name', 'display_name', 'password']);
 
         // Save user image...
         if (isset($request->profile_image) && $request->profile_image != null) {
@@ -190,7 +263,20 @@ class RiderController extends Controller
         $message = __('message.not_found_entry', ['name' => __('message.rider')]);
 
         if($user!='') {
+            $siblings = getSiblingAccounts($user);
+            // Delete Stripe customer (only if Stripe keys are configured in DB)
+            if ($siblings->isEmpty() && hasStripeKeys() && $user->stripe_customer_id) {
+                $stripeResponse = deleteStripeCustomer($user->stripe_customer_id);
+                if (isset($stripeResponse['error'])) {
+                    return redirect()->back()->withErrors('Failed to delete Stripe customer.');
+                }
+            }
             $user->delete();
+            // delete from firebase
+            if($siblings->isEmpty() && $user->uid != null){
+                $firebaseData = app('firebase.firestore')->database()->collection('users')->document($user->uid);
+                $firebaseData->delete();
+            } 
             $status = 'success';
             $message = __('message.delete_form', ['form' => __('message.rider')]);
         }

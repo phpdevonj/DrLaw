@@ -17,7 +17,6 @@ class Admin
      */
     public function handle($request, Closure $next)
     {   
-        
         // get all roles using model and use foreach loop to check in array condition
         $excludedRoles = ['rider', 'driver'];
         $allowedRoles = Role::where('status', 1)->whereNotIn('name', $excludedRoles)->pluck('name')->toArray();

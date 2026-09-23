@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
+use App\Rules\PhoneNumber;
 
 
 class RiderRequest extends FormRequest
@@ -29,22 +31,45 @@ class RiderRequest extends FormRequest
     {
         $method = strtolower($this->method());
         $user_id = $this->route()->rider;
+        $user_type = 'rider';
 
         $rules = [];
         switch ($method) {
             case 'post':
                 $rules = [
-                    'username' => 'required|unique:users,username',
+                    'username' => [
+                        'required',
+                        Rule::unique('users', 'username')->where(fn ($q) => $q->where('user_type', $user_type)),
+                    ],
                     'password' => 'required|min:8',
-                    'email' => 'required|email|unique:users',
-                    'contact_number' => 'max:20|unique:users,contact_number',
+                    'email' => [
+                        'required',
+                        'email',
+                        Rule::unique('users', 'email')->where(fn ($q) => $q->where('user_type', $user_type)),
+                    ],
+                    'contact_number' => [
+                        'max:20',
+                        new PhoneNumber,
+                        Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type)),
+                    ],
                 ];
                 break;
             case 'patch':
                 $rules = [
-                    'username'  => 'required|unique:users,username,'.$user_id,
-                    'email'     => 'required|email|unique:users,email,'.$user_id,
-                    'contact_number' => 'max:20|unique:users,contact_number,'.$user_id,
+                    'username'  => [
+                        'required',
+                        Rule::unique('users', 'username')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                    ],
+                    'email'     => [
+                        'required',
+                        'email',
+                        Rule::unique('users', 'email')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                    ],
+                    'contact_number' => [
+                        'max:20',
+                        new PhoneNumber,
+                        Rule::unique('users', 'contact_number')->where(fn ($q) => $q->where('user_type', $user_type))->ignore($user_id),
+                    ],
                 ];
                 break;
         }

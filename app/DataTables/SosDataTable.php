@@ -118,7 +118,7 @@ class SosDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'sos_' . date('YmdHis');
     }

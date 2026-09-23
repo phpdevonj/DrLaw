@@ -52,6 +52,12 @@
                                     <li class="nav-item">
                                         <a href="javascript:void(0)" data-href="{{ route('layout_page') }}?page=payment-setting" data-target=".paste_here" class="nav-link {{$page=='payment-setting'?'active':''}}"  data-toggle="tabajax" rel="tooltip"> {{ __('message.payment_settings') }}</a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a href="javascript:void(0)" data-href="{{ route('layout_page') }}?page=referral-setting" data-target=".paste_here" class="nav-link {{$page=='referral-setting'?'active':''}}"  data-toggle="tabajax" rel="tooltip"> {{ __('message.referral_settings') }}</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="javascript:void(0)" data-href="{{ route('layout_page') }}?page=driver_message-setting" data-target=".paste_here" class="nav-link {{$page=='driver_message-setting'?'active':''}}"  data-toggle="tabajax" rel="tooltip"> Driver Message</a>
+                                    </li>
                                 @endif
                             @endif
                         </ul>

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{RideRequest,User,Payment};
+use App\Models\{RideRequest,User,Payment,Referral};
 use Illuminate\Http\Request;
-use App\Exports\{AdminReportExport,DriverReportExport,DriverEarningExport,ServiceWiseReportExport};
+use App\Exports\{AdminReportExport,DriverReportExport,DriverEarningExport,ServiceWiseReportExport,ReferralReportExport};
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -284,7 +285,7 @@ class ReportController extends Controller
                 ->when($params['rider_id'], fn($q) => $q->where('rider_id', $params['rider_id']))
                 ->when($params['driver_id'], fn($q) => $q->where('driver_id', $params['driver_id']));
         })
-        >selectRaw('SUM(total_amount) as totalAmount, SUM(admin_commission) as totalAdminCommission, SUM(driver_commission) as totalDriverCommission, SUM(company_fee_charge) as totalCompanyFee, SUM(expenses_charge) as totalExpenses')
+        ->selectRaw('SUM(total_amount) as totalAmount, SUM(admin_commission) as totalAdminCommission, SUM(driver_commission) as totalDriverCommission, SUM(company_fee_charge) as totalCompanyFee, SUM(expenses_charge) as totalExpenses')
         ->first();
 
         // Total amounts
@@ -831,4 +832,201 @@ class ReportController extends Controller
         return $pdf->download($filename);
     }
 
+    public function referralsReport(Request $request)
+    {
+        $pageTitle = __('message.report', ['name' => __('message.referrals')]);
+        $auth_user = authSession();
+        $params = [
+            'from_date' => $request->input('from_date'),
+            'to_date' => $request->input('to_date'),            
+            'referrer_id' => (int) $request->input('referrer_id'),
+            'referred_id' => (int) $request->input('referred_id'),
+            'status' => $request->input('status'),
+        ];
+
+        $referrals = Referral::with(['referrer', 'referred']);  
+        
+        if ($params['from_date'] != null) {
+            $referrals->whereDate('created_at', '>=', $params['from_date']);
+        }
+        if ($params['to_date'] != null) {
+            $referrals->whereDate('created_at', '<=', $params['to_date']);
+        }        
+        if ($params['referrer_id'] != null) {
+            $referrals->where('referrer_id', $params['referrer_id']);
+        }
+        if ($params['referred_id'] != null) {
+            $referrals->where('referred_id', $params['referred_id']);
+        }
+        if ($params['status'] != null) {
+            $referrals->where('status', $params['status']);
+        }
+
+        if ($request->ajax()) {
+            return datatables()->of($referrals)
+                ->addColumn('referrer_email', function ($row) {
+                    return $row->referrer->email ?? '-';
+                })
+                ->addColumn('referred_email', function ($row) {
+                    return $row->referred->email ?? '-';
+                })
+                ->addColumn('referred_device_id', function ($row) {
+                    return $row->referred->device_id ?? '-';
+                })
+                ->addColumn('referred_device_type', function ($row) {
+                    return ucfirst($row->referred->device_type) ?? '-';
+                })
+                ->addColumn('status', function ($row) {
+                    return ucfirst($row->status);
+                })
+                ->addColumn('created_at', function ($row) {
+                    return dateAgoFormate($row->created_at, true);
+                })
+                ->make(true);
+        }
+
+        $data = $referrals->get();
+        return view('report.referrals-report', compact('pageTitle', 'auth_user', 'data', 'params'));
+    }
+
+    public function referralsReportExport(Request $request)
+    {
+        $startDate = $request->input('from_date',null);
+        $endDate = $request->input('to_date',null);
+        $referrerId = $request->input('referrer_id',null);
+        $referredId = $request->input('referred_id',null);
+        $status = $request->input('status',null);
+
+        $start = $startDate ? Carbon::parse($startDate)->format('Y-m-d') : null;
+        $end = $endDate ? Carbon::parse($endDate)->format('Y-m-d') : null;
+
+        $referrals = Referral::with(['referrer', 'referred']); 
+
+        if ($start) {
+            $referrals->whereDate('created_at', '>=', $start);
+        }
+        if ($end) {
+            $referrals->whereDate('created_at', '<=', $end);
+        }
+        if ($referrerId) {
+            $referrals->where('referrer_id', $referrerId);
+        }
+        if ($referredId) {
+            $referrals->where('referred_id', $referredId);
+        }
+        if ($status) {
+            $referrals->where('status', $status);
+        }
+
+        $data = $referrals->get();
+
+        $export = new ReferralReportExport($request,$startDate,$endDate,$referrerId,$referredId,$status);
+        $filename = ($start && $end) ? "referrals-report_{$start}_to_{$end}.xlsx" : "referrals-report_{$start}.xlsx";
+
+        return Excel::download($export, $filename);
+    }
+
+    public function referralsReportPdfExport(Request $request)
+    {
+        $export = new ReferralReportExport($request);
+        $collection = $export->collection();
+        $mappedData = $collection->map([$export, 'map']);
+        $headings = $export->headings('pdf');
+        $dateFilterText = '';
+
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+        $filenameDatePart = '';
+
+        if ($fromDate && $toDate) {
+            $fromDateFormatted = \Carbon\Carbon::parse($fromDate)->format('Y-m-d');
+            $toDateFormatted = \Carbon\Carbon::parse($toDate)->format('Y-m-d');
+            $dateFilterText = 'From Date: ' . $fromDateFormatted . ' To Date: ' . $toDateFormatted;
+            $filenameDatePart = '_from_' . $fromDateFormatted . '_to_' . $toDateFormatted;
+        } elseif ($fromDate) {
+            $fromDateFormatted = \Carbon\Carbon::parse($fromDate)->format('Y-m-d');
+            $dateFilterText = 'From Date: ' . $fromDateFormatted;
+            $filenameDatePart = '_from_' . $fromDateFormatted;
+        } elseif ($toDate) {
+            $toDateFormatted = \Carbon\Carbon::parse($toDate)->format('Y-m-d');
+            $dateFilterText = 'To Date: ' . $toDateFormatted;
+            $filenameDatePart = '_to_' . $toDateFormatted;
+        }
+
+        $htmlContent = '<h1>Referrals Report</h1>';
+        if ($dateFilterText) {
+            $htmlContent .= '<p><strong>' . $dateFilterText . '</strong></p>';
+        }
+
+        $htmlContent .= '<style>
+            body {
+                font-family: "DejaVu Sans", sans-serif;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                border-bottom: 1px solid black;
+            }
+            th, td {
+                padding: 8px;
+                text-align: left;
+                border-bottom: 1px solid #bfbfbf;
+            }
+            .bold-text {
+                font-weight: bold;
+            }
+            .text-capitalize {
+                text-transform: capitalize;
+            }
+            h1 {
+                text-align: center;
+            }
+            p {
+                font-size: 18px;
+            }
+            .note {
+                margin-top: 20px;
+                font-size: 15px;
+                text-align: center;
+                color: green;
+            }  
+        </style>';
+
+        $htmlContent .= '<table>';
+        $htmlContent .= '<thead><tr>';
+
+        if (is_array($headings) && isset($headings) && is_array($headings)) {
+            $columns = $headings;
+        } else {
+            $columns = ['Invalid Headings'];
+        }
+
+        foreach ($columns as $heading) {
+            $htmlContent .= '<th>' . $heading . '</th>';
+        }
+
+        $htmlContent .= '</tr></thead>';
+        $htmlContent .= '<tbody>';
+
+        foreach ($mappedData as $row) {
+            $htmlContent .= '<tr>';
+            foreach ($row as $cell) {
+                $htmlContent .= '<td class="text-capitalize">' . $cell . '</td>';
+            }
+            $htmlContent .= '</tr>';
+        }
+
+        $htmlContent .= '</tbody>';
+        $htmlContent .= '</table>';
+
+        $htmlContent .= '<div class="note">
+                <p class="note">' . __('message.note_pdf_report') . '</p>
+                </div>';
+
+        $pdf = Pdf::loadHTML($htmlContent)->setPaper('a4', 'landscape');
+
+        $filename = 'referrals-report' . $filenameDatePart . '.pdf';
+
+        return $pdf->download($filename);
+    }
 }

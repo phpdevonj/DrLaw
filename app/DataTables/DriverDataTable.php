@@ -58,9 +58,14 @@ class DriverDataTable extends DataTable
                 return $query->service_id != null ? optional($query->service)->name : '';
             })
 
-            ->editColumn('contact_number' , function ( $query ) {
-                // return $query->country_code . $query->contact_number;
-                return maskSensitiveInfo('contact_number', $query->contact_number);
+            ->editColumn('contact_number', function ($query) {
+                if (!$query->contact_number) {
+                    return 'Not Available';
+                }
+
+                $number = formatPhoneNumber($query->contact_number);
+
+                return maskSensitiveInfo('contact_number', $number, 'Not Available');
             })
             
             ->filterColumn('service_id', function( $query, $keyword ){
@@ -78,7 +83,8 @@ class DriverDataTable extends DataTable
             // ->addColumn('action', 'driver.action')
             ->addColumn('action', function($data){
                 $id = $data->id;
-                return view('driver.action',compact('data','id'))->render();
+                $hasExpiredDocs = (int) $data->hasExpiredDocuments();
+                return view('driver.action', compact('data', 'id', 'hasExpiredDocs' ))->render();
             })
             ->order(function ($query) {
                 if (request()->has('order')) {
@@ -130,6 +136,10 @@ class DriverDataTable extends DataTable
             }
         }
 
+        if (request()->has('is_document_expired') && request()->input('is_document_expired') != '') {
+            $model->withExpiredDocument();
+        }
+
         if($this->status != null){
             // $model = $model->where('status', $this->status);
             $model = $model->where('status', '!=', 'active');
@@ -174,7 +184,7 @@ class DriverDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'driver_' . date('YmdHis');
     }

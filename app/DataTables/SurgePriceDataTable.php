@@ -132,6 +132,7 @@ class SurgePriceDataTable extends DataTable
             Column::make('value')->title( __('message.value') ),
             Column::make('time_ranges')->title( __('message.timing') )->orderable(false),
             Column::make('created_at')->title( __('message.created_at') ),
+            
             Column::computed('action')
                   ->exportable(false)
                   ->printable(false)
@@ -145,7 +146,7 @@ class SurgePriceDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'SurgePrice_' . date('YmdHis');
     }

@@ -6,20 +6,29 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SurgePrice;
 use App\Http\Resources\SurgePriceResource;
-use Grimzy\LaravelMysqlSpatial\Types\Point;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 use App\Models\Region;
 
 class SurgePriceController extends Controller
 {
     public function getList(Request $request)
     {
+        $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
+
+
+        if ((int) $surge_price_setting_value !== 1) {
+            return json_custom_response([
+                'data' => [],
+            ]);
+        }
+
         $user = auth()->user();
         $surge_price = SurgePrice::query();
 
         if(!empty($user->latitude) && !empty($user->longitude)){  
             $userLocation = new Point($user->latitude, $user->longitude);
 
-            $region = Region::where('status', 1)->contains('coordinates', $userLocation)->first();
+            $region = Region::where('status', 1)->whereContains('coordinates', $userLocation)->first();
 
             if($region){
                 $surge_price = $surge_price->where('region_id',$region->id);

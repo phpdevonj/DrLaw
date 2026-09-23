@@ -35,6 +35,7 @@
         </div>
     </div>
     @include('app-language-setting.languagewithkeyword.filter')
+    <div class="modal fade" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" id="remoteModelData" data-backdrop="static" data-keyboard="false"></div>
 
     @section('bottom_script')
        {{ $dataTable->scripts() }}
@@ -46,6 +47,15 @@
                     dropdownParent: $('#filterModal'),
                 });
             });
+
+            // Handle loadRemoteModel clicks
+            $(document).on('click', '.loadRemoteModel', function(e) {
+                    e.preventDefault();
+                    var url = $(this).attr('href');
+                    $('#remoteModelData').load(url, function() {
+                        $('#remoteModelData').modal('show');
+                    });
+                });
         </script>
     @endsection
 </x-master-layout>

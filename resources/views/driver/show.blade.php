@@ -21,7 +21,7 @@
                             <a href="{{ route('driver.show',$data->id) }}" class="nav-link {{ $type == 'detail' ? 'active': '' }}"> {{ __('message.detail_form_title',['form'=>__('message.driver')]) }} </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('driver.show', [ $data->id, 'type' => 'bank_detail']) }}" class="nav-link {{ $type == 'bank_detail' ? 'active': '' }}"> {{ __('message.detail_form_title', [ 'form' => __('message.bank') ]) }} </a>
+                            <a href="{{ route('driver.show', [ $data->id, 'type' => 'bank_detail']) }}" class="nav-link {{ $type == 'bank_detail' ? 'active': '' }}"> {{ __('message.bank_details') }} </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('driver.show', [ $data->id, 'type' => 'wallet_history']) }}" class="nav-link {{ $type == 'wallet_history' ? 'active': '' }}"> {{ __('message.wallethistory') }} </a>
@@ -78,7 +78,7 @@
                                     </div>
                                 </div>
                             @endif
-                            
+
                             <p class="text-white text-center mb-4">                                
                                 Driver Score : {{$data->driver_score}}%
                             </p>
@@ -96,7 +96,7 @@
                                 </div>
                                 <p class="mb-0">{{ maskSensitiveInfo('contact_number', $data->contact_number) }}</p>
                             </div>
-                            <div class="d-flex align-items-center mb-3">
+                            <!-- <div class="d-flex align-items-center mb-3">
                                 <div class="p-icon mr-3"> 
                                     
                                     @if( $data->gender == 'female' )
@@ -108,7 +108,7 @@
                                     @endif
                                 </div>
                                 <p class="mb-0">{{ $data->gender }}</p>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -181,9 +181,9 @@
                         <div class="card card-block border-radius-20">
                             <div class="card-body">
                                 <div class="top-block-one">                                
-                                    <p class="mb-1">{{ __('message.cash_earning') }}</p>
+                                    <p class="mb-1">{{ __('message.card_earning') }}</p>
                                     <p></p>
-                                    <h5>{{ getPriceFormat( $data->cash_earning ) ?? 0 }} </h5>
+                                    <h5>{{ getPriceFormat( $data->card_earning ) ?? 0 }} </h5>
                                 </div>
                             </div>
                         </div>
@@ -254,7 +254,7 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">{{ __('message.detail_form_title', [ 'form' => __('message.bank') ]) }}</h4>
+                                <h4 class="card-title mb-0">{{ __('message.bank_details') }}</h4>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -283,9 +283,13 @@
                                         <p class="mb-0">{{ optional($data->userBankAccount)->routing_number ?? '-' }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
+                                        <h5>{{ __('message.account_type') }}</h5>
+                                        <p class="mb-0">{{ ucfirst(optional($data->userBankAccount)->account_type) ?? '-' }}</p>
+                                    </div>
+                                    <!-- <div class="col-md-6 mb-3">
                                         <h5>{{ __('message.bank_iban') }}</h5>
                                         <p class="mb-0">{{ optional($data->userBankAccount)->bank_iban ?? '-' }}</p>
-                                    </div>
+                                    </div> -->
                                     <div class="col-md-6 mb-3">
                                         <h5>{{ __('message.bank_swift') }}</h5>
                                         <p class="mb-0">{{ optional($data->userBankAccount)->bank_swift ?? '-' }}</p>

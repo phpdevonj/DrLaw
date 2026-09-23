@@ -138,7 +138,7 @@
                                             <li><i class="fa fa-phone"></i>: ${driver.contact_number}</li>
                                             <li><i class="fa fa-taxi"></i>: ${driver.driver_service?.name || '-'}</li>
                                             <li><i class="fa fa-clock"></i>: ${driver.last_location_update_at || '-'}</li>
-                                            <li><a href="{{ route('driver.show', '') }}/${driverId}">
+                                            <li><a href="${ '{{ route('driver.show', '__id__') }}'.replace('__id__', driverId) }">
                                                 <i class="fa fa-eye"></i> {{ __('message.view_form_title', ['form' => __('message.driver')]) }}</a></li>
                                         </ul>
                                     </div>`;

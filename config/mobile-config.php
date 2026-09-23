@@ -10,21 +10,19 @@ return [
 
     'ONESIGNAL' => [
         'APP_ID' => env('ONESIGNAL_APP_ID'),
-        'REST_API_KEY' => env('ONESIGNAL_REST_API_KEY'),
-        'DRIVER_APP_ID' => env('ONESIGNAL_DRIVER_APP_ID'),
-        'DRIVER_REST_API_KEY' => env('ONESIGNAL_DRIVER_REST_API_KEY'),
+        'REST_API_KEY' => env('ONESIGNAL_REST_API_KEY')
     ],
 
     'DISTANCE' => [
-        'RADIUS' => ''
+        'PICKUP_RADIUS' => ''
     ],
 
     'RIDE' => [
         'FOR_OTHER' => '',
-        'MULTIPLE_DROP_LOCATION' => '',
+        // 'MULTIPLE_DROP_LOCATION' => '',
     ],
 
-    'FIREBASE' => [
-        'SERVER_KEY' => env('FIREBASE_SERVER_KEY'),
-    ],
+    // 'FIREBASE' => [
+    //     'SERVER_KEY' => env('FIREBASE_SERVER_KEY'),
+    // ],
 ];

@@ -23,7 +23,7 @@ class AppSettingTableSeeder extends Seeder
             0 => 
             array (
                 'id' => 1,
-                'site_name' => 'OG Taxi',
+                'site_name' => 'Ongraph Taxi',
                 'site_email' => NULL,
                 'site_logo' => NULL,
                 'site_favicon' => NULL,

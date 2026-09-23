@@ -33,8 +33,11 @@ class CouponController extends Controller
     {
         $pageTitle = __('message.add_form_title',[ 'form' => __('message.coupon')]);
         $selected_service = $selected_region = [];
+        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+        $currency = currencyArray($currency_code);
+        $current_currency_symbol = $currency['symbol'] ?? '$';
 
-        return view('coupon.form', compact('pageTitle', 'selected_service', 'selected_region'));
+        return view('coupon.form', compact('pageTitle', 'selected_service', 'selected_region','current_currency_symbol'));
     }
 
     /**
@@ -106,8 +109,11 @@ class CouponController extends Controller
                 return [ $item->id => $item->name ];
             });
         }
-        
-        return view('coupon.form', compact('data', 'pageTitle', 'id', 'selected_service', 'selected_region'));
+        $currency_code = SettingData('CURRENCY', 'CURRENCY_CODE') ?? 'USD';
+        $currency = currencyArray($currency_code);
+        $current_currency_symbol = $currency['symbol'] ?? '$';
+
+        return view('coupon.form', compact('data', 'pageTitle', 'id', 'selected_service', 'selected_region','current_currency_symbol'));
     }
 
     /**

@@ -1851,8 +1851,8 @@ class ScreenkeywordSeeder extends Seeder
           [
             "screenId" => "30",
             "keyword_id" => 307,
-            "keyword_name" => "mostReliableOGDriverApp",
-            "keyword_value" => "Most Reliable OG Driver App"
+            "keyword_name" => "mostReliableOngraphDriverApp",
+            "keyword_value" => "Most Reliable Ongraph Driver App"
           ],
           [
             "screenId" => "30",
@@ -1869,8 +1869,8 @@ class ScreenkeywordSeeder extends Seeder
           [
             "screenId" => "30",
             "keyword_id" => 139,
-            "keyword_name" => "mostReliableOGRiderApp",
-            "keyword_value" => "Most Reliable OG Rider App"
+            "keyword_name" => "mostReliableOngraphRiderApp",
+            "keyword_value" => "Most Reliable Ongraph Rider App"
           ],
           [
             "screenId" => "30",
@@ -2506,6 +2506,7 @@ class ScreenkeywordSeeder extends Seeder
       ]
     ];
 
+    $languages = LanguageList::all();
 
     foreach ($screen_data as $screen) {
       $screen_record = Screen::where('screenID', $screen['screenID'])->first();
@@ -2528,6 +2529,18 @@ class ScreenkeywordSeeder extends Seeder
               'keyword_name' => $keyword_data['keyword_name'],
               'keyword_value' => $keyword_data['keyword_value']
             ]);
+          }
+          foreach ($languages as $language) {
+            LanguageWithKeyword::firstOrCreate(
+              [
+                'language_id' => $language->id,
+                'keyword_id' => $keyword_record->keyword_id,
+              ],
+              [
+                'screen_id' => $keyword_record->screen_id,
+                'keyword_value' => $keyword_record->keyword_value,
+              ]
+            );
           }
         }
       }

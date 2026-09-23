@@ -35,11 +35,15 @@ class RegionRequest extends FormRequest
             case 'post':
                 $rules = [
                     'name' => 'required',
+                    'timezone' => 'required',
+                    'coordinates' => 'required',                    
                 ];
                 break;
             case 'patch':
                 $rules = [
                     'name'  => 'required',
+                    'timezone' => 'required',
+                    'coordinates' => 'required',
                 ];
                 break;
         }

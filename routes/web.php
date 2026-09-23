@@ -39,6 +39,7 @@ use App\Http\Controllers\SurgePriceController;
 use App\Http\Controllers\WhyChooseController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\CarModelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,12 +67,12 @@ Route::group(['prefix' => 'auth'], function() {
     Route::get('lock-screen', [HomeController::class, 'authlockScreen'])->name('auth.lock-screen');
 });
 
-Route::get('ride-invoice/{id}', [RideRequestController::class, 'rideInvoicePdf'])->name('ride-invoice');
+Route::get('ride-invoice/{id}/{user_type?}', [RideRequestController::class, 'rideInvoicePdf'])->name('ride-invoice');
 Route::get('language/{locale}', [ HomeController::class, 'changeLanguage'])->name('change.language');
 Route::group(['middleware' => ['auth', 'verified', 'admin', 'check.route.permission']], function()
 {
-    // Route::get('/', [HomeController::class, 'index']);
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/home', [HomeController::class, 'index']);
 
     Route::group(['namespace' => '' ], function () {
         Route::resource('permission', PermissionController::class);
@@ -117,6 +118,9 @@ Route::group(['middleware' => ['auth', 'verified', 'admin', 'check.route.permiss
     Route::post('wallet-settings/save',[ SettingController::class , 'walletSettingsUpdate'])->name('walletSettingsUpdate');
     Route::post('ride-settings/save',[ SettingController::class , 'rideSettingsUpdate'])->name('rideSettingsUpdate');
     Route::post('notification-settings/save',[ SettingController::class , 'notificationSettingsUpdate'])->name('notificationSettingsUpdate');
+    Route::post('referral-settings/save',[ SettingController::class , 'referralSettingsUpdate'])->name('referralSettingsUpdate');
+    Route::post('get-lang-driver-message',[ SettingController::class , 'getLanguageDriverMessage'])->name('getLanguageDriverMessage');
+    Route::post('save-lang-driver-message',[ SettingController::class , 'saveLanguageDriverMessage'])->name('saveLanguageDriverMessage');
 
     Route::post('get-lang-file', [ LanguageController::class, 'getFile' ] )->name('getLanguageFile');
     Route::post('save-lang-file', [ LanguageController::class, 'saveFileContent' ] )->name('saveLangContent');
@@ -124,8 +128,14 @@ Route::group(['middleware' => ['auth', 'verified', 'admin', 'check.route.permiss
     Route::get('pages/term-condition',[ SettingController::class, 'termAndCondition'])->name('term-condition');
     Route::post('term-condition-save',[ SettingController::class, 'saveTermAndCondition'])->name('term-condition-save');
 
+    Route::get('pages/driver-term-condition',[ SettingController::class, 'driverTermAndCondition'])->name('driver-term-condition');
+    Route::post('driver-term-condition-save',[ SettingController::class, 'saveDriverTermAndCondition'])->name('driver-term-condition-save');
+
     Route::get('pages/privacy-policy',[ SettingController::class, 'privacyPolicy'])->name('privacy-policy');
     Route::post('privacy-policy-save',[ SettingController::class, 'savePrivacyPolicy'])->name('privacy-policy-save');
+
+    Route::get('pages/about-us',[ SettingController::class, 'aboutUs'])->name('about-us');
+    Route::post('about-us-save',[ SettingController::class, 'saveAboutUs'])->name('about-us-save');
 
 	Route::post('env-setting', [ SettingController::class , 'envChanges'])->name('envSetting');
     Route::post('update-profile', [ SettingController::class , 'updateProfile'])->name('updateProfile');
@@ -185,18 +195,21 @@ Route::group(['middleware' => ['auth', 'verified', 'admin', 'check.route.permiss
     Route::get('driver-earning-report', [ ReportController::class, 'driverEarning' ])->name('driver.earning.report');
     Route::get('driver-report-report', [ ReportController::class, 'driverReport' ])->name('driver.report.list');
     Route::get('service-wise-report', [ ReportController::class, 'serviceWiseReport' ])->name('service.wise.report');
+    Route::get('referrals-report', [ ReportController::class, 'referralsReport' ])->name('referralsReport');
 
     // Report Excel Route
     Route::get('download-admin-earning', [ReportController::class, 'downloadAdminEarning'])->name('download-admin-earning');
     Route::get('download-driver-earning', [ReportController::class, 'downloadDriverEarning'])->name('download-driver-earning');
     Route::get('download-driver-report', [ReportController::class, 'downloadDriverReport'])->name('download.driver.report');
     Route::get('servicewise-report-export', [ReportController::class, 'serviceWiseReportExport'])->name('download.servicewise.report');
+    Route::get('referrals-report-export', [ReportController::class, 'referralsReportExport'])->name('download.referrals.report');
 
     //Report Pdf Route
     Route::get('download-adminearningpdf', [ReportController::class, 'downloadAdminEarningPdf'])->name('download-adminearningpdf');
     Route::get('download-driverearningpdf', [ReportController::class, 'downloadDriverEarningPdf'])->name('download-driverearningpdf');
     Route::get('download-driver-report-pdf', [ReportController::class, 'downloadDriverReportPdf'])->name('download.driver.report.pdf');
     Route::get('servicewise-report-pdf-export', [ReportController::class, 'serviceWiseReportPdfExport'])->name('download.servicewise.report.pdf');
+    Route::get('referrals-report-pdf-export', [ReportController::class, 'referralsReportPdfExport'])->name('download.referrals.report.pdf');
 
     Route::get('download-withdrawrequest-list', [ WithdrawRequestController::class, 'downloadWithdrawRequestList'])->name('download.withdrawrequest.list');
 
@@ -212,19 +225,15 @@ Route::group(['middleware' => ['auth', 'verified', 'admin', 'check.route.permiss
 
     // admin user
     Route::resource('admin-user', AdminUserController::class);
+
+    // Car model
+    Route::resource('car-models', CarModelController::class);
 });
 
 Route::get('/ajax-list',[ HomeController::class, 'getAjaxList' ])->name('ajax-list');
+Route::get('/get-region-timezone', [ SurgePriceController::class, 'getRegionTimezone' ])->name('get-region-timezone');
 
-Route::get('/', [FrontendController::class, 'index'])->name('browse');
+Route::get('/frontend', [FrontendController::class, 'index'])->name('browse');
 Route::get('termofservice', [FrontendController::class, 'termofservice'])->name('termofservice');
 Route::get('privacypolicy', [FrontendController::class, 'privacypolicy'])->name('privacypolicy');
 Route::get('page/{slug}', [FrontendController::class, 'page'])->name('pages');
-// PayFast ITN Webhook
-Route::post('payfast/itn', [App\Http\Controllers\API\PayFastController::class, 'itnCallback']);
-Route::get('payfast/success', [App\Http\Controllers\API\PayFastController::class, 'paymentSuccess'])->name('payfast.success');
-Route::get('payfast/cancel', [App\Http\Controllers\API\PayFastController::class, 'paymentCancel'])->name('payfast.cancel');
-
-// PayHub Callback Webhook
-Route::post('payhub/callback', [App\Http\Controllers\API\PayHubController::class, 'callback']);
-Route::get('payhub/redirect', [App\Http\Controllers\API\PayHubController::class, 'paymentRedirect'])->name('payhub.redirect');

@@ -17,12 +17,17 @@ use App\Models\Document;
 use App\Models\LanguageVersionDetail;
 use App\Models\RideRequestBid;
 use App\Models\SurgePrice;
-use App\Models\Role;
-use App\Models\RideTip;
+use App\Models\Referral;
+use App\Models\Point;
+use App\Models\PointHistory;
 use App\Models\Wallet;
 use App\Models\WalletHistory;
 use App\Models\Region;
-
+use App\Models\Role;
+use App\Models\PaymentGateway;
+use App\Models\RideTip;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 function DummyData($key){
     $dummy_title = 'XXXXXXXXXXXX';
@@ -43,7 +48,7 @@ function getSettingFirstData($type = null, $key = null)
     return Setting::where('type', $type)->where('key', $key)->first();
 }
 
-function getSingleMediaSettingImage($model = null, $collection_name, $check_collection_type = null)
+function getSingleMediaSettingImage($model, $collection_name, $check_collection_type = null)
 {
     $image = null;
     if ($model !== null) {
@@ -556,7 +561,6 @@ function saveRideHistory($data)
 
 function checkMenuRoleAndPermission($menu)
 {
-
     if (!auth()->check()) {
         return false;
     }
@@ -762,6 +766,69 @@ function timeZoneList()
         $options[$row['timezone_id']] = $row['time'] . ' - ' . formatOffset($row['offset'])  . ' ' . $row['timezone_id'];
     }
     return $options;
+}
+
+
+/**
+ * Get timezone identifiers for a given ISO 3166-1 alpha-2 country code.
+ * Returns an array keyed by timezone_id with formatted label values.
+ * Falls back to UTC if the code is invalid or yields no results.
+ */
+function getTimezonesByCountryCode(string $countryCode = ''): array
+{
+    if ($countryCode == '') {
+        return timeZoneList();
+    }
+    // Normalise: uppercase, map UK alias to ISO 'GB'
+    $countryCode = strtoupper(trim($countryCode));
+    if ($countryCode === 'UK') {
+        $countryCode = 'GB';
+    }
+
+    $preferred = config("timezones.$countryCode");
+    if ($preferred) {
+        // Handle both simple arrays and associative arrays (with labels)
+        $identifiers = is_numeric(array_key_first($preferred)) ? $preferred : array_keys($preferred);
+    } else {
+        try {
+            $identifiers = \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $countryCode);
+        } catch (\Exception $e) {
+            $identifiers = [];
+        }
+    }
+
+    if (empty($identifiers)) {
+        return ['UTC' => 'UTC'];
+    }
+
+    $options = [];
+    foreach ($identifiers as $tzId) {
+        try {
+            $z = new \DateTimeZone($tzId);
+            $c = new \DateTime('now', $z);
+            //$offset = $z->getOffset($c);
+            //$options[$tzId] = formatOffset($offset) . ' — ' . $tzId;
+            $label = $tzId;
+            if ($preferred && isset($preferred[$tzId]) && !is_numeric($tzId)) {
+                $label = $tzId . ' (' . $preferred[$tzId] . ')';
+            }
+            $options[$tzId] = $label;
+        } catch (\Exception $e) {
+            $options[$tzId] = $tzId;
+        }
+    }
+
+    return $options;
+}
+
+/**
+ * Convenience wrapper — reads country code from the current session.
+ * Usage: getTimezonesByCurrentCountry()
+ */
+function getTimezonesByCurrentCountry(): array
+{
+    $code = session('current_country_code', 'UTC');
+    return getTimezonesByCountryCode($code);
 }
 
 function formatOffset($offset)
@@ -1004,19 +1071,87 @@ function createLangFile($lang=''){
     }
 }
 
+/**
+ * Return the list of language codes that are active in the admin panel.
+ * Cached to avoid a DB hit on every API request. Bust the cache with
+ * Cache::forget('supported_locales') whenever languages change.
+ */
+function supportedLocales()
+{
+    return \Illuminate\Support\Facades\Cache::remember('supported_locales', 3600, function () {
+        return \App\Models\LanguageList::where('status', 1)
+            ->pluck('language_code')
+            ->filter()
+            ->values()
+            ->all();
+    });
+}
+
+/**
+ * The language the client EXPLICITLY asked for on the current request:
+ * the custom `language` header, else the `language` request param.
+ * Returns null when neither was sent, so callers fall back to the user's
+ * stored preference instead of clobbering it.
+ *
+ * NOTE: `Accept-Language` is deliberately NOT read here — browsers/HTTP
+ * clients send it automatically (device default), so it is an ambient signal,
+ * not an explicit choice, and must rank below the user's saved current_lang.
+ * The middleware applies it as a lower-priority fallback via acceptLanguageLocale().
+ */
+function apiRequestLanguage()
+{
+    $request = request();
+
+    if ($request->header('language')) {
+        return $request->header('language');
+    }
+
+    return $request->input('language') ?: null;
+}
+
+/**
+ * Primary language subtag from the Accept-Language header, or null.
+ * "en-US,en;q=0.9" -> "en";  "gsw-CH" -> "gsw"
+ */
+function acceptLanguageLocale()
+{
+    $accept = request()->header('Accept-Language');
+    if (! $accept) {
+        return null;
+    }
+    $primary = trim(explode(';', trim(explode(',', $accept)[0]))[0]);
+    return explode('-', $primary)[0] ?: null;
+}
+
+/**
+ * Resolve a requested language code to a locale we actually support.
+ * Falls back to the application default when the code is empty or unknown,
+ * so we never call App::setLocale() with a code that has no lang folder.
+ */
+function resolveSupportedLocale($code = null)
+{
+    $default = config('app.locale', 'en');
+
+    if (empty($code)) {
+        return $default;
+    }
+
+    return in_array($code, supportedLocales(), true) ? $code : $default;
+}
+
 function dateAgoFormate($date,$type2='')
 {
     if($date == null || $date == '0000-00-00 00:00:00') {
         return '-';
     }
 
-    $diff_time1 = \Carbon\Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
+    $diff_time1 = Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
     $datetime = new \DateTime($date);
     $la_time = new \DateTimeZone(auth()->check() ? auth()->user()->timezone ?? 'UTC' : 'UTC');
     $datetime->setTimezone($la_time);
     $diff_date = $datetime->format('Y-m-d H:i:s');
 
-    $diff_time = \Carbon\Carbon::parse($diff_date)->isoFormat('LLL');
+    $diff_time = Carbon::parse($diff_date)->isoFormat('LLL');
 
     if($type2 != ''){
         return $diff_time;
@@ -1033,7 +1168,7 @@ function timeAgoFormate($date)
 
     date_default_timezone_set('UTC');
 
-    $diff_time= \Carbon\Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
+    $diff_time= Carbon::createFromTimeStamp(strtotime($date))->diffForHumans();
 
     return $diff_time;
 }
@@ -1153,12 +1288,12 @@ function first_element_in_distance_matrix($distance_matrix)
     return $row['elements'][0];
 }
 
-function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat, $dropLng, $multiLocation, $dropoff_time_in_seconds, $service, $coupon = null, $surge_price = null,$ride_datetime = null) {
+function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat, $dropLng, $multiLocation, $dropoff_time_in_seconds, $service, $coupon = null, $surge_price = null,$ride_datetime = null,$is_credit_used=false, $rider_id=null) {
     $time_price = 0;
-    
+
     $distance_unit = $service['distance_unit'] ?? 'km';
     $minimum_distance = $service['minimum_distance'] ?? 0;
-    
+
     if ($distance_unit == 'mile') {
         $distance_in_unit = km_to_mile($distance_in_unit); // convert km distance to miles
     }
@@ -1176,9 +1311,9 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     //     $previousLng = $currentLng;
     // }
 
-    //$finalDistance = haversineDistance($previousLat, $previousLng, $dropLat, $dropLng);
-    
-    //$distance_in_unit += $finalDistance;
+    // $finalDistance = haversineDistance($previousLat, $previousLng, $dropLat, $dropLng);
+
+    // $distance_in_unit += $finalDistance;
 
     // if ($distance_unit == 'mile') {
     //     $distance_in_unit = km_to_mile($distance_in_unit);
@@ -1202,7 +1337,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     } else {
         $time_price = 0;
     }
-    
+
     if ($distance_in_unit > $minimum_distance) {
         $distance_in_unit -= $minimum_distance;
     }else{
@@ -1211,7 +1346,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
         $distance_in_unit = 0;
     }
 
-    $distance_price = ($distance_in_unit * $service['per_distance']);   
+    $distance_price = ($distance_in_unit * $service['per_distance']); // Distance Fare    
 
     $base_and_distance_price = ($base_fare + $distance_price);
     $total_amount = $base_and_distance_price + $time_price; // Total ride fare. We are not including time idling in the fare calculation, as it depends on the waiting time. For estimation purposes, the time idling fare is not considered.
@@ -1246,6 +1381,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     $subtotal = $total_amount;
 
     if ($coupon) {
+        $coupon = is_array($coupon) ? (object)$coupon : $coupon;
         if ($coupon->minimum_amount < $total_amount) {
             if ($coupon->discount_type == 'percentage') {
                 $discount_amount = $total_amount * ($coupon->discount / 100);
@@ -1257,23 +1393,57 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
                 $discount_amount = $coupon->maximum_discount;
             }
             $subtotal = $total_amount - $discount_amount;
+        } else {
+            if (!empty(request('service_id')) && $service['id'] == request('service_id')) {
+                $response = [
+                    'message' => 'Minimum fare ₹'.$coupon->minimum_amount.' required.',
+                ];
+                throw new \Illuminate\Http\Exceptions\HttpResponseException(json_custom_response($response, 400));
+            }
+        }
+    }
+
+    // use wallet balance for ride booking
+    if($is_credit_used){
+        $user_wallet = Wallet::where([ 'user_id' => $rider_id ])->first();
+        if($user_wallet && $user_wallet->total_amount > 0){ 
+            $subtotal = $total_amount;    
+            if ($user_wallet->total_amount >= $subtotal) {
+                // Wallet has enough to cover the subtotal
+                $credit_used = $subtotal;
+                $available_wallet_amount = $user_wallet->total_amount - $credit_used;
+                $subtotal = 0; // Fully covered by wallet
+            } else {
+                // Wallet doesn't have enough, use all wallet balance
+                $credit_used = $user_wallet->total_amount;
+                $available_wallet_amount = 0;
+                $subtotal = $subtotal - $credit_used;
+            }
         }
     }
 
     $surge_amount = 0;
     $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
     if ($surge_price_setting_value == 1 && isset($surge_price) && (is_object($surge_price) || is_array($surge_price))) {
-        
-        $timezone = $service->region->timezone ?? 'UTC';
-        $ride_time = \Carbon\Carbon::parse($ride_datetime)->setTimezone('Asia/Kolkata')->toDateTimeString();
-        // $ride_time = \Carbon\Carbon::parse($ride_datetime)->setTimezone($timezone)->toDateTimeString();
+
+        $timezone = $service?->region?->timezone ?? $service?->timezone ?? 'UTC';
+        $rideTimeOnly = \Carbon\Carbon::parse($ride_datetime, $timezone)->format('H:i');
         foreach ($surge_price->from_time as $index => $from_time) {
             $to_time = $surge_price->to_time[$index];
 
-            if (strtotime($ride_time) >= strtotime($from_time) && strtotime($ride_time) <= strtotime($to_time)) {
-                if ($surge_price->type == 'fixed') {
-                    $surge_amount = $surge_price->value;
-                } elseif ($surge_price->type == 'percentage') {
+            // Handle normal & overnight surge windows
+            if ($from_time <= $to_time) {
+                // Same-day surge (e.g. 13:00 - 23:59)
+                $inRange = $rideTimeOnly >= $from_time && $rideTimeOnly <= $to_time;
+            } else {
+                // Overnight surge (e.g. 22:00 - 06:00)
+                $inRange = $rideTimeOnly >= $from_time || $rideTimeOnly <= $to_time;
+            }
+
+            if ($inRange) {
+                if ($surge_price->type === 'fixed') {
+                    $surge_amount = (float) $surge_price->value;
+                } elseif ($surge_price->type === 'percentage') {
                     $surge_amount = ($subtotal * $surge_price->value) / 100;
                 }
                 $total_amount += $surge_amount;
@@ -1283,7 +1453,7 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
     }
 
     $final_subtotal = $subtotal + ($surge_amount ? $surge_amount : 0);
-    $driver_earning = $final_subtotal - $company_fee - $expenses;
+    $driver_earning = $total_amount - $company_fee - $expenses;
 
     return [
         'distance' => round($distance_in_unit, 2),
@@ -1291,9 +1461,11 @@ function calculateRideFares($distance_in_unit, $pickupLat, $pickupLng, $dropLat,
         'distance_price' => (float) number_format( (float) $distance_price, 2,'.',''),
         'time_price' => (float) number_format( (float) $time_price, 2,'.',''),
         'total_amount' => (float) number_format( (float) $total_amount, 2,'.',''),
-        'subtotal' => (float) number_format( (float) $final_subtotal, 2,'.',''),
+        'subtotal' => (float) number_format( (float) $final_subtotal, 2,'.',''), // total amount - coupon discount
         'discount_amount' => $discount_amount,
         'fixed_charge' => (float) number_format( (float) $surge_amount, 2,'.',''),
+        'credit_used' => $credit_used ?? 0,
+        'available_wallet_amount' => $available_wallet_amount ?? 0,
         'company_fee_charge' => (float) number_format( (float) $company_fee, 2,'.',''),
         'expenses_charge' => (float) number_format( (float) $expenses, 2,'.',''),
         'driver_earning' => (float) number_format( (float) $driver_earning, 2,'.',''),
@@ -1321,8 +1493,8 @@ function haversineDistance($lat1, $lng1, $lat2, $lng2) {
 function calculateRideDuration($start_time, $current_time = null)
 {
     $current_time = $current_time ?? date('Y-m-d H:i:s');
-    $start_time = Carbon\Carbon::parse($start_time);
-    $end_time = Carbon\Carbon::parse($current_time);
+    $start_time = Carbon::parse($start_time);
+    $end_time = Carbon::parse($current_time);
     $total_duration = $end_time->diffInMinutes($start_time);
 
     return $total_duration;
@@ -1401,8 +1573,8 @@ function getPointFormat($points)
 
 function verify_coupon_code($coupon_code)
 {
-    $coupon = Coupon::where('code', $coupon_code)->first();
-    $status = isset($coupon_code) ? 400 : 200;
+    $coupon = Coupon::where('code', $coupon_code)->where('status',1)->first();
+    $status = isset($coupon) ? 400 : 200;
     if($coupon != null) {
         $status = Coupon::isValidCoupon($coupon);
     }
@@ -1622,15 +1794,40 @@ function stringLong($str = '', $type = 'title', $length = 0) //Add … if string
 
 function og_get_distance_matrix_multiple_destination($pick_lat, $pick_lng, $drop_lat, $drop_lng, $drop_latlng, $traffic = false)
 {
+    if (is_string($drop_latlng)) {
+        $drop_latlng = json_decode($drop_latlng, true);
+    }
+    if (!is_array($drop_latlng)) {
+        $drop_latlng = [];
+    }
+
+    $drop_latlng = array_map(function($item) {
+        if (is_array($item)) {
+            $item['latitude'] = $item['latitude'] ?? $item['lat'] ?? null;
+            $item['longitude'] = $item['longitude'] ?? $item['lng'] ?? null;
+        }
+        return $item;
+    }, $drop_latlng);
+
+    // If there are no multi drop locations, fallback to simple pick to drop
+    if (empty($drop_latlng)) {
+        $response = og_get_distance_matrix($pick_lat, $pick_lng, $drop_lat, $drop_lng);
+        return [
+            'duration' => duration_value_from_distance_matrix($response) ?? 0,
+            'distance' => distance_value_from_distance_matrix($response) ?? 0,
+        ];
+    }
+
     $distance = 0;
     $duration = 0;
-    for ($i = 0; $i <= count($drop_latlng); $i++)
+    $count = count($drop_latlng);
+    for ($i = 0; $i <= $count; $i++)
     {
         if( $i == 0 ) {
             $response = og_get_distance_matrix($pick_lat, $pick_lng, $drop_latlng[$i]['latitude'], $drop_latlng[$i]['longitude']);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);
-        } elseif( count($drop_latlng) == $i ) {
+        } elseif( $count == $i ) {
             $response = og_get_distance_matrix($drop_latlng[$i-1]['latitude'], $drop_latlng[$i-1]['longitude'], $drop_lat, $drop_lng);
             $distance += distance_value_from_distance_matrix($response);
             $duration += duration_value_from_distance_matrix($response);
@@ -1694,12 +1891,13 @@ if (!function_exists('getSurgePrice')) {
         }
         $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
         if ($surge_price_setting_value == 1) {
-            $ride_datetime = \Carbon\Carbon::parse($ride_datetime);             
-            $day_id = $ride_datetime->format('N');            
-            $current_time = $ride_datetime->format('H:i');
-
-            $region = Region::select('distance_unit')->find($region_id);
+            $region = Region::select('distance_unit', 'timezone')->find($region_id);
             $distance_unit = $region?->distance_unit ?? 'km'; // default to km if not found
+            $timezone = $region?->timezone ?? 'UTC';
+
+            $ride_datetime = \Carbon\Carbon::parse($ride_datetime, $timezone);          
+            $day_id = $ride_datetime->format('N');            
+            $current_time = $ride_datetime->format('H:i');           
 
             $surge_prices = SurgePrice::where('region_id',$region_id)->whereJsonContains('day', $day_id)->get();
 
@@ -1712,7 +1910,11 @@ if (!function_exists('getSurgePrice')) {
                         $to_time = $to_times[$index];
                 
                         // Check radius match
-                        if (strtotime($current_time) >= strtotime($from_time) && strtotime($current_time) <= strtotime($to_time)) {
+                        // Use Carbon for reliable time-only comparison (avoids strtotime date sensitivity)
+                        $rideCarbon = \Carbon\Carbon::createFromFormat('H:i', $current_time);
+                        $fromCarbon = \Carbon\Carbon::createFromFormat('H:i', $from_time);
+                        $toCarbon = \Carbon\Carbon::createFromFormat('H:i', $to_time);
+                        if ($rideCarbon->between($fromCarbon, $toCarbon)) {
                             // Now check lat/lng/radius                            
                             if($surge_price->latitude && $surge_price->longitude && $surge_price->radius){ 
                                 
@@ -1792,6 +1994,122 @@ function rideStatus() {
     ];
 }
 
+
+function generateUniqueReferralCode()
+{
+    $attempts = 0;
+    $maxAttempts = 10;
+    $length = 15;
+    
+    do {
+        // Increase length if too many collisions
+        if ($attempts >= $maxAttempts) {
+            $length++;
+            $attempts = 0;
+        }
+        
+        $code = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, $length));
+        $attempts++;
+        
+    } while (User::where('referral_code', $code)->exists() && $length <= 19);
+
+    return $code;
+}
+
+function validateReferralCode($code)
+{
+    return User::where('referral_code', $code)->first();
+}
+
+function validateDeviceId($deviceId)
+{
+    return !User::where('device_id', $deviceId)->exists();
+}
+
+function createReferral($referrerId, $referredId, $validReferral = true)
+{
+    $referral_max_limit = SettingData('referral', 'referral_max_limit') ?? null;
+    
+    $status = 'pending';
+    $comment = null;
+
+    if (!$validReferral) {
+        $status = 'failed';
+        $comment = 'Device already registered';
+    } elseif ($referral_max_limit > 0) {
+        $referral_count = Referral::where('referrer_id', $referrerId)->count();
+            
+        if ($referral_count >= $referral_max_limit) {
+            $status = 'failed';
+            $comment = 'Referral limit exceeded';
+        }
+    }
+    
+    return Referral::create([
+        'referrer_id' => $referrerId,
+        'referred_id' => $referredId,        
+        'status' => $status,
+        'comment' => $comment
+    ]);
+}
+
+function processReferral($referrerId, $referredId)
+{
+    try {
+        DB::beginTransaction();
+
+        $referral = Referral::where([
+            'referrer_id' => $referrerId,
+            'referred_id' => $referredId,
+            'status' => 'pending',
+        ])->first();
+
+        if ($referral) {
+            $referral->update(['status' => 'complete']);            
+            
+            $bonusPoints = SettingData('referral', 'referral_bonus_points') ?? 0;
+            $point_data = Point::firstOrCreate(['user_id' => $referrerId]);
+            
+            $total_points = $point_data->total_points + $bonusPoints;
+            $point_data->total_points = $total_points;
+            $point_data->save();
+
+            // Create point history record
+            $point_history = [
+                'user_id' => $referrerId,
+                'ride_request_id' => null,
+                'type' => 'credit',
+                'transaction_type' => 'referral',
+                'amount' => $bonusPoints,
+                'balance' => $total_points,
+                'datetime' => date('Y-m-d H:i:s')
+            ];
+            PointHistory::create($point_history);
+        }
+        DB::commit();
+        return true;
+    } catch(\Exception $e) {
+        DB::rollback();
+        return json_custom_response($e);
+    }
+}
+
+function getAddressFromLatLong($lat,$lng){
+    $google_map_api_key = env('GOOGLE_MAP_KEY');
+    $response = Http::get("https://maps.googleapis.com/maps/api/geocode/json", [
+        'latlng' => "$lat,$lng",
+        'key' => $google_map_api_key
+    ]);
+
+    $data = $response->json();
+
+    if ($response->successful() && isset($data['results'][0])) {
+        $address = preg_replace('/^\b[\w\d]+\+\w+\b,?\s*/', '',$data['results'][0]['formatted_address']);
+        return trim($address);
+    }
+    return "Address not found";
+}
+
 function convertSecondsToReadableTime($totalSeconds)
 {
     $hours = floor($totalSeconds / 3600);
@@ -1812,6 +2130,177 @@ function convertSecondsToReadableTime($totalSeconds)
 
 function getActiveAdminsRoles() {
     return Role::where('status', 1)->whereNotIn('name', ['driver', 'rider'])->pluck('name')->toArray();
+}
+
+if (!function_exists('createStripeCustomer')) {
+    function createStripeCustomer($email, $name, $phone, $type)
+    {
+        $stripeSecretKey = getStripeSecretKey();
+
+        $response = Http::withToken($stripeSecretKey)->asForm()->post('https://api.stripe.com/v1/customers', [
+            'email' => $email,
+            'name' => $name,
+            'phone' => $phone,
+        ]);
+
+        if ($response->failed()) {
+            return ['error' => $response->json()['error']['message'] ?? 'Unknown error'];
+        }
+
+        return $response->json();
+    }
+}
+
+if (!function_exists('updateStripeCustomer')) {
+    function updateStripeCustomer($customerId, $email, $name, $phone)
+    {
+        $stripeSecretKey = getStripeSecretKey();
+        $response = Http::withToken($stripeSecretKey)->asForm()->post("https://api.stripe.com/v1/customers/$customerId", [
+            'email' => $email,
+            'name' => $name,
+            'phone' => $phone,
+        ]);
+
+        if ($response->failed()) {
+            return ['error' => $response->json()['error']['message'] ?? 'Unknown error'];
+        }
+
+        return $response->json();
+    }
+}
+
+if (!function_exists('deleteStripeCustomer')) {
+    function deleteStripeCustomer($customerId)
+    {
+        $stripeSecretKey = getStripeSecretKey();
+        $response = Http::withToken($stripeSecretKey)->delete("https://api.stripe.com/v1/customers/$customerId");
+
+        if ($response->failed()) {
+            return ['error' => $response->json()['error']['message'] ?? 'Unknown error'];
+        }
+
+        return $response->json();
+    }
+}
+
+if (!function_exists('hasStripeKeys')) {
+    /**
+     * Check whether Stripe is configured in the DB (active gateway with a secret key).
+     * Use this as a gate before any Stripe API call.
+     */
+    function hasStripeKeys()
+    {
+        $paymentGateway = PaymentGateway::where('type', 'stripe')->where('status', 1)->first();
+        if (!$paymentGateway) {
+            return false;
+        }
+        $values = $paymentGateway['is_test'] == 1
+            ? ($paymentGateway['test_value'] ?? [])
+            : ($paymentGateway['live_value'] ?? []);
+        return !empty($values['secret_key']);
+    }
+}
+
+if (!function_exists('getStripeSecretKey')) {
+    function getStripeSecretKey()
+    {
+        $paymentGateway = PaymentGateway::where('type', 'stripe')->where('status', 1)->first();
+        if (!$paymentGateway) {
+            return null;
+        }
+        return $paymentGateway['is_test'] == 1
+            ? ($paymentGateway['test_value']['secret_key'] ?? null)
+            : ($paymentGateway['live_value']['secret_key'] ?? null);
+    }
+}
+
+
+if (!function_exists('cancelStripePayment')) {
+    function cancelStripePayment($payment_intent_id)
+    {
+        $stripeSecretKey = getStripeSecretKey();
+        $response = Http::withToken($stripeSecretKey)->asForm()
+            ->post("https://api.stripe.com/v1/payment_intents/{$payment_intent_id}/cancel");
+
+        if ($response->successful()) {
+            $result = $response->json();
+            return [
+                'success' => ($result['status'] ?? '') === 'canceled',
+                'data'    => $result,
+            ];
+        }
+    
+        return [
+            'success' => false,
+            'error'   => $response->json(),
+        ];
+    }
+}
+
+if (!function_exists('createStripePaymentIntent')) {
+    function createStripePaymentIntent($customer_id, $amount, $currency){
+        $stripeSecretKey = getStripeSecretKey();
+
+        $customerResponse = Http::withToken($stripeSecretKey)
+        ->get("https://api.stripe.com/v1/customers/{$customer_id}");
+
+        if (!$customerResponse->successful()) {
+            throw new \Exception('Unable to retrieve customer.');
+        }
+
+        $customer = $customerResponse->json();
+        $defaultPaymentMethod = $customer['invoice_settings']['default_payment_method'] ?? null;
+
+        if (!$defaultPaymentMethod) {
+            throw new \Exception('No default payment method set.');
+        }
+
+        $paymentIntent = Http::withToken($stripeSecretKey)->asForm()->post(
+            'https://api.stripe.com/v1/payment_intents',
+            [
+                'amount'               => (int) $amount,
+                'currency'             => $currency,
+                'customer'             => $customer_id,
+                'payment_method'       => $defaultPaymentMethod,
+                'payment_method_types' => ['card'],
+                'confirmation_method'  => 'automatic',
+                'confirm'              => true,
+                'capture_method'       => 'manual',
+            ]
+        );
+
+        if (!$paymentIntent->successful()) {
+            throw new \Exception('Unable to create payment intent: ' . json_encode($paymentIntent->json()));
+        }
+
+        return $paymentIntent->json();
+    }
+}
+
+if (!function_exists('captureStripePaymentIntent')) {
+    function captureStripePaymentIntent($payment_intent_id, $amount){
+        $stripeSecretKey = getStripeSecretKey();
+
+        $payload = [];
+        if ($amount) {
+            $payload['amount_to_capture'] = (int) $amount;
+        }
+
+        $response = Http::withToken($stripeSecretKey)->asForm()->post("https://api.stripe.com/v1/payment_intents/{$payment_intent_id}/capture", $payload);
+
+        if ($response->successful()) {
+            $result = $response->json();
+            return [
+                'success' => ($result['status'] ?? '') === 'succeeded',
+                'data'    => $result,
+            ];
+        }
+    
+        return [
+            'success' => false,
+            'error'   => $response->json(),
+        ];
+    }
 }
 
 if (!function_exists('debitRiderWallet')) {
@@ -1863,5 +2352,194 @@ if (!function_exists('recordRideTip')) {
             'received_by'       => $received_by,
             'payment_intent_id' => $payment_intent_id,
         ]);
+    }
+}
+
+function formatPhoneNumber($number)
+{
+    $formats = [
+        '+1' => '+1 XXX XXX XXXX',   // US, Canada
+        '+61' => '+61 XXX XXX XXX',   // Australia
+        '+44' => '+44 XXXX XXXXXX',   // UK
+        '+64' => '+64 XXX XXX XXXX',  // New Zealand
+        '+91' => '+91 XXXXX XXXXX',   // India
+    ];
+
+    foreach ($formats as $code => $format) {
+        if (str_starts_with($number, $code)) {
+
+            $digits = preg_replace('/\D/', '', $number);
+            $digits = substr($digits, strlen($code) - 1);
+
+            $index = 0;
+            $formatted = $code . ' ';
+
+            foreach (str_split(substr($format, strlen($code) + 1)) as $char) {
+                if ($char === 'X') {
+                    $formatted .= $digits[$index] ?? '';
+                    $index++;
+                } else {
+                    $formatted .= $char;
+                }
+            }
+
+            return $formatted;
+        }
+    }
+
+    return $number;
+}
+
+/**
+ * Find sibling accounts — users with the same email but a different user_type.
+ *
+ * @param  \App\Models\User  $user
+ * @return \Illuminate\Database\Eloquent\Collection
+ */
+function getSiblingAccounts(User $user)
+{
+    if (empty($user->email)) {
+        return collect();
+    }
+
+    return User::where('email', $user->email)
+        ->where('id', '!=', $user->id)
+        ->get();
+}
+
+/**
+ * Sync shared fields (password, avatar, display_name) to sibling accounts.
+ *
+ * @param  \App\Models\User  $user   The source user whose data should be copied.
+ * @param  array             $fields The field names to sync (e.g. ['password', 'display_name']).
+ * @return void
+ */
+function syncSharedFieldsToSiblings(User $user, array $fields): void
+{
+    $siblings = getSiblingAccounts($user);
+
+    if ($siblings->isEmpty()) {
+        return;
+    }
+
+    $data = [];
+    foreach ($fields as $field) {
+        if ($user->{$field} !== null) {
+            $data[$field] = $user->{$field};
+        }
+    }
+
+    if (!empty($data)) {
+        User::where('email', $user->email)
+            ->where('id', '!=', $user->id)
+            ->update($data);
+    }
+}
+
+/**
+ * Clones an existing user's shared attributes to instantly create a new role account.
+ * Used for seamless Auto-Cloning during login across different platforms.
+ *
+ * @param  User $existingUser
+ * @param  string           $newRole (e.g. 'rider' or 'driver')
+ * @return User
+ */
+function cloneUserForNewRole(User $existingUser, string $newRole)
+{
+    /*
+     * Clone EVERY shared attribute across roles (single-account experience) and only
+     * skip the fields that must NOT carry from one app to the other. This blacklist
+     * approach guarantees new columns (e.g. address, stripe_customer_id) are cloned
+     * automatically instead of being silently dropped by a hardcoded whitelist.
+     */
+    $excludedFields = [
+        // Primary key & unique identifiers — must be unique per account.
+        'id', 'username', 'referral_code', 'remember_token', 'created_at', 'updated_at',
+        // Set explicitly below for the new role.
+        'user_type',
+        // Per-device / per-session / transient values — belong to a single app install.
+        'player_id', 'fcm_token', 'device_id', 'device_type', 'app_version', 'login_type',
+        'latitude', 'longitude', 'last_location_update_at', 'last_actived_at',
+        'is_online', 'is_available', 'last_notification_seen', 'otp_verify_at',
+        // Driver-specific mandatory fields — not applicable to a rider and must be re-verified.
+        'license_number', 'license_expiration_date', 'social_security_number',
+        'is_verified_driver', 'fleet_id', 'service_id',
+    ];
+
+    $cloneData = collect($existingUser->getAttributes())
+        ->except($excludedFields)
+        ->toArray();
+
+    $cloneData['user_type'] = $newRole;
+    $cloneData['username'] = stristr($cloneData['email'] ?? $cloneData['contact_number'], "@", true) . rand(100,1000);
+    // Each account (rider & driver) must have its own unique referral code.
+    $cloneData['referral_code'] = generateUniqueReferralCode();
+    
+    // Generate Stripe Customer if cloning into Rider and one doesn't exist
+    if ($newRole === 'rider' && empty($cloneData['stripe_customer_id']) && hasStripeKeys()) {
+        $stripeCustomer = createStripeCustomer($cloneData['email'] ?? '', $cloneData['display_name'] ?? '', $cloneData['contact_number'] ?? '', 'stripe');
+        if (isset($stripeCustomer['id'])) {
+            $cloneData['stripe_customer_id'] = $stripeCustomer['id'];
+        }
+    }
+
+    $newUser = User::create($cloneData);
+    $newUser->assignRole($newRole);
+
+    // Provision a digital wallet for the new account
+    $newUser->userWallet()->create(['total_amount' => 0 ]);
+
+    // Try to sync profile image if present
+    try {
+        $media = $existingUser->getFirstMedia('profile_image');
+        if ($media && file_exists($media->getPath())) {
+            $newUser->addMedia($media->getPath())->preservingOriginal()->toMediaCollection('profile_image');
+        }
+    } catch (\Exception $e) {
+        \Log::error('Auto-clone media sync failed: ' . $e->getMessage());
+    }
+
+    return $newUser;
+}
+if (!function_exists('getPaystackSecretKey')) {
+    function getPaystackSecretKey()
+    {
+        $paymentGateway = PaymentGateway::where('type', 'paystack')->where('status', 1)->first();
+        if (!$paymentGateway) {
+            return null;
+        }
+        return $paymentGateway['is_test'] == 1 ? $paymentGateway['test_value']['secret_key'] : $paymentGateway['live_value']['secret_key'];
+    }
+}
+if (!function_exists('generateUniqueUsername')) {
+
+    function generateUniqueUsername(?string $firstName, ?string $lastName): string 
+    {
+        // 1. Clean and combine names into lowercase alphanumeric only
+        $base = preg_replace('/[^a-z0-9]/', '', strtolower(trim(($firstName ?? '') . ($lastName ?? '')))) ?: 'user';
+
+        // 2. Pad with random numbers if total length is under 6 characters
+        if (($len = strlen($base)) < 6) {
+            $base .= random_int((int)str_repeat('1', 6 - $len), (int)str_repeat('9', 6 - $len));
+        }
+
+        // 3. Fast check: If 'laxmanroriyatesting' is free, take it immediately
+        if (!User::where('username', $base)->exists()) {
+            return $base;
+        }
+
+        // 4. If it exists, fetch all matches starting with 'laxmanroriyatesting'
+        // We use flip() to turn values into array keys for blazing fast O(1) lookups
+        $existing = User::where('username', 'LIKE', "{$base}%")
+            ->pluck('username')
+            ->flip(); 
+
+        // 5. Safely loop to find the first open slot (e.g., laxmanroriyatesting1, laxmanroriyatesting2)
+        $counter = 1;
+        while ($existing->has($base . $counter)) {
+            $counter++;
+        }
+
+        return $base . $counter;
     }
 }

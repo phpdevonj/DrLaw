@@ -68,6 +68,7 @@ class WithdrawRequestController extends Controller
         $message = __('message.save_form',['form' => __('message.withdrawrequest')]);
         
         if(request()->is('api/*')){
+            $message = __('message.withdrawal_request_sent',['company_name' => 'Wayvers']);
             return json_message_response( $message );
         }
 

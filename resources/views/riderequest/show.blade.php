@@ -18,7 +18,7 @@
                             </div>
                             @if(!empty($data->multi_drop_location) && $data->multi_drop_location != null)
                                 @php
-                                    $multiDropLocations = json_decode($data->multi_drop_location, true);
+                                    $multiDropLocations = $data->multi_drop_location;
                                 @endphp
 
                                 <div class="col-12 timeline">
@@ -31,7 +31,7 @@
                                                     </div>
                                                     <div class="timeline-text">
                                                         <p>{{ $item['address'] ?? '-' }} <br>
-                                                            <small class="p-0">{{ __('message.dropped_at') }}: {{ date('Y-m-d H:i', strtotime($item['dropped_at'])) ?? '-' }}</small>
+                                                            <small class="p-0">{{ __('message.dropped_at') }}: {{ !empty($item['dropped_at']) ? date('Y-m-d H:i', strtotime($item['dropped_at'])) : '-' }}</small>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -43,11 +43,13 @@
                                 </div>
                             @endif
                         
-                            @if( !empty($data->multi_drop_location) && count($data->multi_drop_location) > 0)
-                                @foreach ($data->multi_drop_location as $key => $value)
-                                    <div class="col-12">
-                                        <p><i class="ri-map-pin-line text-success"></i> {{ $value['address'] ?? '-' }}</p>
-                                    </div>
+                            @if( !empty($multiDropLocations) && count($multiDropLocations) > 0)
+                                @foreach ($multiDropLocations as $key => $value)
+                                    @if(!empty($value['dropped_at']))
+                                        <div class="col-12">
+                                            <p><i class="ri-map-pin-line text-success"></i> {{ $value['address'] ?? '-' }}</p>
+                                        </div>
+                                    @endif
                                 @endforeach
                             @endif
                             <div class="col-12">
@@ -93,7 +95,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        {{--  @dd($data->ride_has_bid == 1)  --}}
                         @if(optional($data)->payment != null && optional($data)->payment->payment_status == 'paid')
                             @php
                             $distance_unit = $data->distance_unit;
@@ -187,12 +188,7 @@
                                     <li class="list-group-item d-flex flex-xl-row flex-column justify-content-between align-items-center align-items-xl-start px-0"> 
                                         <span>{{ __('message.total_amount') }}</span>
                                         @php
-                                            $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
-                                            if ($surge_price_setting_value == 1){
-                                                $total_amount = ( $data->tips ?? 0 ) + optional($data->payment)->total_amount + ($fixed_amount ? $fixed_amount : 0);
-                                            } else {
-                                                $total_amount = ( $data->tips ?? 0 ) + optional($data->payment)->total_amount;
-                                            }
+                                            $total_amount = ( $data->tips ?? 0 ) + optional($data->payment)->total_amount;
                                         @endphp
                                         <span class="font-weight-bold">{{ getPriceFormat($total_amount) }}</span>
                                     </li>
@@ -232,7 +228,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 @if(count($data->rideRequestHistory) > 0)
                     <div class="card card-block border-radius-20">
                         <div class="card-header d-flex justify-content-between">
@@ -278,7 +274,7 @@
                                                 $historyEntries[] = [
                                                     'type' => 'driver_declined',
                                                     'message' => '<a href="'. route('driver.show', ['driver' => $history->rideRequest->riderequest_in_driver_id]) .'">'. $history->history_message .'</a>',
-                                                    'datetime' => $history->datetime,
+                                                    'datetime' => dateAgoFormate($history->datetime)
                                                 ];
                                             } elseif (in_array($history->history_type, ['bid_placed', 'bid_rejected'])) {
                                                 $driverName = $historyData['driver_name'] ?? '';
@@ -294,7 +290,7 @@
                                                 $historyEntries[] = [
                                                     'type' => $history->history_type,
                                                     'message' => $history->history_message,
-                                                    'datetime' => $history->datetime,
+                                                    'datetime' => dateAgoFormate($history->datetime),
                                                 ];
                                             }
                                         }
@@ -345,7 +341,9 @@
                 <div class="card card-block border-radius-20">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
-                            <h4 class="card-title mb-0">{{ __('message.detail_form_title', [ 'form' => __('message.rider') ]) }}</h4>
+                            <h4 class="card-title mb-0 d-flex align-items-center">
+                                {{ __('message.detail_form_title', [ 'form' => __('message.rider') ]) }}
+                            </h4>
                         </div>
                     </div>
                     <div class="card-body">
@@ -380,7 +378,9 @@
                 <div class="card card-block border-radius-20">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
-                            <h4 class="card-title mb-0">{{ __('message.detail_form_title', [ 'form' => __('message.driver') ]) }}</h4>
+                            <h4 class="card-title mb-0 d-flex align-items-center">
+                                {{ __('message.detail_form_title', [ 'form' => __('message.driver') ]) }}
+                            </h4>
                         </div>
                     </div>
                     <div class="card-body">
@@ -420,11 +420,11 @@
                     </div>
                 </div>
 
-                @if(empty($data->driver_id) && $data->is_schedule == 1 && $data->status == 'scheduled')
+                @if(empty($data->driver_id) && (($data->is_schedule == 1 && $data->status == 'scheduled') || $data->status == 'new_ride_requested'))
                 <div class="card card-block border-radius-20">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
-                            <h4 class="card-title mb-0">Assigned Driver</h4>
+                            <h4 class="card-title mb-0">{{ __('message.assign_driver') }}</h4>
                         </div>
                     </div>
                     <div class="card-body">

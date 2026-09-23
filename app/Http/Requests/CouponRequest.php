@@ -36,7 +36,7 @@ class CouponRequest extends FormRequest
                     'code' => 'required|unique:coupons',
                     'title' => 'required',
                     'discount' => 'required',
-                    'coupon_type' => 'required|in:region_wise,service_wise,first_ride,all',
+                    'coupon_type' => 'required|in:region_wise,service_wise,first_ride,all,new_user',
                     'region_ids' => 'required_if:coupon_type,region_wise',
                     'service_ids' => 'required_if:coupon_type,service_wise'
                 ];
@@ -45,7 +45,7 @@ class CouponRequest extends FormRequest
                 $rules = [
                     'title' => 'required',
                     'discount' => 'required',
-                    'coupon_type' => 'required|in:region_wise,service_wise,first_ride,all',
+                    'coupon_type' => 'required|in:region_wise,service_wise,first_ride,all,new_user',
                     'region_ids' => 'required_if:coupon_type,region_wise',
                     'service_ids' => 'required_if:coupon_type,service_wise'
                 ];

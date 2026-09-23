@@ -22,7 +22,12 @@ class DatabaseSeeder extends Seeder
             ModelHasPermissionsTableSeeder::class,
             AppSettingTableSeeder::class,
             LanguageDefaultListSeeder::class,
-            //ScreenkeywordSeeder::class
+            ScreenkeywordSeeder::class,
+            CarModelsTableSeeder::class,
+            NewDefaultKeywordsSeeder::class,
+            LanguageListTableSeeder::class,
+            DocumentSeeder::class,
+            DriverMessagesTableSeeder::class,
         ]);
     }
 }

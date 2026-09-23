@@ -106,7 +106,7 @@ class FleetDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'fleet_' . date('YmdHis');
     }

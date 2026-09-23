@@ -56,37 +56,41 @@
                             </div>
                         </li>
 
-                        <li class="nav-item nav-icon dropdown">
-                            <a href="#" class="search-toggle dropdown-toggle" id="languageDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @php
-                                    $selected_lang_flag = file_exists(public_path('/images/flag/' .app()->getLocale() . '.png')) ? asset('/images/flag/' . app()->getLocale() . '.png') : asset('/images/lang_flag.png');
-                                @endphp
-                                <img src="{{ $selected_lang_flag }}" class="img-fluid rounded selected-lang" alt="lang-flag">
+                        <!-- The hidden native Google Translate element -->
+                        <div id="google_translate_element" style="display: none;"></div>
+
+                        <li class="nav-item nav-icon" id="custom-lang-switcher" style="position:relative;">
+                            <a href="#" class="search-toggle" id="lang-toggle-btn" style="display:flex;align-items:center;gap:6px;">
+                                <img src="{{ asset('/images/lang_flag.png') }}" class="img-fluid rounded selected-lang" alt="lang-flag" id="selected-lang-flag" style="width:22px;height:22px;object-fit:cover;border-radius:3px;">
                                 <span class="bg-primary"></span>
                             </a>
-                            <div class="mm-sub-dropdown dropdown-menu language-menu" aria-labelledby="languageDropdownMenu">
+                            <div class="og-lang-menu" id="lang-menu">
                                 <div class="card shadow-none m-0 border-0">
-                                    <div class="p-0 ">
-                                        <ul class="dropdown-menu-1 list-group list-group-flush">
+                                    <div class="p-0">
+                                        <ul class="list-group list-group-flush">
                                             @php
-                                                $language_option = appSettingData('get')->language_option;
-                                                if(!empty($language_option)){
-                                                    $language_array = languagesArray($language_option);
-                                                }
+                                                $app_languages = App\Models\LanguageList::where('status', 1)->orderBy('is_default', 'desc')->orderBy('id')->get();
                                             @endphp
-                                            @if(count($language_array) > 0 )
-                                                @foreach( $language_array  as $lang )
-                                                    <li class="dropdown-item-1 list-group-item px-2">
-                                                        <a class="p-0" data-lang="{{ $lang['id'] }}" href="{{ route('change.language',[ 'locale' => $lang['id'] ]) }}">
-                                                        @php
-                                                            $flag_path = file_exists(public_path('/images/flag/' . $lang['id'] . '.png')) ? asset('/images/flag/' . $lang['id'] . '.png') : asset('/images/lang_flag.png');
-                                                        @endphp
-                                                            <img src="{{ $flag_path }}" alt="img-flag-{{ $lang['id'] }}" class="img-fluid mr-2 selected-lang-list" />
-                                                            {{ $lang['title'] }}
-                                                        </a>
-                                                    </li>
-                                                @endforeach
-                                            @endif
+                                            @foreach($app_languages as $appLang)
+                                                @php
+                                                    $appFlagMedia = $appLang->getFirstMedia('language_flag');
+                                                    if ($appFlagMedia && file_exists($appFlagMedia->getPath())) {
+                                                        $appFlagPath = $appFlagMedia->getFullUrl();
+                                                    } else {
+                                                        $appFlagPath = file_exists(public_path('/images/flag/' . $appLang->language_code . '.png'))
+                                                            ? asset('/images/flag/' . $appLang->language_code . '.png')
+                                                            : asset('/images/lang_flag.png');
+                                                    }
+                                                @endphp
+                                                <li class="list-group-item px-3 py-2 lang-option d-flex align-items-center gap-2"
+                                                    data-code="{{ $appLang->language_code }}"
+                                                    data-name="{{ $appLang->language_name }}"
+                                                    data-flag="{{ $appFlagPath }}"
+                                                    style="cursor:pointer;">
+                                                    <img src="{{ $appFlagPath }}" alt="{{ $appLang->language_code }}" style="width:20px;height:20px;object-fit:cover;border-radius:2px;" />
+                                                    <span>{{ $appLang->language_name }}</span>
+                                                </li>
+                                            @endforeach
                                         </ul>
                                     </div>
                                 </div>

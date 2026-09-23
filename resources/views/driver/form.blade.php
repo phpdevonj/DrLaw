@@ -108,7 +108,17 @@
                                 @if(!isset($id))
                                     <div class="form-group col-md-6">
                                         {{ Form::label('password',__('message.password').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
-                                        {{ Form::password('password', ['class' => 'form-control', 'placeholder' =>  __('message.password') ]) }}
+                                        <div class="input-group">
+                                            {{ Form::password('password', ['class' => 'form-control', 'placeholder' =>  __('message.password') ]) }}
+                                            <div class="input-group-append">
+                                                <span class="input-group-text toggle-password" data-toggle="#password" style="cursor: pointer;">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Password must be at least 8 characters, include one uppercase letter, one number and one special character.
+                                        </small>
                                     </div>
                                 @endif
 
@@ -159,8 +169,20 @@
                                 </div>
                                 --}}
                                 <div class="form-group col-md-6">
-                                    {{ Form::label('car_model',__('message.car_model').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
-                                    {{ Form::text('userDetail[car_model]', old('userDetail[car_model]'), ['class' => 'form-control', 'placeholder' => __('message.car_model')]) }}
+                                    <!-- {{ Form::label('car_model',__('message.car_model').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::text('userDetail[car_model]', old('userDetail[car_model]'), ['class' => 'form-control', 'placeholder' => __('message.car_model')]) }} -->
+
+                                    {{ Form::label('userDetail[car_model]', __('message.car_model').' <span class="text-danger">*</span>', ['class' => 'form-control-label'], false) }}
+
+                                    {{ Form::select('userDetail[car_model]', 
+                                        isset($id) ? [ optional($data->userDetail)->car_model => optional($data->userDetail)->car_model ] : [], 
+                                        old('userDetail[car_model]'), 
+                                        [
+                                            'class' => 'select2js form-group car-model',
+                                            'data-placeholder' => __('message.select_name', [ 'select' => __('message.car_model') ]),
+                                            'data-ajax--url' => route('ajax-list', ['type' => 'car_model_name']),
+                                        ])
+                                    }}
                                 </div>
 
                                 <div class="form-group col-md-6">
@@ -174,8 +196,19 @@
                                 </div>
                                 
                                 <div class="form-group col-md-6">
-                                    {{ Form::label('car_production_year',__('message.car_production_year').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
-                                    {{ Form::text('userDetail[car_production_year]', old('userDetail[car_production_year]'), ['class' => 'form-control', 'placeholder' => __('message.car_production_year')]) }}
+                                    <!-- {{ Form::label('car_production_year',__('message.car_production_year').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
+                                    {{ Form::text('userDetail[car_production_year]', old('userDetail[car_production_year]'), ['class' => 'form-control', 'placeholder' => __('message.car_production_year')]) }} -->
+                                    @php
+                                        $currentYear = now()->year;
+                                        $years = array_combine(range($currentYear, 2010), range($currentYear, 2010)); // [2025 => 2025, ..., 2010 => 2010]
+                                    @endphp
+
+                                    {{ Form::label('car_production_year', __('message.car_production_year') . ' <span class="text-danger">*</span>', ['class' => 'form-control-label'], false) }}
+
+                                    {{ Form::select('userDetail[car_production_year]', $years, old('userDetail[car_production_year]'), [
+                                        'class' => 'form-control',
+                                        'placeholder' => __('message.select_name', ['select' => __('message.car_production_year')])
+                                    ]) }}
                                 </div>
 
                                 <div class="form-group col-md-6">
@@ -204,9 +237,19 @@
                                 </div>
                                 
                                 <div class="form-group col-md-6">
+                                    {{ Form::label('account_type',__('message.account_type'),['class'=>'form-control-label'], false ) }}
+                                    {{ Form::select(
+                                        'userBankAccount[account_type]',
+                                        [ 'checking' => __('message.checking'), 'savings' => __('message.savings') ],
+                                        old('userBankAccount.account_type'),
+                                        [ 'class' => 'form-control select2js', 'required' ]
+                                    ) }}
+                                </div>
+
+                                <!-- <div class="form-group col-md-6">
                                     {{ Form::label('bank_iban',__('message.bank_iban'),['class'=>'form-control-label'], false ) }}
                                     {{ Form::text('userBankAccount[bank_iban]', old('userBankAccount[bank_iban]'), ['class' => 'form-control', 'placeholder' => __('message.bank_iban')]) }}
-                                </div>
+                                </div> -->
 
                                 <div class="form-group col-md-6">
                                     {{ Form::label('bank_swift',__('message.bank_swift'),['class'=>'form-control-label'], false ) }}

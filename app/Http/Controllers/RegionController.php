@@ -6,9 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Region;
 use App\DataTables\RegionDataTable;
 use App\Http\Requests\RegionRequest;
-use Grimzy\LaravelMysqlSpatial\Types\Point;
-use Grimzy\LaravelMysqlSpatial\Types\Polygon;
-use Grimzy\LaravelMysqlSpatial\Types\LineString;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use MatanYadaev\EloquentSpatial\Objects\LineString;
 
 class RegionController extends Controller
 {

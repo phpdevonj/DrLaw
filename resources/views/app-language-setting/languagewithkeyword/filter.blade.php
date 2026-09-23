@@ -52,6 +52,9 @@
             var formData = $(this).serialize();
             var table = $('#dataTableBuilder').DataTable();
             table.ajax.url('{{ route("languagewithkeyword.index") }}?' + formData).load();
+            var downloadUrl = '{{ route("download.language.with,keyword.list") }}?' + formData;
+            $('#download-csv-btn').attr('href', downloadUrl);
+
         });
 
         $('#reset-filter-btn').on('click', function() {
@@ -59,7 +62,8 @@
             $('#keyword').val('').trigger('change');
             $('#screen').val('').trigger('change');
             var table = $('#dataTableBuilder').DataTable();
-            table.ajax.url('{{ route("languagewithkeyword.index") }}').load();
+            table.ajax.url('{{ route("languagewithkeyword.index") }}').load();            
+            $('#download-csv-btn').attr('href', '{{ route("download.language.with,keyword.list") }}');
         });
     });
 </script>

@@ -237,7 +237,7 @@ class RideRequestDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'RideRequests_' . date('YmdHis');
     }

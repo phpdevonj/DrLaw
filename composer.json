@@ -5,34 +5,35 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^7.3|^8.0",
-        "barryvdh/laravel-dompdf": "^2.2",
-        "benwilkins/laravel-fcm-notification": "^4.0",
-        "fruitcake/laravel-cors": "^2.0",
-        "google/cloud-firestore": "^1.43",
-        "grimzy/laravel-mysql-spatial": "^5.0",
-        "guzzlehttp/guzzle": "^7.0.1",
-        "kreait/laravel-firebase": "^4.2",
-        "laravel-notification-channels/onesignal": "^2.3",
-        "laravel/framework": "^8.75",
-        "laravel/sanctum": "^2.15",
-        "laravel/tinker": "^2.5",
+        "php": "^8.3|^8.4",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "google/cloud-firestore": "^1.54",
+        "guzzlehttp/guzzle": "^7.8",
+        "kreait/laravel-firebase": "^7.1",
+        "laravel-notification-channels/onesignal": "^2.8",
+        "laravel/framework": "^13.0",
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^3.0",
         "lavary/laravel-menu": "^1.8",
+        "maatwebsite/excel": "^4.0",
+        "matanyadaev/laravel-eloquent-spatial": "^4.7",
         "php-mqtt/laravel-client": "^1.0",
-        "spatie/laravel-medialibrary": "^9.12",
-        "spatie/laravel-permission": "^5.5",
-        "spatie/laravel-sluggable": "3.6",
-        "yajra/laravel-datatables": "^1.5",
-        "yajra/laravel-datatables-oracle": "^9.19"
+        "prabowosd/laravel-collective-html": "^1.1",
+        "spatie/laravel-medialibrary": "^11.21",
+        "spatie/laravel-permission": "^7.3",
+        "spatie/laravel-sluggable": "^3.8",
+        "yajra/laravel-datatables": "dev-master as 11.0",
+        "yajra/laravel-datatables-oracle": "dev-master as 11.0",
+        "twilio/sdk": "^8.11"
     },
     "require-dev": {
-        "facade/ignition": "^2.5",
-        "fakerphp/faker": "^1.9.1",
-        "laravel/breeze": "^1.9",
-        "laravel/sail": "^1.0.1",
-        "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^5.10",
-        "phpunit/phpunit": "^9.5.10"
+        "fakerphp/faker": "^1.23",
+        "laravel/breeze": "^2.4",
+        "laravel/sail": "^1.39",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5",
+        "spatie/laravel-ignition": "^2.9"
     },
     "autoload": {
         "psr-4": {
@@ -70,6 +71,10 @@
         }
     },
     "config": {
+        "platform": {
+            "ext-grpc": "1.50.0",
+            "ext-protobuf": "4.31.0"
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true

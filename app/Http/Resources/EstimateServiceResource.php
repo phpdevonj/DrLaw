@@ -3,8 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Models\Coupon;
-use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class EstimateServiceResource extends JsonResource
 {
@@ -26,9 +25,20 @@ class EstimateServiceResource extends JsonResource
         $drop_lat = request('drop_lat');
         $drop_lng = request('drop_lng');
         $multi_location = request('multi_location', []);
-        $date_time = now()->format('Y-m-d h:i');
+        $datetime = request('datetime') ?? date('Y-m-d H:i');
+        // get timezone
+        $timezone = optional($this->region)->timezone ?? 'UTC';
+        $date_time = \Carbon\Carbon::parse($datetime, $timezone)->setTimezone($timezone)->format('Y-m-d H:i');
         $surge_price = getSurgePrice($date_time, $this->region_id, $pick_lat, $pick_lng, $drop_lat, $drop_lng);
+        $is_credit_used = request('is_credit_used');
+        $rider_id = request('rider_id');
         
+        Log::channel('surge')->info('Surge check started', [
+            'ride_datetime' => $date_time,
+            'region_id'     => $this->region_id,
+            'pickup'        => [$pick_lat, $pick_lng],
+            'drop'          => [$drop_lat, $drop_lng],
+        ]);
         $service_data = [
             'id'                => $this->id,
             'service_id'        => $this->id,
@@ -68,7 +78,7 @@ class EstimateServiceResource extends JsonResource
         ];
 
         // caclulate ride
-        $ridefee = calculateRideFares($distance_in_unit,$pick_lat, $pick_lng, $drop_lat, $drop_lng, $multi_location,$dropoff_time_in_seconds, $service_data, $coupon,$surge_price,$date_time);
+        $ridefee = calculateRideFares($distance_in_unit,$pick_lat, $pick_lng, $drop_lat, $drop_lng, $multi_location,$dropoff_time_in_seconds, $service_data, $coupon,$surge_price,$date_time,$is_credit_used,$rider_id);
 
         return array_merge($service_data, $ridefee);
     }

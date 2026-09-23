@@ -110,19 +110,21 @@
         <table class="mydetails">
             <tr>
                 <td>
-                @php
-                    // Get the logo URL from your existing function
-                    $logoUrl = getSingleMedia(appSettingData('get'),'site_logo',null);
+                    @php
+                        // Get the logo URL from your existing function
+                        $logoUrl = getSingleMedia(appSettingData('get'),'site_logo',null);
 
-                    // Convert it to a public path
-                    $relativePath = str_replace(url('/'), '', $logoUrl); 
-                    $logoPath = public_path($relativePath);              
+                        // Convert it to a public path
+                        $relativePath = str_replace(url('/'), '', $logoUrl); 
+                        $logoPath = public_path($relativePath);              
 
-                    // Convert to base64
-                    $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
-                    $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
-                    $logoSrc = $logoData ? 'data:image/' . $logoType . ';base64,' . $logoData : '';
-                @endphp
+                        $extra_charges_texts = [];
+
+                        // Convert to base64
+                        $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
+                        $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
+                        $logoSrc = $logoData ? 'data:image/' . $logoType . ';base64,' . $logoData : '';
+                    @endphp
                     <img src="{{ $logoSrc }}" height="125" width="125">
                 </td>
                 <td class="invoice-details">
@@ -186,7 +188,7 @@
             </tr>  --}}
         </table>
 
-        <table class="details" style="margin-bottom: 5px;margin-top: 5px;">
+        <!-- <table class="details" style="margin-bottom: 5px;margin-top: 5px;">
             <thead>
                 <tr>
                     <th style="text-align: left">{{ __('message.detail_form_title',['form' => __('message.driver')]) }} :</th>
@@ -207,7 +209,7 @@
                     </td>
                 </tr>
             </tbody>
-        </table>
+        </table> -->
 
         <table class="items">
             <thead>
@@ -217,110 +219,170 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>{{ __('message.total_distance') }}</td>
-                    <td class="addressdetails">{{ $ride_detail->distance ?? 0 }} {{ $ride_detail->distance_unit }}</td>
-                </tr>
-                <tr>
-                    <td>{{ __('message.total_duration') }}</td>
-                    <td class="addressdetails">{{ $ride_detail->duration }} {{ __('message.min') }}</td>
-                </tr>
-
-                @if ($ride_detail->ride_has_bid == 1)
+                @if($user_type == 'admin')
                     <tr>
-                        <td>{{ __('message.sub_total') }}</td>
-                        <td class="addressdetails">{{ getPriceFormat($ride_detail->approvedBids->bid_amount) }}</td>
+                        <td>{{ __('message.total_distance') }}</td>
+                        <td class="addressdetails">{{ $ride_detail->distance ?? 0 }} {{ $ride_detail->distance_unit }}</td>
                     </tr>
-                @else
-                    @php
-                        $distance_unit = $ride_detail->distance_unit;
-                        $extra_charges_values = [];
-                        $extra_charges_texts = [];
-                        $sub_total = $ride_detail->subtotal;
-                        $grand_total = $sub_total;
+                    <tr>
+                        <td>{{ __('message.total_duration') }}</td>
+                        <td class="addressdetails">{{ $ride_detail->duration }} {{ __('message.min') }}</td>
+                    </tr>
 
-                        // Calculate extra charges
-                        if (is_array($ride_detail->extra_charges)) {
-                            foreach ($ride_detail->extra_charges as $item) {
-                                if (isset($item['value_type'])) {
-                                    $formatted_value = ($item['value_type'] == 'percentage') ? $item['value'] . '%' : getPriceFormat($item['value']);
-                                    if ($item['value_type'] == 'percentage') {
-                                        $data_value = $sub_total * $item['value'] / 100;
-                                        $key = str_replace('_', ' ', ucfirst($item['key']));
-                                        $extra_charges_texts[] = $key . ' (' . $formatted_value . ')';
-                                        $extra_charges_values[] = getPriceFormat($data_value);
-                                        $grand_total += $data_value;
-                                    } else {
-                                        $key = str_replace('_', ' ', ucfirst($item['key']));
-                                        $extra_charges_texts[] = $key . ' (' . $formatted_value . ')';
-                                        $extra_charges_values[] = $formatted_value;
-                                        $grand_total += $item['value'];
+                    @if ($ride_detail->ride_has_bid == 1)
+                        <tr>
+                            <td>{{ __('message.sub_total') }}</td>
+                            <td class="addressdetails">{{ getPriceFormat($ride_detail->approvedBids->bid_amount) }}</td>
+                        </tr>
+                    @else
+                        @php
+                            $distance_unit = $ride_detail->distance_unit;
+                            $extra_charges_values = [];
+                            $extra_charges_texts = [];
+                            $sub_total = $ride_detail->subtotal;
+                            $grand_total = $sub_total;
+
+                            // Calculate extra charges
+                            if (is_array($ride_detail->extra_charges)) {
+                                foreach ($ride_detail->extra_charges as $item) {
+                                    if (isset($item['value_type'])) {
+                                        $formatted_value = ($item['value_type'] == 'percentage') ? $item['value'] . '%' : getPriceFormat($item['value']);
+                                        if ($item['value_type'] == 'percentage') {
+                                            $data_value = $sub_total * $item['value'] / 100;
+                                            $key = str_replace('_', ' ', ucfirst($item['key']));
+                                            $extra_charges_texts[] = $key . ' (' . $formatted_value . ')';
+                                            $extra_charges_values[] = getPriceFormat($data_value);
+                                            $grand_total += $data_value;
+                                        } else {
+                                            $key = str_replace('_', ' ', ucfirst($item['key']));
+                                            $extra_charges_texts[] = $key . ' (' . $formatted_value . ')';
+                                            $extra_charges_values[] = $formatted_value;
+                                            $grand_total += $item['value'];
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // Add tips if available
-                        //if (isset($ride_detail->tips)) {
-                        //    $grand_total += $ride_detail->tips;
-                        //}
-                    @endphp
+                            // Add tips if available
+                            //if (isset($ride_detail->tips)) {
+                            //    $grand_total += $ride_detail->tips;
+                            //}
+                        @endphp
 
-                    @if($ride_detail->minimum_fare == ($ride_detail->subtotal - $ride_detail->extra_charges_amount))
+                        @if($ride_detail->minimum_fare == ($ride_detail->subtotal - $ride_detail->extra_charges_amount))
+                            <tr>
+                                <td>{{ __('message.minimum_fare') }}</td>
+                                <td class="addressdetails">{{ getPriceFormat($ride_detail->minimum_fare) }}</td>
+                            </tr>
+                        @else
+                            <tr>
+                                <td>{{ __('message.base_fare') }}</td>
+                                <td class="addressdetails">{{ getPriceFormat($ride_detail->base_fare) }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ __('message.distance_fare') }}</td>
+                                <td class="addressdetails">{{ getPriceFormat($ride_detail->per_distance_charge) }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ __('message.time_fare') }}</td>
+                                <td class="addressdetails">{{ getPriceFormat($ride_detail->per_minute_time_fare_charge) }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ __('message.time_idling') }}</td>
+                                <td class="addressdetails">{{ getPriceFormat($ride_detail->per_minute_waiting_charge) }}</td>
+                            </tr>
+                        @endif
+                
                         <tr>
-                            <td>{{ __('message.minimum_fare') }}</td>
-                            <td class="addressdetails">{{ getPriceFormat($ride_detail->minimum_fare) }}</td>
-                        </tr>
-                    @else
-                        <tr>
-                            <td>{{ __('message.base_fare') }}</td>
-                            <td class="addressdetails">{{ getPriceFormat($ride_detail->base_fare) }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ __('message.distance_fare') }}</td>
-                            <td class="addressdetails">{{ getPriceFormat($ride_detail->per_distance_charge) }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ __('message.time_fare') }}</td>
-                            <td class="addressdetails">{{ getPriceFormat($ride_detail->per_minute_drive_charge) }}</td>
+                            <td>{{ __('message.extra_charges') }}</td>
+                            <td class="addressdetails">
+                                @if(count($ride_detail->extra_charges) > 0)
+                                    @php
+                                        $extra_charges = collect($ride_detail->extra_charges)->pluck('value')->sum();
+                                    @endphp
+                                    {{ getPriceFormat($extra_charges) }}
+                                @else
+                                {{ getPriceFormat($ride_detail->extra_charges_amount) }}
+                                @endif
+                            </td>
                         </tr>
                         <tr>
-                            <td>{{ __('message.time_idling') }}</td>
-                            <td class="addressdetails">{{ getPriceFormat($ride_detail->per_minute_waiting_charge) }}</td>
+                            <td>{{ __('message.company_fee') }}</td>
+                            <td class="addressdetails">{{ getPriceFormat($ride_detail->company_fee_charge) }}</td>
                         </tr>
-                    @endif
-            
+                        <tr>
+                            <td>{{ __('message.expenses_charge') }}</td>
+                            <td class="addressdetails">{{ getPriceFormat($ride_detail->expenses_charge) }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ __('message.coupon_discount') }}</td>
+                            <td class="addressdetails"> -{{ getPriceFormat($ride_detail->coupon_discount) }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ __('message.credits_used') }}</td>
+                            <td class="addressdetails">{{ getPriceFormat($ride_detail->credit_used) }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ __('message.fixed_charges') }} ({{ __('message.surge_price') }})</td>
+                            <td class="addressdetails">
+                                {{ getPriceFormat($fixed_charge) }}
+                            </td>
+                        </tr>
+                    @endif                                       
+                @elseif($user_type == 'rider')
                     <tr>
-                        <td>{{ __('message.extra_charges') }}</td>
+                        <td>{{ __('message.ride_amount') }}</td>
                         <td class="addressdetails">
-                            @if(count($ride_detail->extra_charges) > 0)
-                                @php
-                                    $extra_charges = collect($ride_detail->extra_charges)->pluck('value')->sum();
-                                @endphp
-                                {{ $extra_charges }}
-                            @else
-                            {{ getPriceFormat($ride_detail->extra_charges_amount) }}
-                            @endif
+                            @php
+                                $sub_total = $ride_detail->subtotal;
+                                $subTotal  = $sub_total + ($ride_detail->coupon_discount ? $ride_detail->coupon_discount : 0);
+                                $subTotal  = $subTotal;
+                            @endphp
+                            {{ getPriceFormat($subTotal) }}
                         </td>
-                    </tr>
-                    <tr>
-                        <td>{{ __('message.company_fee') }}</td>
-                        <td class="addressdetails">{{ getPriceFormat($ride_detail->company_fee_charge) }}</td>
-                    </tr>
-                    <tr>
-                        <td>{{ __('message.expenses_charge') }}</td>
-                        <td class="addressdetails">{{ getPriceFormat($ride_detail->expenses_charge) }}</td>
                     </tr>
                     <tr>
                         <td>{{ __('message.coupon_discount') }}</td>
-                        <td class="addressdetails">{{ getPriceFormat($ride_detail->coupon_discount) }}</td>
-                    </tr>
-                    <tr>
-                        <td>{{ __('message.fixed_charges') }}</td>
                         <td class="addressdetails">
-                            {{ getPriceFormat($fixed_charge) }}
+                            {{ getPriceFormat($ride_detail->coupon_discount) }}
                         </td>
                     </tr>
+                    <tr>
+                        <td>{{ __('message.tips') }}</td>
+                        <td class="addressdetails">
+                            {{ getPriceFormat($ride_detail->tips) }}
+                        </td>
+                    </tr>
+                @elseif($user_type == 'driver')
+                    <tr>
+                        <td>{{ __('message.passenger_payment') }}</td>
+                        <td class="addressdetails">
+                            @php
+                                $sub_total = $ride_detail->subtotal + $ride_detail->coupon_discount;
+                                //$subTotal  = $sub_total + ($fixed_charge ? $fixed_charge : 0)
+                                $subTotal  = $sub_total; 
+                            @endphp
+                            {{ getPriceFormat($subTotal) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{{ __('message.external_fees') }}</td>
+                        <td class="addressdetails">
+                            {{ getPriceFormat($ride_detail->expenses_charge) }}
+                        </td>
+                    </tr>   
+                    <tr>
+                        <td>{{ __('message.wayvers_fees') }}</td>
+                        <td class="addressdetails">
+                            {{ getPriceFormat($ride_detail->company_fee_charge) }}
+                        </td>
+                    </tr>   
+                    <tr>
+                        <td>{{ __('message.driver_earning') }}</td>
+                        <td class="addressdetails">
+                            {{ getPriceFormat($ride_detail->payment->driver_fee) }}
+                        </td>
+                    </tr>  
                 @endif
             </tbody>
         </table>
@@ -338,7 +400,8 @@
                     <td>{{ __('message.sub_total') }}</td>
                     <td class="addressdetails">
                         @php
-                            $subTotal  = $sub_total + ($fixed_charge ? $fixed_charge : 0)
+                            //$subTotal  = $sub_total + ($fixed_charge ? $fixed_charge : 0)
+                            $subTotal  = $sub_total;
                         @endphp
                         {{ getPriceFormat($subTotal) }}
                 </tr>
@@ -354,7 +417,10 @@
                     <td>{{ __('message.total') }}</td>
                     <td>
                         @php
-                            $grandTotal  = $grand_total + ($fixed_charge ? $fixed_charge : 0)
+                            //$sub_total = $ride_detail->subtotal;
+                            $grand_total = $sub_total;
+                            //$grandTotal  = $grand_total + ($fixed_charge ? $fixed_charge : 0)
+                            $grandTotal  = $grand_total; 
                         @endphp
                         {{ getPriceFormat($grandTotal) }}</td>
                     </td>

@@ -12,9 +12,14 @@ class PaymentGatewayController extends Controller
 
     public function getList(Request $request)
     {
-        $gateways = PaymentGateway::where('status',1);
+        // Only return gateways whose type is active (uncommented) in constant.php
+        $activeGatewayTypes = array_keys(config('constant.PAYMENT_GATEWAY_SETTING', []));
 
-        $gateways = $gateways->where('type','!=', 'cash' )->orderBy('title','asc')->paginate(10);
+        $gateways = PaymentGateway::where('status', 1)
+            ->where('type', '!=', 'cash')
+            ->whereIn('type', $activeGatewayTypes)
+            ->orderBy('title', 'asc')
+            ->paginate(10);
         $items = PaymentGatewayResource::collection($gateways);
 
         $response = [

@@ -241,10 +241,13 @@ class ProcessScheduledRides extends Command
 
         $minumum_amount_get_ride = SettingData('wallet', 'min_amount_to_get_ride') ?? null;
 
+        $limitTime = now()->subMinutes(30);
+
         $nearby_driver = User::selectRaw("id, user_type, player_id, latitude, longitude, ( $unit_value * acos( cos( radians($latitude) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians($longitude) ) + sin( radians($latitude) ) * sin( radians( latitude ) ) ) ) AS distance")
                         ->where('user_type', 'driver')->where('status', 'active')->where('is_online',1)->where('is_available',1)
                         ->where('service_id', $ride_request->service_id )
                         ->whereNotIn('id', $cancelled_driver_ids)
+                        ->where('last_actived_at', '>=', $limitTime) // NEW CONDITION
                         ->having('distance', '<=', $radius)
                         ->orderBy('distance','asc');
         if( $minumum_amount_get_ride != null ) {

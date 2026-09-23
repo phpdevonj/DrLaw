@@ -11,6 +11,8 @@ class FrontendController extends Controller
 {
     public function index()
     {
+        return redirect()->to('login');
+        
         $data['dummy_title']  = DummyData('dummy_title');
         $data['dummy_description'] = DummyData('dummy_description');
 

@@ -75,7 +75,7 @@ class ScreenDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'Screen_' . date('YmdHis');
     }

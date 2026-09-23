@@ -14,7 +14,7 @@ use App\Http\Resources\RegionResource;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\RiderDashboardResource;
 use App\Http\Resources\DriverDashboardResource;
-use Grimzy\LaravelMysqlSpatial\Types\Point;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class DashboardController extends Controller
 {
@@ -23,7 +23,10 @@ class DashboardController extends Controller
         $data['app_setting'] = AppSetting::first();
         
         $data['terms_condition'] = Setting::where('type','terms_condition')->where('key','terms_condition')->first();
+        $data['driver_terms_condition'] = Setting::where('type','driver_terms_condition')->where('key','driver_terms_condition')->first();
         $data['privacy_policy'] = Setting::where('type','privacy_policy')->where('key','privacy_policy')->first();
+        
+        $data['about_us'] = Setting::where('type','about_us')->where('key','about_us')->first();
 
         $data['ride_for_other'] = (int) SettingData('RIDE', 'RIDE_FOR_OTHER') ?? 0;
         $data['ride_multiple_drop_location'] = (int) SettingData('RIDE', 'RIDE_MULTIPLE_DROP_LOCATION') ?? 0;
@@ -64,20 +67,26 @@ class DashboardController extends Controller
         if( $request->has('latitude') && isset($request->latitude) && $request->has('longitude') && isset($request->longitude) )
         {
             $point = new Point($request->latitude, $request->longitude);
-            $region->contains('coordinates', $point);
+            $region->whereContains('coordinates', $point);
         }
         $region = $region->first();
         $data['region'] = isset($region) ? new RegionResource($region) : null;
         $data['app_seeting'] = AppSetting::first();
         
         $data['terms_condition'] = Setting::where('type','terms_condition')->where('key','terms_condition')->first();
+        $data['driver_terms_condition'] = Setting::where('type','driver_terms_condition')->where('key','driver_terms_condition')->first();
         $data['privacy_policy'] = Setting::where('type','privacy_policy')->where('key','privacy_policy')->first();
+
+        $data['about_us'] = Setting::where('type','about_us')->where('key','about_us')->first();
 
         $ride_setting = Setting::where('type','ride')->get();
         $data['ride_setting'] = SettingResource::collection($ride_setting);
 
         $wallet_setting = Setting::where('type','wallet')->get();
         $data['Wallet_setting'] = SettingResource::collection($wallet_setting);
+
+        $referral_setting = Setting::where('type','referral')->get();
+        $data['referral_setting'] = SettingResource::collection($referral_setting);
         $data['ride_for_other'] = (int) SettingData('RIDE', 'RIDE_FOR_OTHER') ?? 0;
         $data['ride_multiple_drop_location'] = (int) SettingData('RIDE', 'RIDE_MULTIPLE_DROP_LOCATION') ?? 0;
         $data['is_bidding'] = (int) SettingData('ride', 'is_bidding') ?? null;

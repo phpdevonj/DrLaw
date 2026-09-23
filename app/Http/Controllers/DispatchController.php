@@ -121,15 +121,18 @@ class DispatchController extends Controller
         }
         $service_data = $service;
         $service_data['distance_unit'] = $distance_in_unit;
-        $date_time = now()->format('Y-m-d h:i');
-        $surge_price = getSurgePrice($date_time, $service->region_id, $pick_lat, $pick_lng, $drop_lat, $drop_lng);
+        $date_time = \Carbon\Carbon::now()->setTimezone($timezone)->format('Y-m-d H:i');
+        
         // caclulate ride
         $pick_lat = request('pick_lat');
         $pick_lng = request('pick_lng');
         $drop_lat = request('drop_lat');
         $drop_lng = request('drop_lng');
+
+        $surge_price = getSurgePrice($date_time, $service->region_id, $pick_lat, $pick_lng, $drop_lat, $drop_lng);
+        
         $multi_location = request('multi_location', []);
-        $ridefee = calculateRideFares($distance_in_unit,$pick_lat, $pick_lng, $drop_lat, $drop_lng, $multi_location,$dropoff_time_in_seconds, $service_data, $coupon = null,$surge_price,$date_time);
+        $ridefee = calculateRideFares($distance_in_unit,$pick_lat, $pick_lng, $drop_lat, $drop_lng, $multi_location,$dropoff_time_in_seconds, $service_data, $coupon = null,$surge_price,$date_time,$is_credit_used=false,$rider_id=null);
         $data['distance'] = $distance_in_unit;
         $data['total_amount'] = $ridefee['total_amount'];
         $data['duration'] = $dropoff_time_in_seconds/60;

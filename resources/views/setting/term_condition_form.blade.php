@@ -17,7 +17,7 @@
                         {{ Form::hidden('id') }}
                         <div class="row">
                             <div class="form-group col-md-12">
-                                {{ Form::label('terms_condition',__('message.terms_condition'), ['class' => 'form-control-label']) }}
+                                {{ Form::label('terms_condition',__('message.rider_terms_condition'), ['class' => 'form-control-label']) }}
                                 {{ Form::textarea('value', null, ['class'=> 'form-control tinymce-terms_condition' , 'placeholder'=> __('message.terms_condition') ]) }}
                             </div>
                         </div>

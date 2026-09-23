@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
+use App\Models\DriverMessage;
 
 class SettingController extends Controller
 {
@@ -48,7 +49,9 @@ class SettingController extends Controller
     {
         $page = $request->page;
         if( $page == 'payment-setting' ) {
-            $type = isset($request->type) ? $request->type : 'payhub';
+            // Default to the first configured payment gateway instead of a
+            // hardcoded 'stripe', which may no longer be enabled.
+            $type = isset($request->type) ? $request->type : array_key_first(config('constant.PAYMENT_GATEWAY_SETTING'));
         }
         $auth_user = auth()->user();
         $user_id = $auth_user->id;
@@ -118,6 +121,16 @@ class SettingController extends Controller
                 $payment_setting_data = PaymentGateway::where('type',$type)->first();
                 // dd($payment_setting_data);
                 $data  = view('setting.'.$page, compact('settings', 'page', 'type', 'payment_setting_data'))->render();
+                break;
+            case 'referral-setting':
+                $page = 'referral-setting';
+                $referral_setting = config('constant.referral');
+
+                foreach ($referral_setting as $key => $val) {
+                    $referral_setting[$key] = Setting::where('key',$key)->pluck('value')->first();
+                }
+
+                $data  = view('setting.'.$page, compact('referral_setting', 'page'))->render();
                 break;
             default:
                 $data  = view('setting.'.$page, compact('settings','page','envSettting'))->render();
@@ -333,7 +346,7 @@ class SettingController extends Controller
     public function termAndCondition(Request $request)
     {
         $setting_data = Setting::where('type','terms_condition')->where('key','terms_condition')->first();
-        $pageTitle = __('message.terms_condition');
+        $pageTitle = __('message.rider_terms_condition');
         $assets = ['textarea'];
         return view('setting.term_condition_form',compact('setting_data', 'pageTitle', 'assets'));
     }
@@ -360,6 +373,38 @@ class SettingController extends Controller
         }
 
         return redirect()->route('term-condition')->withsuccess($message);
+    }
+
+    public function driverTermAndCondition(Request $request)
+    {
+        $setting_data = Setting::where('type','driver_terms_condition')->where('key','driver_terms_condition')->first();
+        $pageTitle = __('message.driver_terms_condition');
+        $assets = ['textarea'];
+        return view('setting.driver_term_condition_form',compact('setting_data', 'pageTitle', 'assets'));
+    }
+
+    public function saveDriverTermAndCondition(Request $request)
+    {
+        if(env('APP_DEMO')){
+            return redirect()->route('driver-term-condition')->withErrors(__('message.demo_permission_denied'));
+        }
+        if(!auth()->user()->hasAnyRole(getActiveAdminsRoles())) {
+            abort(403, __('message.action_is_unauthorized'));
+        }
+        $setting_data = [
+                        'type'  => 'driver_terms_condition',
+                        'key'   =>  'driver_terms_condition',
+                        'value' =>  $request->value
+                    ];
+        $result = Setting::updateOrCreate(['id' => $request->id],$setting_data);
+        if($result->wasRecentlyCreated)
+        {
+            $message = __('message.save_form',['form' => __('message.driver_terms_condition')]);
+        }else{
+            $message = __('message.update_form',['form' => __('message.driver_terms_condition')]);
+        }
+
+        return redirect()->route('driver-term-condition')->withsuccess($message);
     }
 
     public function privacyPolicy(Request $request)
@@ -466,5 +511,90 @@ class SettingController extends Controller
         $message = __('message.save_form', ['form' => __('message.setting')]);
 
         return redirect()->back()->withsuccess($message);
+    }
+
+    public function referralSettingsUpdate(Request $request)
+    {
+        if(env('APP_DEMO')){
+            return redirect()->route('setting.index', ['page' => 'referral-setting'])->withErrors(__('message.demo_permission_denied'));
+        }
+        $data = $request->all();
+
+        foreach ($data['type'] as $key) {
+            $input = [
+                'type'  => 'referral',
+                'key'   => $key,
+                'value' => $data[$key] ?? null,  // Ensure key exists in request
+            ];
+            Setting::updateOrCreate(['key' => $key], $input);
+        }
+
+        return redirect()->route('setting.index', ['page' => 'referral-setting'])->withSuccess( __('message.updated'));
+    }
+
+    public function getLanguageDriverMessage(Request $request){
+        $input = $request->all();
+        $message_type = $input['message_type'];
+        $requestLang = $input['lang'];
+
+        $driverMessageData = DriverMessage::where(['language_code'=>$requestLang, 'message_type'=>$message_type])->get();        
+        $driverMessage = [];
+        foreach($driverMessageData as $key => $val){
+            $driverMessage[$val['message_key']] = $val['message_value'];
+        }
+        $data  = view('setting.driver_message', compact('driverMessage','message_type','requestLang'))->render();
+        return json_custom_response($data);
+    }
+
+    public function saveLanguageDriverMessage(Request $request){
+        $data = $request->all();
+
+        $messageType = $data['message_type'];
+        $languageCode = $data['requestLang'];
+
+        foreach ($data as $key => $value) {            
+            if (!in_array($key, ['_token','message_type', 'requestLang'])) {
+                DriverMessage::where('message_type', $messageType)
+                    ->where('language_code', $languageCode)
+                    ->where('message_key', $key)
+                    ->update([
+                        'message_value' => $value
+                    ]);
+            }
+        }
+       
+        return redirect()->route('setting.index', ['page' => 'driver_message-setting'])->withSuccess( __('message.updated'));
+    }
+
+    public function aboutUs(Request $request)
+    {
+        $setting_data = Setting::where('type','about_us')->where('key','about_us')->first();
+        $pageTitle = __('message.about_us');
+        $assets = ['textarea'];
+        return view('setting.about_us_form',compact('setting_data', 'pageTitle', 'assets'));
+    }
+
+    public function saveAboutUs(Request $request)
+    {
+        if(env('APP_DEMO')){
+            return redirect()->route('about-us')->withErrors(__('message.demo_permission_denied'));
+        }
+        if(!auth()->user()->hasAnyRole(getActiveAdminsRoles())) {
+            abort(403, __('message.action_is_unauthorized'));
+        }
+        $setting_data = [
+                        'type'  => 'about_us',
+                        'key'   =>  'about_us',
+                        'value' =>  $request->value
+                    ];
+        $result = Setting::updateOrCreate(['id' => $request->id],$setting_data);
+        if($result->wasRecentlyCreated)
+        {
+            $message = __('message.save_form',['form' => __('message.about_us')]);
+        }else{
+            $message = __('message.update_form',['form' => __('message.about_us')]);
+        }
+
+        return redirect()->route('about-us')->withsuccess($message);
     }
 }

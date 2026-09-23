@@ -28,7 +28,7 @@ class WithdrawRequest extends Model
     {
         $user = auth()->user();
 
-        if($user->hasAnyRole(getActiveAdminsRoles())){
+        if($user->hasAnyRole(['admin'])){
             $query = $query;
         } else {
             $query = $query->where('user_id', $user->id);

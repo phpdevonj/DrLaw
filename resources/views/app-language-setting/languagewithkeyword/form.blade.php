@@ -3,7 +3,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">{{ $pageTitle }}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
@@ -46,7 +46,7 @@
             </div>
             <div class="modal-footer">
                 {{ Form::submit( __('message.save'), [ 'class' => 'btn btn-md btn-primary float-right', 'id' => 'btn_submit', 'data-form' => 'ajax' ]) }}
-                <button type="button" class="btn btn-md btn-secondary float-right mr-1" data-dismiss="modal">{{ __('message.close') }}</button>
+                <button type="button" class="btn btn-md btn-secondary float-right mr-1" data-bs-dismiss="modal">{{ __('message.close') }}</button>
             </div>
         {{ Form::close() }}
     </div>

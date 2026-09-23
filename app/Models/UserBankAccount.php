@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserBankAccount extends Model
 {
     use HasFactory;
-    protected $fillable = [ 'user_id', 'bank_name', 'bank_code', 'account_holder_name', 'account_number','bank_address','routing_number','bank_iban','bank_swift' ];
+    protected $fillable = [ 'user_id', 'bank_name', 'bank_code', 'account_holder_name', 'account_number','bank_address','routing_number','bank_iban','bank_swift', 'account_type' ];
 
     protected $casts = [
         'user_id' => 'integer',

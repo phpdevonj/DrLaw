@@ -79,7 +79,7 @@ class Role extends Model implements RoleContract
      *
      * @throws \Spatie\Permission\Exceptions\RoleDoesNotExist
      */
-    public static function findByName(string $name, $guardName = null): RoleContract
+    public static function findByName(string $name, ?string $guardName = null): RoleContract
     {
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
 
@@ -92,7 +92,7 @@ class Role extends Model implements RoleContract
         return $role;
     }
 
-    public static function findById(int $id, $guardName = null): RoleContract
+    public static function findById(string|int $id, ?string $guardName = null): RoleContract
     {
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
 
@@ -113,7 +113,7 @@ class Role extends Model implements RoleContract
      *
      * @return \Spatie\Permission\Contracts\Role
      */
-    public static function findOrCreate(string $name, $guardName = null): RoleContract
+    public static function findOrCreate(string $name, ?string $guardName = null): RoleContract
     {
         $guardName = $guardName ?? Guard::getDefaultName(static::class);
 
@@ -135,7 +135,7 @@ class Role extends Model implements RoleContract
      *
      * @throws \Spatie\Permission\Exceptions\GuardDoesNotMatch
      */
-    public function hasPermissionTo($permission): bool
+    public function hasPermissionTo($permission, ?string $guardName = null): bool
     {
         if (config('permission.enable_wildcard_permission', false)) {
             return $this->hasWildcardPermission($permission, $this->getDefaultGuardName());
@@ -144,11 +144,11 @@ class Role extends Model implements RoleContract
         $permissionClass = $this->getPermissionClass();
 
         if (is_string($permission)) {
-            $permission = $permissionClass->findByName($permission, $this->getDefaultGuardName());
+            $permission = $permissionClass::findByName($permission, $this->getDefaultGuardName());
         }
 
         if (is_int($permission)) {
-            $permission = $permissionClass->findById($permission, $this->getDefaultGuardName());
+            $permission = $permissionClass::findById($permission, $this->getDefaultGuardName());
         }
 
         if (! $this->getGuardNames()->contains($permission->guard_name)) {

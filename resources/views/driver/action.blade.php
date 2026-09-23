@@ -8,7 +8,7 @@
     <a class="mr-2" href="{{ route('driver.edit', $id) }}" title="{{ __('message.update_form_title',['form' => __('message.driver') ]) }}"><i class="fas fa-edit text-primary"></i></a>
     @endif
     
-    @if( $data->status == 'active' && $auth_user->can('driver show') )
+    @if( ( $data->status == 'active' || $hasExpiredDocs == 1 ) && $auth_user->can('driver show') )
         <a class="mr-2" href="{{ route('driver.show',$id) }}"><i class="fas fa-eye text-secondary"></i></a>
     @endif
 

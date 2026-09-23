@@ -16,12 +16,14 @@ use App\Jobs\NotifyViaMqtt;
 use App\Models\RideRequestBid;
 use App\Models\Service;
 use App\Models\SurgePrice;
-use Grimzy\LaravelMysqlSpatial\Types\Point;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 use Illuminate\Support\Facades\Http;
 use Validator;
 use App\Models\Point as RiderPoints;
 use App\Models\PointHistory;
 use Illuminate\Support\Facades\DB;
+use App\Models\Wallet;
+use App\Models\WalletHistory;
 use App\Http\Resources\ScheduleRideRequestResource;
 
 class RideRequestController extends Controller
@@ -135,20 +137,11 @@ class RideRequestController extends Controller
             if ($riderequest->start_latitude && $riderequest->start_longitude) {
                 $point = new Point($riderequest->start_latitude, $riderequest->start_longitude);
                 $service = Service::whereHas('region', function ($q) use ($point) {
-                    $q->where('status', 1)->contains('coordinates', $point);
+                    $q->where('status', 1)->whereContains('coordinates', $point);
                 })->where('id', $service->id)->first();
             }
 
-            if ($riderequest->coupon_code) {
-                $rider_coupon_code = Coupon::where('id', $riderequest->coupon_code)->value('code');
-                $response = verify_coupon_code($rider_coupon_code);
-
-                if ($response['status'] != 200) {
-                    return json_custom_response($response, $response['status']);
-                }
-            }
-
-            if (!empty($riderequest->multi_drop_location)) {
+            if (!empty($riderequest->multi_drop_location) && (int) SettingData('RIDE', 'RIDE_MULTIPLE_DROP_LOCATION') === 1) {
                 $place_details = og_get_distance_matrix_multiple_destination(
                     $riderequest->start_latitude, 
                     $riderequest->start_longitude, 
@@ -171,23 +164,18 @@ class RideRequestController extends Controller
             }
 
             $distance_in_unit = $dropoff_distance_in_meters ? $dropoff_distance_in_meters / 1000 : 0;
-            $coupon_code = $riderequest->coupon_code;
-            $coupon = Coupon::where('id', $coupon_code)->first();
-
-            $status = $coupon_code ? 400 : 200;
-            if ($coupon) {
-                $status = Coupon::isValidCoupon($coupon);
-            }
-            
-            if ($status != 200) {
-                $response = couponVerifyResponse($status);
-                return json_custom_response($response, $status);
-            }
 
             $request['distance_in_unit'] = $distance_in_unit;
             $request['dropoff_distance_in_meters'] = $dropoff_distance_in_meters;
             $request['dropoff_time_in_seconds'] = $dropoff_time_in_seconds;
-            $request['coupon'] = $coupon;
+            $request['coupon'] = $riderequest->coupon_data;
+            
+            $request['pick_lat'] = $riderequest->start_latitude;
+            $request['pick_lng'] = $riderequest->start_longitude;
+            $request['drop_lat'] = $riderequest->end_latitude;
+            $request['drop_lng'] = $riderequest->end_longitude;
+            $request['multi_location'] = $riderequest->multi_drop_location;
+            $request['datetime'] = $riderequest->datetime;
 
             $services = collect([$service]);
             $items = EstimateServiceResource::collection($services);
@@ -273,7 +261,13 @@ class RideRequestController extends Controller
         $current_date = Carbon::today()->toDateTimeString();
         $coupon = Coupon::where('id', $ride_request->coupon_code)->where('start_date', '<=',$current_date)->where('end_date', '>=',$current_date)->first();
         $extra_charges_amount = $request->has('extra_charges_amount') ? request('extra_charges_amount') : 0;
-        $ridefee = $this->calculateRideFares($service, $distance, $duration, $waiting_time, $extra_charges_amount, $coupon);
+
+        // get timezone
+        $timezone = optional($service->region)->timezone ?? 'UTC';
+        $date_time = \Carbon\Carbon::now()->setTimezone($timezone)->format('Y-m-d H:i');        
+        $surge_price = getSurgePrice($date_time, $service->region_id, $ride_request->start_latitude, $ride_request->start_longitude, $ride_request->end_latitude, $ride_request->end_longitude);
+
+        $ridefee = $this->calculateRideFares($service, $distance, $duration, $waiting_time, $extra_charges_amount, $coupon, $ride_request, $surge_price, $date_time);
 
         $ridefee['waiting_time_limit'] = $service->waiting_time_limit;
         $ridefee['per_minute_drive'] = $service->per_minute_drive;
@@ -288,32 +282,10 @@ class RideRequestController extends Controller
             $ridefee['early_completion_reason'] = $request->early_completion_reason ?? '';
             $ridefee['remaining_distance'] = $request->remaining_distance ?? 0;
         }
-
         
+
         $ride_request->update($ridefee);
 
-        // $ride_datetime = $ride_request->datetime;
-        // $surge_price = $this->getSurgePrice($ride_datetime);
-
-        // if (isset($surge_price) && !empty($surge_price)) {
-        //     if ($surge_price->type == 'fixed') {
-        //         $surge_amount = $surge_price->value;
-        //     } elseif ($surge_price->type == 'multiply') {
-        //         $surge_amount = ($ridefee['total_amount'] * $surge_price->value) / 100;
-        //     }
-        //     $ridefee['total_amount'] += $surge_amount;
-        // }
-
-        $ride_request->update($ridefee);
-        
-        $payment_data = [
-            'rider_id'          => $ride_request->rider_id,
-            'ride_request_id'   => $ride_request->id,
-            'payment_type'      => $ride_request->payment_type ?? 'cash',
-            'datetime'          => date('Y-m-d H:i:s'),
-            'payment_status'    => 'pending',
-            'total_amount'      => $ridefee['total_amount'],
-        ];
         if ($ride_request->ride_has_bid == 1) {
             $ride_bid_data = $ride_request->bids()->where('is_bid_accept',1)->first();
             $payment_data = [
@@ -323,6 +295,7 @@ class RideRequestController extends Controller
                 'datetime'          => date('Y-m-d H:i:s'),
                 'payment_status'    => 'pending',
                 'total_amount'      => $ride_bid_data->bid_amount,
+                'credit_used'       => $ride_request->credit_used,
             ];
         } else {
             $payment_data = [
@@ -331,11 +304,28 @@ class RideRequestController extends Controller
                 'payment_type'      => $ride_request->payment_type ?? 'cash',
                 'datetime'          => date('Y-m-d H:i:s'),
                 'payment_status'    => 'pending',
-                'total_amount'      => $ridefee['total_amount'],
+                'total_amount'      => $ridefee['subtotal'],
+                'credit_used'       => $ride_request->credit_used,
             ];
         }
 
         Payment::create($payment_data);
+
+        // deduct use credits from wallet and create wallet history
+        if(!empty($ride_request->credit_used) && $ride_request->credit_used > 0){
+            $user_wallet = Wallet::firstOrCreate([ 'user_id' => $ride_request->rider_id ]);
+            $total_wallet_amount = $user_wallet->total_amount - $ride_request->credit_used;   
+            $user_wallet->total_amount = $total_wallet_amount;
+            $user_wallet->save();
+
+            $wallet_history['user_id'] = $ride_request->rider_id;                   
+            $wallet_history['datetime'] = date('Y-m-d H:i:s');
+            $wallet_history['type'] = 'debit';
+            $wallet_history['transaction_type'] = 'credit_used';
+            $wallet_history['balance'] = $total_wallet_amount;
+            $wallet_history['amount'] = $ride_request->credit_used;
+            $walletResult = WalletHistory::create($wallet_history); 
+        }
 
         saveRideHistory($history_data);
         // update driver is_available
@@ -346,10 +336,28 @@ class RideRequestController extends Controller
             // transfer loyalty points to rider account
             $this->transferLoyaltyPointToRiderAccount($ridefee['subtotal'], $ride_request->rider_id, $ride_request->id);
         }
+
+        // Add referral reward logic
+        $referral_condition = SettingData('referral', 'referral_reward_condition') ?? null;
+        if(isset($referral_condition) && $referral_condition == "on_first_ride_complete"){
+            $rider = $ride_request->rider;
+            if(isset($rider->referred_by) && !empty($rider->referred_by)){
+                $riderCompletedRides = RideRequest::where('rider_id', $rider->id)
+                ->where('status', 'completed')
+                ->count();
+
+                if ($riderCompletedRides === 1) {
+                    // award referral bonus if applicable
+                    processReferral($rider->referred_by, $rider->id);
+                }
+            }            
+        }  
+        
+
         return json_message_response( __('message.ride.completed'));
     }
 
-    public function calculateRideFares($service, $distance, $duration, $waiting_time, $extra_charges_amount, $coupon )
+    public function calculateRideFares($service, $distance, $duration, $waiting_time, $extra_charges_amount, $coupon, $riderequest, $surge_price, $ride_time)
     {
         // distance price
         $per_minute_drive_charge = 0;
@@ -379,7 +387,7 @@ class RideRequestController extends Controller
         }
 
         $per_minute_waiting_charge = $waiting_time * $service->per_minute_wait; // Time Idling
-        
+              
         $base_fare = $service->base_fare; // Base Fare
         $minimum_fare = $service->minimum_fare; // Minimum Fare
 
@@ -391,7 +399,7 @@ class RideRequestController extends Controller
         }else{
             $company_fee = $service->company_fee_above_threshold;
         }
-        
+
         $total_amount += $company_fee; // Normal Ride Fare
 
         // Expenses
@@ -400,13 +408,12 @@ class RideRequestController extends Controller
         // Total Ride Fee (what rider pays)
         $total_amount += $expenses;
 
+
         if( $total_amount < $service->minimum_fare ){
             $total_amount = $service->minimum_fare;
         } else {
             $minimum_fare = 0;
         }
-        $total_amount += $extra_charges_amount; // Additional fees
-        
         // if( $service->commission_type == 'fixed' ) {
         //     $commission = $service->admin_commission + $service->fleet_commission;
         //     if( $total_amount <= $commission) {
@@ -433,15 +440,60 @@ class RideRequestController extends Controller
             }
         }
 
+        if(!empty($riderequest->credit_used) && $riderequest->credit_used > 0){
+            $subtotal = $subtotal - $riderequest->credit_used;
+        }
+
+        $surge_type   = null;
+        $surge_value = null;
+        $surge_amount = 0;
+        $surge_price_setting_value = SettingData('ride', 'surge_price') ?? null;
+        if ($surge_price_setting_value == 1 && isset($surge_price) && (is_object($surge_price) || is_array($surge_price))) {  
+            
+            $timezone = $service->region->timezone ?? 'UTC';
+            $rideTimeOnly = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $ride_time, $timezone)->format('H:i');
+
+            foreach ($surge_price->from_time as $index => $from_time) {
+                $to_time = $surge_price->to_time[$index];
+        
+                // Handle normal & overnight surge windows
+                if ($from_time <= $to_time) {
+                    // Same-day surge (e.g. 13:00 - 23:59)
+                    $inRange = $rideTimeOnly >= $from_time && $rideTimeOnly <= $to_time;
+                } else {
+                    // Overnight surge (e.g. 22:00 - 06:00)
+                    $inRange = $rideTimeOnly >= $from_time || $rideTimeOnly <= $to_time;
+                }
+        
+                if ($inRange) {
+                    if ($surge_price->type === 'fixed') {
+                        $surge_amount = (float) $surge_price->value;
+                    } elseif ($surge_price->type === 'percentage') {
+                        $surge_amount = ($subtotal * $surge_price->value) / 100;
+                    }
+
+                    $surge_type  = $surge_price->type;
+                    $surge_value = (float) $surge_price->value;
+        
+                    $total_amount += $surge_amount;
+                    break;
+                }
+            }
+        }
+
+        $subtotal = $subtotal + ($surge_amount ? $surge_amount : 0);
+        $total_amount = $total_amount + ($extra_charges_amount ? $extra_charges_amount : 0); // Additional fees
+        $subtotal = $subtotal + ($extra_charges_amount ? $extra_charges_amount : 0); // Additional fees
+
         return [
             'base_fare'                 => $base_fare,
             'minimum_fare'              => $minimum_fare,
             'base_distance'             => $service->minimum_distance,
             'per_distance'              => $service->per_distance,
             'per_distance_charge'       => (float) number_format( (float) $per_distance_charge, 2,'.',''), // Distance Fare
-            'per_minute_drive_charge'   => (float) number_format( (float) $per_minute_drive_charge, 2,'.',''), // Time Idling
+            'per_minute_drive_charge'   => (float) number_format( (float) $per_minute_drive_charge, 2,'.',''),
             'waiting_time'              => $waiting_time,
-            'per_minute_waiting_charge' => $per_minute_waiting_charge,
+            'per_minute_waiting_charge' => $per_minute_waiting_charge, // Time Idling
             'subtotal'                  => (float) number_format( (float) $subtotal, 2,'.',''),
             'total_amount'              => (float) number_format( (float) $total_amount, 2,'.',''),
             'extra_charges_amount'      => $extra_charges_amount,
@@ -456,6 +508,9 @@ class RideRequestController extends Controller
             'company_fee_charge'          => $company_fee, // Company fee
             'expenses'                    => $service->expenses,
             'expenses_charge'             => (float) number_format( (float) $expenses, 2,'.',''), // Expenses
+            'surge_type'                  => $surge_type,
+            'surge_value'                 => $surge_value,
+            'surge_amount'                => (float) $surge_amount,
         ];
     }
 
@@ -584,32 +639,6 @@ class RideRequestController extends Controller
         $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json?placeid='.$request->placeid.'&key='.$google_map_api_key);
 
         return $response->json();
-    }
-
-    public function getSurgePrice($ride_datetime) {
-        if ($ride_datetime === null) {
-            return null;
-        }
-        $ride_datetime = Carbon::parse($ride_datetime);
-        $day = $ride_datetime->format('l');
-        $current_time = $ride_datetime->format('H:i');
-        
-        $surge_prices = SurgePrice::where('day', $day)->get();
-    
-        foreach ($surge_prices as $surge) {
-            $from_times = $surge->from_time;
-            $to_times = $surge->to_time;
-    
-            foreach ($from_times as $index => $from_time) {
-                $to_time = $to_times[$index];
-    
-                if (strtotime($current_time) >= strtotime($from_time) && strtotime($current_time) <= strtotime($to_time)) {
-                    return $surge;
-                }
-            }
-        }
-    
-        return "";
     }
 
     public function updateFirestoreRideDocument($ride_request, $role)
@@ -749,7 +778,7 @@ class RideRequestController extends Controller
         $currency = strtolower($currency_data['code']);
         $amount = $request->tips;
 
-        if ($request->payment_type === 'card') {
+        if ($request->payment_type === 'card' && hasStripeKeys()) {
             // Try capturing Stripe payment
             
             $captureRes = captureStripePaymentIntent($request->payment_intent_id, $amount * 100);
@@ -763,7 +792,7 @@ class RideRequestController extends Controller
 
             // Record tip
             recordRideTip($ride_request->id, $amount, 'card', 'completed', 'driver', $request->payment_intent_id);
-        } else {
+        } else if ($request->payment_type === 'wallet') {
             // Debit rider wallet
             debitRiderWallet($ride_request->rider_id, $amount, $currency, $ride_request->id);
 
@@ -772,6 +801,9 @@ class RideRequestController extends Controller
 
             // Record tip
             recordRideTip($ride_request->id, $amount, 'wallet', 'completed', 'driver');
+        } else {
+            // Record tip
+            recordRideTip($ride_request->id, $amount, 'cash', 'completed', 'driver');
         }
     }
 }

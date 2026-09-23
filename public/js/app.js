@@ -1,7 +1,7 @@
 /*
 Template: SimpleDash - Responsive Bootstrap 4 Admin Dashboard Template
 Author: Arihant
-Design and Developed by: ongraph.com
+Design and Developed by: ongraph
 NOTE: This file contains the styling for responsive Template.
 */
 
@@ -643,6 +643,18 @@ Index Of Script
         setTimeout(function () { 
             $(el).removeClass(' animate__animated animate__rubberBand')
         }, 1000)
+    });
+
+    $(document).on('click', '.toggle-password', function() {
+        const input = $($(this).attr('data-toggle'));
+        const icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        }
     });
 
 })(jQuery);

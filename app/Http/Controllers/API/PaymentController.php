@@ -74,6 +74,10 @@ class PaymentController extends Controller
         $message = __('message.payment_completed');
         if($ride_request->status == 'completed' && $result->payment_status == 'paid')
         {
+            if($data['payment_type'] == 'card' ) {
+                $ride_request->captured_payment_intent_id = $data['captured_payment_intent_id'];
+                $ride_request->save();
+            }
             $this->walletTransaction($ride_request->id);
         } else {
             $message = __('message.payment_status_message',[ 'id' => $result->ride_request_id, 'status' => __('message.'.$result->payment_status) ]);
@@ -133,19 +137,36 @@ class PaymentController extends Controller
         
         if( $type == 'today' ) {
 
-            $today_ride_request = RideRequest::myRide()->where('status','completed')
+            $rideQuery = RideRequest::myRide()->where('status','completed')
                         ->whereHas('payment', function ($query) use($today) {
                             $query->where('payment_status','paid')->whereDate('datetime',$today);
-                        })->count();
+                        });
 
-            $total_cash_ride = Payment::myPayment()->where('payment_status','paid')->where('payment_type', 'cash')->whereDate('datetime',$today)->sum('driver_commission');
-            $total_wallet_ride = Payment::myPayment()->where('payment_status','paid')->where('payment_type', 'wallet')->whereDate('datetime',$today)->sum('driver_commission');
+            $today_ride_request = $rideQuery->count();
+            $total_minutes = $rideQuery->sum('duration');
+
+            $hours = floor($total_minutes / 60);
+            $minutes = $total_minutes % 60;
+
+            $today_numbers_of_hours = "{$hours}h" . ($hours != 1 ? "s" : "");
+            if ($minutes > 0) {
+                $today_numbers_of_hours .= " {$minutes}m";
+            }
+
+            $today_numbers_of_miles = $rideQuery->sum('distance');
+
+            $paymentQuery = Payment::myPayment()->where('payment_status','paid')->whereIn('payment_type', ['wallet', 'cash','card'])->whereDate('datetime',$today);
+
+            $today_ride_earnings = $paymentQuery->sum('driver_commission');
+            $today_tips_earnings = $paymentQuery->sum('driver_tips');
+
             $response = [
-                'total_cash_ride'   => $total_cash_ride,
-                'total_wallet_ride' => $total_wallet_ride,
-                'today_earnings'    => $total_cash_ride + $total_wallet_ride,
-                'today_ride_request'=> $today_ride_request,
-                'today'             => $today,
+                'today_ride_request'  => $today_ride_request,
+                'numbers_of_hours'    => $today_numbers_of_hours,
+                'numbers_of_miles'    => (float) number_format( (float) $today_numbers_of_miles, 2,'.',''),
+                'today_earnings'      => $today_ride_earnings,
+                'tips_earnings'       => $today_tips_earnings,
+                'today'               => $today,
             ];
         }
 
@@ -153,14 +174,27 @@ class PaymentController extends Controller
             $from_date = isset($request->from_date) ? Carbon::parse($request->from_date) : Carbon::parse($today)->startOfWeek()->toDateTimeString();
             $to_date = isset($request->to_date) ? Carbon::parse($request->to_date) : Carbon::parse($today)->endOfWeek()->toDateTimeString();
 
-            $total_ride_request = RideRequest::myRide()->where('status','completed')
-                ->whereHas('payment', function ($query) use($from_date,$to_date) {
-                    $query->where('payment_status','paid')->whereBetween('datetime',[ $from_date, $to_date ]);
-                })->count();
 
-            $total_cash_ride = Payment::myPayment()->where('payment_status', 'paid')->where('payment_type', 'cash')->whereBetween('datetime',[ $from_date, $to_date ])->sum('driver_commission');
-            $total_wallet_ride = Payment::myPayment()->where('payment_status', 'paid')->where('payment_type', 'wallet')->whereBetween('datetime',[ $from_date, $to_date ])->sum('driver_commission');
-            $total_card_ride = Payment::myPayment()->where('payment_status', 'paid')->whereNotIn('payment_type',[ 'cash', 'wallet'])->whereBetween('datetime',[ $from_date, $to_date ])->sum('driver_commission');
+            $rideQuery = RideRequest::myRide()->where('status','completed')
+                        ->whereHas('payment', function ($query) use($from_date,$to_date) {
+                            $query->where('payment_status','paid')->whereBetween('datetime',[ $from_date, $to_date ]);
+                        });
+
+            $total_ride_request = $rideQuery->count();
+            $total_minutes = $rideQuery->sum('duration');
+            $hours = floor($total_minutes / 60);
+            $minutes = $total_minutes % 60;
+
+            $total_numbers_of_hours = "{$hours}h" . ($hours != 1 ? "s" : "");
+            if ($minutes > 0) {
+                $total_numbers_of_hours .= " {$minutes}m";
+            }
+            $total_numbers_of_miles = $rideQuery->sum('distance');
+
+            $paymentQuery = Payment::myPayment()->where('payment_status', 'paid')->whereIn('payment_type', ['wallet', 'cash','card'])->whereBetween('datetime',[ $from_date, $to_date ]);
+
+            $total_ride_earnings = $paymentQuery->sum('driver_commission');
+            $total_tips_earnings = $paymentQuery->sum('driver_tips');
 
             $week_report = Payment::selectRaw('DATE_FORMAT(datetime , "%w") as days , DATE_FORMAT(datetime , "%Y-%m-%d") as date, driver_commission ' )
                             ->myPayment()->where('payment_status', 'paid')
@@ -190,11 +224,10 @@ class PaymentController extends Controller
                 'to_date'           => $to_date,
                 'week_report'       => $data,
                 'total_ride_count'  => $total_ride_request,
-                'total_cash_ride'   => $total_cash_ride,
-                'total_wallet_ride' => $total_wallet_ride,
-                'total_card_ride'   => $total_card_ride,
-
-                'total_earnings'    => $total_cash_ride + $total_wallet_ride + $total_card_ride,
+                'numbers_of_hours'  => $total_numbers_of_hours,
+                'numbers_of_miles'  => (float) number_format( (float) $total_numbers_of_miles, 2,'.',''),
+                'total_earnings'    => $total_ride_earnings,
+                'tips_earnings'     => $total_tips_earnings,
             ];
         }
 
@@ -202,22 +235,37 @@ class PaymentController extends Controller
         {
             $from_date = isset($request->from_date) ? Carbon::parse($request->from_date) : Carbon::parse($today)->startOfMonth()->toDateTimeString();
             $to_date = isset($request->to_date) ? Carbon::parse($request->to_date)->endOfDay()->toDateTimeString() : Carbon::parse($today)->endOfDay()->toDateTimeString();
-            $total_ride_request = RideRequest::myRide()->where('status','completed')
-                ->whereHas('payment', function ($query) use($from_date,$to_date) {
-                    $query->where('payment_status','paid')->whereBetween('datetime',[ $from_date, $to_date ]);
-                })->count();
-    
-            $total_cash_ride = Payment::myPayment()->where('payment_status', 'paid')->where('payment_type', 'cash')->whereBetween('datetime',[ $from_date, $to_date ])->sum('driver_commission');
-            $total_wallet_ride = Payment::myPayment()->where('payment_status', 'paid')->where('payment_type', 'wallet')->whereBetween('datetime',[ $from_date, $to_date ])->sum('driver_commission');
+
+            $rideQuery = RideRequest::myRide()->where('status','completed')
+                        ->whereHas('payment', function ($query) use($from_date,$to_date) {
+                            $query->where('payment_status','paid')->whereBetween('datetime',[ $from_date, $to_date ]);
+                        });
+
+            $total_ride_request = $rideQuery->count();
+            $total_minutes = $rideQuery->sum('duration');
+            $hours = floor($total_minutes / 60);
+            $minutes = $total_minutes % 60;
+
+            $total_numbers_of_hours = "{$hours}h" . ($hours != 1 ? "s" : "");
+            if ($minutes > 0) {
+                $total_numbers_of_hours .= " {$minutes}m";
+            }
+            $total_numbers_of_miles = $rideQuery->sum('distance');
+
+            $paymentQuery = Payment::myPayment()->where('payment_status', 'paid')->whereIn('payment_type', ['wallet', 'cash','card'])->whereBetween('datetime',[ $from_date, $to_date ]);
+
+            $total_ride_earnings = $paymentQuery->sum('driver_commission');
+            $total_tips_earnings = $paymentQuery->sum('driver_tips');
             
             $response = [
                 'today_date'        => $today,
                 'from_date'         => $from_date,
                 'to_date'           => $to_date,
                 'total_ride_count'  => $total_ride_request,
-                'total_cash_ride'   => $total_cash_ride,
-                'total_wallet_ride' => $total_wallet_ride,
-                'total_earnings'    => $total_cash_ride + $total_wallet_ride,
+                'numbers_of_hours'  => $total_numbers_of_hours,
+                'numbers_of_miles'  => (float) number_format( (float) $total_numbers_of_miles, 2,'.',''),
+                'total_earnings'    => $total_ride_earnings,
+                'tips_earnings'     => $total_tips_earnings,
             ];
         }
         return json_custom_response($response);

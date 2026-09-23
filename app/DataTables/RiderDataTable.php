@@ -60,6 +60,15 @@ class RiderDataTable extends DataTable
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
             })
+            ->editColumn('contact_number' , function ( $query ) {
+                if (!$query->contact_number) {
+                    return 'Not Available';
+                }
+
+                $number = formatPhoneNumber($query->contact_number);
+
+                return maskSensitiveInfo('contact_number', $number, 'Not Available');
+            })
             ->addIndexColumn()
             ->addColumn('action', 'rider.action')
             ->order(function ($query) {
@@ -142,7 +151,7 @@ class RiderDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'Users_' . date('YmdHis');
     }

@@ -42,6 +42,20 @@ class RegionDataTable extends DataTable
                 }
                 return '<span class="text-capitalize text-' .$status .' badge badge-light-'.$status.'">'.$status_label.'</span>';
             })
+            ->editColumn('distance_unit', function($query) {
+                switch ($query->distance_unit) {
+                    case 'km':
+                        $distance_unit = 'KM';
+                        break;
+                    case 'mile':
+                        $distance_unit = 'Miles';
+                        break;
+                }
+                return $distance_unit;
+            })
+            ->editColumn('timezone', function ($query) {
+                return getTimezonesByCountryCode(optional($query->country)->code ?? '')[$query->timezone] ?? $query->timezone;
+            })
             ->editColumn('created_at', function ($query) {
                 return dateAgoFormate($query->created_at, true);
             })
@@ -87,7 +101,7 @@ class RegionDataTable extends DataTable
         return [
             Column::make('DT_RowIndex')
                 ->searchable(false)
-                ->title(__('message.srno'))
+               ->title('#')
                 ->orderable(false)
                 ->width(60),
             Column::make('name')->title( __('message.name') ),
@@ -108,7 +122,7 @@ class RegionDataTable extends DataTable
      *
      * @return string
      */
-    protected function filename()
+    protected function filename(): string
     {
         return 'Regions_' . date('YmdHis');
     }

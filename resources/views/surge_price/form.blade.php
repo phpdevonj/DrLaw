@@ -7,7 +7,10 @@
             {!! Form::open(['route' => ['surge-prices.store'], 'method' => 'post']) !!}
         @endif
         <div class="row">
-            <div class="col-lg-12">
+            <div class="col-12">
+                <a href="{{route('surge-prices.index')}}" class="btn border-radius-10 btn-dark float-right" role="button"><i class="fas fa-arrow-circle-left"></i> {{ __('message.back') }}</a>
+            </div>
+            <div class="col-lg-12 mt-3">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
@@ -36,7 +39,7 @@
                                     {{ Form::label('radius', __('message.radius'), ['class'=>'form-control-label'], false ) }}
                                     {{ Form::number('radius', old('radius'), ['class' => 'form-control', 'step' => '0.01', 'min' => '0.1']) }}
                                 </div>
-
+                                
                                 <div class="form-group col-md-4">
                                     {{ Form::label('day',__('message.day').' <span class="text-danger">*</span>',['class'=>'form-control-label'], false ) }}
                                     {{ Form::select('day[]',getDaysOfWeek(), old('day'), [ 'class' =>'form-control select2js' ,'multiple' => 'multiple','data-placeholder' => __('message.select_name',[ 'select' => __('message.day') ])]) }}
@@ -52,7 +55,11 @@
                                     {{ Form::number('value', old('value'),[ 'step' =>'any', 'min' =>'0', 'placeholder' => __('message.value'), 'class' => 'form-control']) }}
                                 </div>
 
-                                <div class=" form-group col-md-12 mt-3">
+                                <div class="form-group col-md-12 mt-3">
+                                    <div id="timezone-info" class="mt-2" style="display: none;">
+                                        <strong>{{ __('message.timezone_info') }}:</strong> <span id="timezone-text" style="color: black;"></span>
+                                    </div>
+
                                     <button type="button" id="add_button" class="btn mb-3 btn-sm btn-primary float-right">{{ __('message.add_form_title',['form' => '']) }}</button>
                                         @if(isset($id) && !empty($data))
                                             <table id="table_list" class="table border-none">
@@ -141,6 +148,35 @@
             (function($) {
                 "use strict";
                 $(document).ready(function() {
+                    // Handle region selection change to show timezone
+                    $('#region_id').on('change', function() {
+                        var regionId = $(this).val();
+                        if (regionId) {
+                            $.ajax({
+                                url: '{{ route("get-region-timezone") }}',
+                                type: 'GET',
+                                data: { region_id: regionId },
+                                success: function(response) {
+                                    if (response.success && response.timezone) {
+                                        $('#timezone-text').text('These times will be stored in ' + response.timezone);
+                                        $('#timezone-info').show();
+                                    } else {
+                                        $('#timezone-info').hide();
+                                    }
+                                },
+                                error: function() {
+                                    $('#timezone-info').hide();
+                                }
+                            });
+                        } else {
+                            $('#timezone-info').hide();
+                        }
+                    });
+                    
+                    // Show timezone info on page load if region is already selected
+                    @if(isset($data) && $data->region_id)
+                        $('#region_id').trigger('change');
+                    @endif
                     var resetSequenceNumbers = function() {
                         $("#table_list tbody tr").each(function(i) {
                             $(this).find('td:first').text(i + 1);
@@ -219,7 +255,8 @@
                 });
             })(jQuery);
         </script>
-        <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&libraries=places" defer></script>
+
+        <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&v=3.64&libraries=places" defer></script>
         <script>
             $(function() {
 

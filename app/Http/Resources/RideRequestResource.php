@@ -16,7 +16,7 @@ class RideRequestResource extends JsonResource
     {
         $pdfUrl = null;
         if($this->status == 'completed' ){
-            $pdfUrl = route('ride-invoice', ['id' => $this->id]);
+            $pdfUrl = route('ride-invoice', ['id' => $this->id, 'user_type'=>auth()->user()->user_type]);
         }
         $surge_price = getSurgePrice($this->datetime, optional($this->service)->region_id, $this->start_latitude, $this->start_longitude, $this->end_latitude, $this->end_longitude);
 
@@ -24,6 +24,9 @@ class RideRequestResource extends JsonResource
 
         $driver_ratings = optional($this->driver)->driverRating ?? collect();
         $rider_ratings = optional($this->rider)->riderRating ?? collect();
+
+
+        $driver_earning = $this->total_amount - $this->company_fee_charge - $this->expenses_charge;
 
         return [
             'id'                => $this->id,
@@ -77,10 +80,13 @@ class RideRequestResource extends JsonResource
             'payment_type'      => $this->payment_type,
             'payment_status'    => optional($this->payment)->payment_status ?? 'pending',
             'extra_charges'     => $this->extra_charges,
-            'fixed_charge'     => $surge_price->value ?? 0,
+            'surge_price_type'  => $this->surge_type ?? '',
+            'surge_price_value' => (float) number_format( (float) $this->surge_value, 2,'.','') ?? 0,
+            'fixed_charge'      => (float) number_format( (float) $this->surge_amount, 2,'.','') ?? 0,
             'coupon_discount'   => $this->coupon_discount,
             'coupon_code'       => $this->coupon_code,
             'coupon_data'       => $this->coupon_data,
+            'credit_used'       => $this->credit_used,
             'is_rider_rated'    => $this->is_rider_rated,
             'is_driver_rated'   => $this->is_driver_rated,
             'max_time_for_find_driver_for_ride_request' => $this->max_time_for_find_driver_for_ride_request,
@@ -95,10 +101,15 @@ class RideRequestResource extends JsonResource
             'invoice_name' => 'Ride_' . $this->id,
             'driver_rating' => $driver_ratings->count() > 0 ? (float) number_format(max($driver_ratings->avg('rating'), 0), 2) : 0,
             'rider_rating'  => $rider_ratings->count() > 0 ? (float) number_format(max($rider_ratings->avg('rating'), 0), 2) : 0,
+            'held_payment_intent_id'     => $this->held_payment_intent_id,
+            'held_payment_amount'        => $this->held_payment_amount,
+            'captured_payment_intent_id' => $this->captured_payment_intent_id,
             'rider_complete_trips'    => optional($this->rider)->completedTripsAsRiderCount(),
             'driver_complete_trips'    => optional($this->driver)->completedTripsAsDriverCount(),
             'expenses_charge'          => $this->expenses_charge,
             'company_fee_charge'       => $this->company_fee_charge,
+            'driver_earning'       => (float) number_format( (float) $driver_earning, 2,'.',''),
+            'service_cancellation_fee' => (float) number_format( (float) optional($this->service)->cancellation_fee, 2,'.',''),
         ];
     }
 }

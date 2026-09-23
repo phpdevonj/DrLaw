@@ -21,14 +21,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('register',[API\UserController::class, 'register']);
-Route::post('/driver/register/step-one', [API\UserController::class, 'validateDriverStepOne']);
 Route::post('driver-register',[API\UserController::class, 'driverRegister']);
+Route::post('/driver/register/step-one', [API\UserController::class, 'validateDriverStepOne']);
 Route::post('login',[API\UserController::class,'login']);
+Route::post('check-email', [API\UserController::class, 'checkEmail']);
+Route::post('check-phone', [API\UserController::class, 'checkPhone']);
 Route::post('forget-password',[ API\UserController::class,'forgetPassword']);
 Route::post('social-login',[ API\UserController::class, 'socialLogin' ]);
 Route::get('user-list',[API\UserController::class, 'userList']);
 Route::get('user-detail',[API\UserController::class, 'userDetail']);
-
+Route::post('send-otp', [API\UserController::class, 'sendOtp']);
+Route::post('verify-otp', [API\UserController::class, 'verifyOtp']);
 Route::get('document-list', [ API\DocumentController::class, 'getList' ] );
 
 Route::get('service-list', [ API\ServiceController::class, 'getList' ]);
@@ -38,6 +41,8 @@ Route::get('near-by-driver',[ App\Http\Controllers\HomeController::class, 'drive
 Route::get('language-table-list', [API\LanguageTableController::class, 'getList']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+
+    Route::post('update-language', [API\UserController::class, 'updateLanguage']);
 
     Route::get('driver-document-list', [ API\DriverDocumentController::class, 'getList' ] );
     Route::post('driver-document-save', [ App\Http\Controllers\DriverDocumentController::class, 'store' ] );
@@ -127,22 +132,66 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('accept-schedule-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'acceptScheduleRide']);
     Route::post('decline-accepted-schedule-ride/{id}', [App\Http\Controllers\RideRequestController::class, 'declineAcceptedScheduleRide']);
 
-    // create paystack payment transaction
-    Route::post('/paystack/transaction', [API\PaystackController::class, 'storeTransaction']);
-    Route::post('/paystack/transaction/update-status', [API\PaystackController::class, 'updateTransactionStatus']);
+    // Driver messages
+    Route::get('driver-message-list', [ API\SettingController::class, 'getDriverMessageList' ] );
 
-    // PayFast Routes
-    Route::post('/wallet/payfast/create', [API\PayFastController::class, 'createPayment']);
+    // Stripe
+    Route::post('/create-setup-intent', [API\StripeCardController::class, 'createSetupIntent']);
+    Route::get('/list-cards', [API\StripeCardController::class, 'listPaymentMethods']);
+    Route::delete('/delete-card', [API\StripeCardController::class, 'deletePaymentMethod']);
+    Route::post('/set-default-card', [API\StripeCardController::class, 'setDefaultCard']);
+    Route::post('/create-payment-intent', [API\StripeCardController::class, 'createPaymentIntent']);
+    Route::post('/capture-payment-intent', [API\StripeCardController::class, 'capturePaymentIntent']);
+    Route::post('/cancel-payment-intent', [API\StripeCardController::class, 'cancelPaymentIntent']);
+    Route::get('/transactions-list', [ API\StripeCardController::class, 'getTransactionsList'] );
 
-    // PayHub Routes
-    Route::post('/wallet/payhub/create', [API\PayHubController::class, 'createPayment']);
-    
+    Route::post('/create-stripe-customer', [API\StripeCardController::class, 'createStripeCustomer']);
+
     // surge price
     Route::get('surge-price-list', [ API\SurgePriceController::class, 'getList'] );
+
+    // send notification for in app chat
+    Route::post('send-notification', [ API\NotificationController::class, 'sendNotification']);
+
+    // get user recent ride destination location
+    Route::get('rider-recent-ride-location', [ API\UserController::class, 'riderRecentRideLocation']);
+
+    // get user address list
+    Route::get('user-address-list', [ API\UserController::class, 'getUserAddressList']);
+
+    //  paypal payment flow
+    Route::post('wallet/paypal/create-payment', [API\PaypalController::class, 'createPayment']);
+    Route::post('wallet/paypal/capture-payment', [API\PaypalController::class, 'capturePayment']);
+    Route::get('wallet/paypal/saved-cards', [API\PaypalController::class, 'getSavedCards']);
+    Route::delete('wallet/paypal/saved-cards/{id}', [API\PaypalController::class, 'deleteCard']);
+
+        // Paystack
+    Route::post('/paystack-initialize-payment', [API\PaystackController::class, 'initializePayment']);
+    Route::post('/paystack-verify-payment', [API\PaystackController::class, 'verifyPayment']);
+
+        // ── Cash-In (Rider) – /api/mobile-money/cashin/* ────────────────────
+    Route::prefix('mobile-money/cashin')->group(function () {
+        Route::get('services', [Api\CashInController::class, 'getServices']);
+        Route::get('service-details', [Api\CashInController::class, 'getServiceDetails']);
+        Route::post('quote', [Api\CashInController::class, 'getQuote']);
+        Route::post('collect', [Api\CashInController::class, 'collectPayment']);
+        Route::get('verify', [Api\CashInController::class, 'verifyTransaction']);
+    });
+
+    // ── Cash-Out (Driver) – /api/mobile-money/cashout/* ─────────────────
+    Route::prefix('mobile-money/cashout')->group(function () {
+        Route::post('initiate', [Api\CashOutController::class, 'initiate']);
+        Route::get('verify', [Api\CashOutController::class, 'verify']);
+    });
 });
 
 Route::get('place-autocomplete-api', [ API\RideRequestController::class, 'placeAutoComplete' ] );
 Route::get('place-detail-api', [ API\RideRequestController::class, 'placeDetail' ] );
 
-// paystack webhook
-Route::post('/paystack/webhook', [API\PaystackController::class, 'handleWebhook']);
+// get car models
+Route::get('car-models-list', [ API\CarModelController::class, 'getList'] );
+// PayPal Webhook & Return redirects (Public)
+Route::post('paypal/webhook', [API\PaypalController::class, 'webhook']);
+Route::get('paypal/return', [API\PaypalController::class, 'returnCapture']);
+
+Route::post('mobile-money/webhook', [Api\MobileMoneyController::class, 'mobileMoneyWebhook']);

@@ -93,11 +93,11 @@
      }
 </script>
 @if(isset($assets) && in_array('map', $assets))
-    <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&libraries=drawing" defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&v=3.64&libraries=drawing" defer></script>
 @endif
 
 @if(isset($assets) && in_array('map_place', $assets))
-   <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&libraries=places" defer></script>
+   <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_KEY')}}&v=3.64&libraries=places" defer></script>
 @endif
 
 @yield('bottom_script')
@@ -139,3 +139,147 @@
 <script src="{{ asset('js/app.js') }}" defer></script>
 <script src="{{ asset('js/sweetalert.min.js')}}"></script>
 @include('helper.app_message')
+
+{{-- Google Translate: hidden widget + custom switcher logic --}}
+<style>
+/* Hide the Google top frame that pushes the page down */
+body > .skiptranslate { display: none !important; }
+body { top: 0px !important; }
+
+/* Custom language switcher dropdown */
+.og-lang-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    min-width: 160px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.12);
+    z-index: 9999;
+}
+.og-lang-menu.open {
+    display: block;
+}
+.og-lang-menu .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    font-size: 14px;
+}
+.og-lang-menu .list-group-item:first-child {
+    border-top: 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+.og-lang-menu .list-group-item:last-child {
+    border-bottom: 0;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+.og-lang-menu .list-group-item:hover,
+.og-lang-menu .lang-option.active {
+    background: #f0f0f0;
+}
+</style>
+<script type="text/javascript">
+    // 1. Initialize Google Translate
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            // Comma-separated list of languages you want to support
+            // includedLanguages: 'en,fr',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+    }
+
+    // 2. Aggressively clear old cookies to prevent getting stuck
+    function clearGoogTransCookie() {
+        var d = location.hostname.split('.');
+        var domains = [''];
+        domains.push('; domain=' + location.hostname);
+        domains.push('; domain=.' + location.hostname);
+        while (d.length > 1) {
+            var dom = d.join('.');
+            domains.push('; domain=' + dom);
+            domains.push('; domain=.' + dom);
+            d.shift();
+        }
+        domains.forEach(function(dom) {
+            document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT' + dom;
+        });
+    }
+
+    // 3. Set new cookie
+    function setGoogTransCookie(lang) {
+        clearGoogTransCookie();
+        if (lang && lang !== 'en') {
+            var domain = location.hostname;
+            var val = '/en/' + lang;
+            document.cookie = 'googtrans=' + val + '; path=/; expires=Thu, 01 Jan 2099 00:00:00 GMT';
+            if (domain.indexOf('.') !== -1 && !/^\d{1,3}(\.\d{1,3}){3}$/.test(domain)) {
+                document.cookie = 'googtrans=' + val + '; path=/; expires=Thu, 01 Jan 2099 00:00:00 GMT; domain=.' + domain;
+            }
+        }
+    }
+
+    // 4. Read active language on page load
+    function getActiveLang() {
+        var m = decodeURIComponent(document.cookie).match(/(?:^|;)\s*googtrans=\/en\/([^;]+)/);
+        return m ? m[1] : 'en';
+    }
+
+    // 5. Update UI to match active language
+    function syncUI(lang) {
+        var opt = document.querySelector('.lang-option[data-code="' + lang + '"]');
+        if (!opt) return;
+        var flag = document.getElementById('selected-lang-flag');
+        var label = document.getElementById('selected-lang-label');
+        if (flag) flag.src = opt.dataset.flag;
+        if (label) label.textContent = opt.dataset.name;
+        document.querySelectorAll('.lang-option').forEach(function(el) {
+            el.classList.toggle('active', el.dataset.code === lang);
+        });
+    }
+
+    // 6. Handle selection
+    function selectLanguage(code) {
+        setGoogTransCookie(code);
+        location.reload(); // Reload to let Google Translate read the new cookie
+    }
+
+    // 7. Event Listeners
+    document.addEventListener('DOMContentLoaded', function () {
+        syncUI(getActiveLang());
+
+        var switcher = document.getElementById('custom-lang-switcher');
+        var toggleBtn = document.getElementById('lang-toggle-btn');
+        var menu = document.getElementById('lang-menu');
+
+        if (!switcher || !toggleBtn || !menu) return;
+
+        // Open/close dropdown
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            menu.classList.toggle('open');
+        });
+
+        // Click an option
+        menu.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var opt = e.target.closest('.lang-option');
+            if (opt) selectLanguage(opt.dataset.code);
+        });
+
+        // Click outside to close
+        document.addEventListener('click', function (e) {
+            if (!switcher.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+    });
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
