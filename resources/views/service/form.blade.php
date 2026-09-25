@@ -221,13 +221,10 @@
                             <div class="row mb-3">
                                 <div class="form-group col-md-4">
                                     {{ Form::label('payment_method',__('message.payment_method').' <span class="text-danger">*</span>',['class'=>'form-control-label'],false) }}
-                                    {{ Form::select('payment_method',[ 
-                                        'card' => __('message.card'), 
+                                    {{ Form::select('payment_method',[
                                         'wallet' => __('message.wallet'),
-                                        'card_wallet' => __('message.card_wallet'),
-                                        'cash' => __('message.cash'), 
+                                        'cash' => __('message.cash'),
                                         'cash_wallet' => __('message.cash_wallet'),
-                                        'cash_card_wallet' => __('message.cash_card_wallet'),
                                         ], old('payment_method') ,[ 'class' =>'form-control select2js','required']) }}
                                 </div>
 
