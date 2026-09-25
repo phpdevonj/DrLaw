@@ -27,6 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.route.permission' => \App\Http\Middleware\CheckRoutePermission::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'payfast/itn',
+            'payhub/callback',
+        ]);
+
         $middleware->redirectGuestsTo(fn () => route('login'));
     })
     ->withSchedule(function (Schedule $schedule) {
