@@ -56,6 +56,7 @@ class PayHubController extends Controller
             'metadata1' => $referenceId,
             'metadata2' => (string) $user->id,
             'metadata3' => 'wallet_topup',
+            'description' => 'payhub one time payment',
         ];
 
         $result = $this->payHubService->createTransaction($paymentData);
